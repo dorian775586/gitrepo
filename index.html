@@ -78,6 +78,55 @@
       .card button:hover {
         background-color: #2e74d1;
       }
+
+      /* Новая форма бронирования */
+      #booking-form-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: var(--tg-theme-secondary-bg-color, #1f1f1f);
+        border-radius: 16px;
+        display: none;
+      }
+
+      #booking-form label {
+        display: block;
+        margin: 15px 0 5px;
+      }
+
+      #booking-form input,
+      #booking-form select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: none;
+        background-color: #333;
+        color: #eee;
+        font-size: 14px;
+      }
+
+      #booking-form button {
+        margin-top: 20px;
+        padding: 12px;
+        background: #d33;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+      }
+
+      #booking-form button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+
+      #message {
+        margin-top: 15px;
+        font-size: 1.1em;
+        color: #aaffaa;
+      }
     </style>
   </head>
   <body>
@@ -90,7 +139,7 @@
           <h2>Стол 1</h2>
           <p>Столик с диваном у окна</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="1">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 2" />
@@ -98,7 +147,7 @@
           <h2>Стол 2</h2>
           <p>Уютный столик на двоих</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="2">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 3" />
@@ -106,7 +155,7 @@
           <h2>Стол 3</h2>
           <p>У окна, на 4 персоны</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="3">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 4" />
@@ -114,7 +163,7 @@
           <h2>Стол 4</h2>
           <p>Рядом с барной стойкой</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="4">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 5" />
@@ -122,7 +171,7 @@
           <h2>Стол 5</h2>
           <p>Столик с диваном</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="5">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 6" />
@@ -130,7 +179,7 @@
           <h2>Стол 6</h2>
           <p>Для компании из 6 человек</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="6">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 7" />
@@ -138,7 +187,7 @@
           <h2>Стол 7</h2>
           <p>У окна, рядом с растениями</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="7">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 8" />
@@ -146,7 +195,7 @@
           <h2>Стол 8</h2>
           <p>В глубине зала</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="8">Забронировать</button>
       </div>
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 9" />
@@ -154,9 +203,103 @@
           <h2>Стол 9</h2>
           <p>Окружён мягкими креслами</p>
         </div>
-        <button>Забронировать</button>
+        <button data-table="9">Забронировать</button>
       </div>
     </div>
+
+    <!-- Форма бронирования -->
+    <div id="booking-form-container">
+      <h2>Бронирование столика <span id="selected-table"></span></h2>
+      <form id="booking-form">
+        <label for="date">Дата</label>
+        <input type="date" id="date" required />
+
+        <label for="time">Время</label>
+        <select id="time" required></select>
+
+        <label for="guests">Количество гостей</label>
+        <input type="number" id="guests" min="1" max="20" value="1" required />
+
+        <button type="submit">Подтвердить бронь</button>
+      </form>
+      <div id="message"></div>
+    </div>
+
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
+    <script>
+      // Заполним время слотами с 12:00 до 23:00 с шагом 30 минут
+      function generateTimeSlots() {
+        const slots = [];
+        let start = new Date();
+        start.setHours(12, 0, 0, 0);
+        const end = new Date();
+        end.setHours(23, 0, 0, 0);
+
+        while (start <= end) {
+          slots.push(start.toTimeString().slice(0, 5));
+          start = new Date(start.getTime() + 30 * 60000);
+        }
+        return slots;
+      }
+
+      const timeSelect = document.getElementById('time');
+      generateTimeSlots().forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        timeSelect.appendChild(opt);
+      });
+
+      // Установим сегодняшнюю дату как минимальную для выбора
+      const dateInput = document.getElementById('date');
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.min = today;
+      dateInput.value = today;
+
+      const bookingFormContainer = document.getElementById('booking-form-container');
+      const bookingForm = document.getElementById('booking-form');
+      const messageDiv = document.getElementById('message');
+      const selectedTableSpan = document.getElementById('selected-table');
+
+      // При клике на кнопку "Забронировать" на карточке
+      document.querySelectorAll('.card button').forEach(button => {
+        button.addEventListener('click', () => {
+          const tableNumber = button.getAttribute('data-table');
+          selectedTableSpan.textContent = "№" + tableNumber;
+          bookingFormContainer.style.display = "block";
+          messageDiv.textContent = "";
+          bookingForm.reset();
+          // Заполнить hidden поле для столика
+          bookingForm.dataset.table = tableNumber;
+          // Чтобы пользователь не забывал, можно даже выделить стол в форме
+          // Но у нас просто пишем номер
+        });
+      });
+
+      bookingForm.addEventListener('submit', e => {
+        e.preventDefault();
+        messageDiv.textContent = "";
+
+        const date = dateInput.value;
+        const time = timeSelect.value;
+        const guests = document.getElementById('guests').value;
+        const table = bookingForm.dataset.table;
+
+        if (!date || !time || !guests || !table) {
+          messageDiv.textContent = "Пожалуйста, заполните все поля.";
+          return;
+        }
+
+        const bookingData = { date, time, table, guests };
+
+        try {
+          Telegram.WebApp.sendData(JSON.stringify(bookingData));
+          messageDiv.textContent = "Бронь отправлена!";
+          bookingFormContainer.style.display = "none";
+        } catch (err) {
+          messageDiv.textContent = "Ошибка отправки данных: " + err.message;
+        }
+      });
+    </script>
   </body>
 </html>
