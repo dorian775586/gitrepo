@@ -15,7 +15,7 @@
         padding: 20px;
         font-family: "Segoe UI", sans-serif;
         background-color: var(--tg-theme-bg-color, #121212);
-        color: var(--tg-theme-text-color, #ffffff);
+        color: var(--tg-theme-text-color, #e0e0e0);
       }
 
       h1 {
@@ -34,10 +34,15 @@
         background-color: var(--tg-theme-secondary-bg-color, #1f1f1f);
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        transition: box-shadow 0.3s ease;
+      }
+
+      .card:hover {
+        box-shadow: 0 8px 20px rgba(255, 75, 75, 0.6);
       }
 
       .card img {
@@ -58,14 +63,14 @@
 
       .card p {
         font-size: 13px;
-        color: var(--tg-theme-hint-color, #aaaaaa);
+        color: var(--tg-theme-hint-color, #bbbbbb);
         margin: 0 0 12px 0;
       }
 
       .card button {
         margin: 0 12px 12px;
         height: 36px;
-        background-color: #438eff;
+        background-color: #ff4b4b;
         color: white;
         border: none;
         border-radius: 10px;
@@ -76,7 +81,7 @@
       }
 
       .card button:hover {
-        background-color: #2e74d1;
+        background-color: #d13636;
       }
 
       /* Модальное окно бронирования */
@@ -88,8 +93,8 @@
         top: 0;
         width: 100vw;
         height: 100vh;
-        background-color: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
+        background-color: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -97,12 +102,12 @@
       }
 
       #booking-form {
-        background-color: var(--tg-theme-secondary-bg-color, #1f1f1f);
+        background-color: var(--tg-theme-secondary-bg-color, #222222);
         border-radius: 16px;
         padding: 20px;
-        max-width: 400px;
+        max-width: 360px;
         width: 100%;
-        box-shadow: 0 0 15px rgba(255, 75, 75, 0.5);
+        box-shadow: 0 0 25px rgba(255, 75, 75, 0.7);
         position: relative;
       }
 
@@ -130,7 +135,7 @@
       #booking-form button {
         margin-top: 20px;
         padding: 12px;
-        background: #d33;
+        background: #ff4b4b;
         color: white;
         font-weight: bold;
         border: none;
@@ -138,6 +143,11 @@
         cursor: pointer;
         font-size: 16px;
         width: 100%;
+        transition: background 0.3s ease;
+      }
+
+      #booking-form button:hover:not(:disabled) {
+        background: #d13636;
       }
 
       #booking-form button:disabled {
@@ -156,10 +166,15 @@
         position: absolute;
         top: 12px;
         right: 16px;
-        font-size: 24px;
+        font-size: 28px;
         color: #ff4b4b;
         cursor: pointer;
         user-select: none;
+        transition: color 0.3s ease;
+      }
+
+      #closeBookingForm:hover {
+        color: #d13636;
       }
     </style>
   </head>
