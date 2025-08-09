@@ -79,13 +79,36 @@
         background-color: #2e74d1;
       }
 
-      /* Новая форма бронирования */
+      /* Модальное окно бронирования */
       #booking-form-container {
-        margin-top: 30px;
+        display: none; /* Скрыто по умолчанию */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
         padding: 20px;
+      }
+
+      #booking-form {
         background-color: var(--tg-theme-secondary-bg-color, #1f1f1f);
         border-radius: 16px;
-        display: none;
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 0 15px rgba(255, 75, 75, 0.5);
+        position: relative;
+      }
+
+      #booking-form h2 {
+        margin-top: 0;
+        color: #ff4b4b;
       }
 
       #booking-form label {
@@ -126,6 +149,17 @@
         margin-top: 15px;
         font-size: 1.1em;
         color: #aaffaa;
+      }
+
+      /* Кнопка закрытия */
+      #closeBookingForm {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        font-size: 24px;
+        color: #ff4b4b;
+        cursor: pointer;
+        user-select: none;
       }
     </style>
   </head>
@@ -207,10 +241,12 @@
       </div>
     </div>
 
-    <!-- Форма бронирования -->
+    <!-- Модальное окно формы бронирования -->
     <div id="booking-form-container">
-      <h2>Бронирование столика <span id="selected-table"></span></h2>
       <form id="booking-form">
+        <div id="closeBookingForm">&times;</div>
+        <h2>Бронирование столика <span id="selected-table"></span></h2>
+
         <label for="date">Дата</label>
         <input type="date" id="date" required />
 
@@ -221,8 +257,8 @@
         <input type="number" id="guests" min="1" max="20" value="1" required />
 
         <button type="submit">Подтвердить бронь</button>
+        <div id="message"></div>
       </form>
-      <div id="message"></div>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
@@ -242,47 +278,57 @@
         return slots;
       }
 
-      const timeSelect = document.getElementById('time');
-      generateTimeSlots().forEach(t => {
-        const opt = document.createElement('option');
+      const timeSelect = document.getElementById("time");
+      generateTimeSlots().forEach((t) => {
+        const opt = document.createElement("option");
         opt.value = t;
         opt.textContent = t;
         timeSelect.appendChild(opt);
       });
 
       // Установим сегодняшнюю дату как минимальную для выбора
-      const dateInput = document.getElementById('date');
-      const today = new Date().toISOString().split('T')[0];
+      const dateInput = document.getElementById("date");
+      const today = new Date().toISOString().split("T")[0];
       dateInput.min = today;
       dateInput.value = today;
 
-      const bookingFormContainer = document.getElementById('booking-form-container');
-      const bookingForm = document.getElementById('booking-form');
-      const messageDiv = document.getElementById('message');
-      const selectedTableSpan = document.getElementById('selected-table');
+      const bookingFormContainer = document.getElementById("booking-form-container");
+      const bookingForm = document.getElementById("booking-form");
+      const messageDiv = document.getElementById("message");
+      const selectedTableSpan = document.getElementById("selected-table");
+      const closeBookingFormBtn = document.getElementById("closeBookingForm");
 
-      // При клике на кнопку "Забронировать" на карточке
-      document.querySelectorAll('.card button').forEach(button => {
-        button.addEventListener('click', () => {
-          const tableNumber = button.getAttribute('data-table');
+      // При клике на кнопку "Забронировать" на карточке открываем модалку
+      document.querySelectorAll(".card button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const tableNumber = button.getAttribute("data-table");
           selectedTableSpan.textContent = "№" + tableNumber;
-          bookingFormContainer.style.display = "block";
+          bookingFormContainer.style.display = "flex";
           messageDiv.textContent = "";
           bookingForm.reset();
-          // Заполнить hidden поле для столика
           bookingForm.dataset.table = tableNumber;
-          // Чтобы пользователь не забывал, можно даже выделить стол в форме
-          // Но у нас просто пишем номер
         });
       });
 
-      bookingForm.addEventListener('submit', e => {
+      // Закрытие модалки по крестику
+      closeBookingFormBtn.onclick = () => {
+        bookingFormContainer.style.display = "none";
+      };
+
+      // Закрытие модалки по клику вне формы
+      bookingFormContainer.onclick = (e) => {
+        if (e.target === bookingFormContainer) {
+          bookingFormContainer.style.display = "none";
+        }
+      };
+
+      bookingForm.addEventListener("submit", (e) => {
         e.preventDefault();
         messageDiv.textContent = "";
 
         const date = dateInput.value;
         const time = timeSelect.value;
-        const guests = document.getElementById('guests').value;
+        const guests = document.getElementById("guests").value;
         const table = bookingForm.dataset.table;
 
         if (!date || !time || !guests || !table) {
@@ -294,10 +340,14 @@
 
         try {
           Telegram.WebApp.sendData(JSON.stringify(bookingData));
-          messageDiv.textContent = "Бронь отправлена!";
-          bookingFormContainer.style.display = "none";
-        } catch (err) {
-          messageDiv.textContent = "Ошибка отправки данных: " + err.message;
+          messageDiv.style.color = "#aaffaa";
+          messageDiv.textContent = "Бронирование отправлено!";
+          setTimeout(() => {
+            bookingFormContainer.style.display = "none";
+          }, 2000);
+        } catch (error) {
+          messageDiv.style.color = "#ff4b4b";
+          messageDiv.textContent = "Ошибка отправки: " + error.message;
         }
       });
     </script>
