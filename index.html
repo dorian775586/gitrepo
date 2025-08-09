@@ -65,7 +65,7 @@
       .card button {
         margin: 0 12px 12px;
         height: 36px;
-        background-color: #438eff; /* вернул синий */
+        background-color: #438eff; /* синий цвет кнопок */
         color: white;
         border: none;
         border-radius: 10px;
@@ -81,7 +81,7 @@
 
       /* Модальное окно бронирования */
       #booking-form-container {
-        display: none; /* Скрыто по умолчанию */
+        display: none; /* Окно по умолчанию скрыто и не открывается */
         position: fixed;
         z-index: 1000;
         left: 0;
@@ -108,7 +108,7 @@
 
       #booking-form h2 {
         margin-top: 0;
-        color: #ffffff; /* обычный белый цвет */
+        color: white; /* Белый обычный цвет заголовка */
       }
 
       #booking-form label {
@@ -130,7 +130,7 @@
       #booking-form button {
         margin-top: 20px;
         padding: 12px;
-        background: #438eff; /* синий, как кнопки */
+        background: #4caf50; /* зелёный цвет кнопки */
         color: white;
         font-weight: bold;
         border: none;
@@ -138,11 +138,6 @@
         cursor: pointer;
         font-size: 16px;
         width: 100%;
-        transition: background 0.3s ease;
-      }
-
-      #booking-form button:hover {
-        background: #2e74d1;
       }
 
       #booking-form button:disabled {
@@ -155,6 +150,8 @@
         font-size: 1.1em;
         color: #aaffaa; /* зелёный для успешных сообщений */
       }
+
+      /* Ошибка будет задаваться динамически красным в скрипте */
 
       /* Кнопка закрытия */
       #closeBookingForm {
@@ -308,7 +305,7 @@
         button.addEventListener("click", () => {
           const tableNumber = button.getAttribute("data-table");
           selectedTableSpan.textContent = "№" + tableNumber;
-          bookingFormContainer.style.display = "flex";
+          bookingFormContainer.style.display = "flex"; // открытие модалки только при клике
           messageDiv.textContent = "";
           bookingForm.reset();
           bookingForm.dataset.table = tableNumber;
@@ -327,4 +324,9 @@
         }
       };
 
-      bookingForm.addEventListener("submit
+      bookingForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        messageDiv.textContent = "";
+
+        const date = dateInput.value;
+        const time = time
