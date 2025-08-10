@@ -81,7 +81,7 @@
 
       /* Модальное окно бронирования */
       #booking-form-container {
-        display: none; /* Окно по умолчанию скрыто и не открывается */
+        display: none; /* Скрываем по умолчанию */
         position: fixed;
         z-index: 1000;
         left: 0;
@@ -90,7 +90,7 @@
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(4px);
-        display: flex;
+
         justify-content: center;
         align-items: center;
         padding: 20px;
@@ -333,16 +333,11 @@
         const date = document.getElementById("date").value;
         const time = document.getElementById("time").value;
         const guests = document.getElementById("guests").value;
-        if (!date || !time || !guests) {
-          messageDiv.textContent = "Пожалуйста, заполните все поля.";
-          return;
-        }
 
-        // Здесь можешь добавить отправку данных на сервер через fetch/ajax
-        messageDiv.style.color = "#aaffff";
-        messageDiv.textContent = `Столик ${selectedTableSpan.textContent} забронирован на ${date} в ${time} для ${guests} гостя(ей).`;
+        // Можно добавить здесь отправку данных на сервер или Telegram API
+        messageDiv.textContent = `Столик забронирован на ${date} в ${time} на ${guests} гостя(ей).`;
+        bookingForm.reset();
 
-        // Автоматически закрываем окно через 2 секунды
         setTimeout(() => {
           bookingFormContainer.style.display = "none";
         }, 2000);
