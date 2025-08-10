@@ -1,200 +1,342 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Бронирование столиков</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Столики</title>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: "Segoe UI", sans-serif;
-            background-color: var(--tg-theme-bg-color, #1f1f1f);
-            color: var(--tg-theme-text-color, #ffffff);
-        }
+      :root {
+        color-scheme: dark;
+      }
 
-        h1 {
-            text-align: center;
-            color: #ffffff;
-        }
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: "Segoe UI", sans-serif;
+        background-color: var(--tg-theme-bg-color, #1f1f1f);
+        color: var(--tg-theme-text-color, #ffffff);
+      }
 
-        .tables {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
+      h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
 
-        .table {
-            background-color: #2a2a2a;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+      }
 
-        .table:hover {
-            transform: scale(1.05);
-        }
+      .card {
+        background-color: var(--tg-theme-secondary-bg-color, #252525);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
 
-        .btn-book {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #007bff;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-        }
+      .card img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+      }
 
-        .btn-book:hover {
-            background-color: #0069d9;
-        }
+      .card-content {
+        padding: 12px;
+        flex-grow: 1;
+      }
 
-        /* Модальное окно */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-        }
+      .card h2 {
+        font-size: 16px;
+        margin: 0 0 6px 0;
+      }
 
-        .modal-content {
-            background-color: #2a2a2a;
-            padding: 20px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
+      .card p {
+        font-size: 13px;
+        color: var(--tg-theme-hint-color, #aaaaaa);
+        margin: 0 0 12px 0;
+      }
 
-        .modal h2 {
-            color: #ffffff;
-            margin-bottom: 20px;
-        }
+      .card button {
+        margin: 0 12px 12px;
+        height: 36px;
+        background-color: #007bff; /* синий цвет кнопок */
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
 
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 6px;
-        }
+      .card button:hover {
+        background-color: #0056b3;
+      }
 
-        .modal button {
-            padding: 10px;
-            background-color: #007bff;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            width: 100%;
-        }
+      /* Модальное окно бронирования */
+      #booking-form-container {
+        display: none; /* Окно по умолчанию скрыто и не открывается */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
 
-        .modal button:hover {
-            background-color: #0069d9;
-        }
+      #booking-form {
+        background-color: var(--tg-theme-secondary-bg-color, #252525);
+        border-radius: 16px;
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+        position: relative;
+      }
 
-        .close {
-            background: none;
-            border: none;
-            color: #ccc;
-            font-size: 20px;
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            cursor: pointer;
-        }
+      #booking-form h2 {
+        margin-top: 0;
+        color: white; /* Белый цвет заголовка */
+      }
+
+      #booking-form label {
+        display: block;
+        margin: 15px 0 5px;
+        color: white;
+      }
+
+      #booking-form input,
+      #booking-form select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: none;
+        background-color: #0056b3;
+        color: #eee;
+        font-size: 14px;
+      }
+
+      #booking-form button {
+        margin-top: 20px;
+        padding: 12px;
+        background: #007bff; /* синий цвет кнопки */
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+        transition: background 0.3s ease;
+      }
+
+      #booking-form button:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      #booking-form button:disabled {
+        background: #004080;
+        cursor: not-allowed;
+      }
+
+      #message {
+        margin-top: 15px;
+        font-size: 1.1em;
+        color: #aaffff; /* голубоватый для успешных сообщений */
+      }
+
+      /* Кнопка закрытия */
+      #closeBookingForm {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        font-size: 24px;
+        color: #007bff;
+        cursor: pointer;
+        user-select: none;
+      }
     </style>
-</head>
-<body>
-
-<h1>Выберите столик</h1>
-<div class="tables" id="tables"></div>
-
-<!-- Модальное окно -->
-<div class="modal" id="bookingModal">
-    <div class="modal-content">
-        <button class="close" onclick="closeModal()">✖</button>
-        <h2>Бронирование столика</h2>
-        <input type="text" id="name" placeholder="Ваше имя">
-        <select id="time">
-            <option value="">Выберите время</option>
-            <option>12:00</option>
-            <option>12:30</option>
-            <option>13:00</option>
-            <option>13:30</option>
-            <option>14:00</option>
-            <option>14:30</option>
-            <option>15:00</option>
-            <option>15:30</option>
-            <option>16:00</option>
-            <option>16:30</option>
-            <option>17:00</option>
-            <option>17:30</option>
-            <option>18:00</option>
-            <option>18:30</option>
-            <option>19:00</option>
-            <option>19:30</option>
-            <option>20:00</option>
-            <option>20:30</option>
-            <option>21:00</option>
-            <option>21:30</option>
-            <option>22:00</option>
-            <option>22:30</option>
-        </select>
-        <button onclick="bookTable()">Забронировать</button>
+  </head>
+  <body>
+    <h1>🍽️ Столики</h1>
+    <div class="grid">
+      <!-- Карточки столов -->
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 1" />
+        <div class="card-content">
+          <h2>Стол 1</h2>
+          <p>Столик с диваном у окна</p>
+        </div>
+        <button data-table="1">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 2" />
+        <div class="card-content">
+          <h2>Стол 2</h2>
+          <p>Уютный столик на двоих</p>
+        </div>
+        <button data-table="2">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 3" />
+        <div class="card-content">
+          <h2>Стол 3</h2>
+          <p>У окна, на 4 персоны</p>
+        </div>
+        <button data-table="3">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 4" />
+        <div class="card-content">
+          <h2>Стол 4</h2>
+          <p>Рядом с барной стойкой</p>
+        </div>
+        <button data-table="4">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 5" />
+        <div class="card-content">
+          <h2>Стол 5</h2>
+          <p>Столик с диваном</p>
+        </div>
+        <button data-table="5">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 6" />
+        <div class="card-content">
+          <h2>Стол 6</h2>
+          <p>Для компании из 6 человек</p>
+        </div>
+        <button data-table="6">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 7" />
+        <div class="card-content">
+          <h2>Стол 7</h2>
+          <p>У окна, рядом с растениями</p>
+        </div>
+        <button data-table="7">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 8" />
+        <div class="card-content">
+          <h2>Стол 8</h2>
+          <p>В глубине зала</p>
+        </div>
+        <button data-table="8">Забронировать</button>
+      </div>
+      <div class="card">
+        <img src="/images/tabel1.jpg" alt="Стол 9" />
+        <div class="card-content">
+          <h2>Стол 9</h2>
+          <p>Окружён мягкими креслами</p>
+        </div>
+        <button data-table="9">Забронировать</button>
+      </div>
     </div>
-</div>
 
-<script>
-    const tablesContainer = document.getElementById('tables');
-    const bookingModal = document.getElementById('bookingModal');
-    let selectedTable = null;
+    <!-- Модальное окно формы бронирования -->
+    <div id="booking-form-container">
+      <form id="booking-form">
+        <div id="closeBookingForm">&times;</div>
+        <h2>Бронирование столика <span id="selected-table"></span></h2>
 
-    // Рендер столиков
-    for (let i = 1; i <= 12; i++) {
-        const table = document.createElement('div');
-        table.classList.add('table');
-        table.innerHTML = `
-            <div>Столик ${i}</div>
-            <button class="btn-book" onclick="openModal(${i})">Забронировать</button>
-        `;
-        tablesContainer.appendChild(table);
-    }
+        <label for="date">Дата</label>
+        <input type="date" id="date" required />
 
-    function openModal(tableNumber) {
-        selectedTable = tableNumber;
-        bookingModal.style.display = 'flex';
-    }
+        <label for="time">Время</label>
+        <select id="time" required></select>
 
-    function closeModal() {
-        bookingModal.style.display = 'none';
-    }
+        <label for="guests">Количество гостей</label>
+        <input type="number" id="guests" min="1" max="20" value="1" required />
 
-    function bookTable() {
-        const name = document.getElementById('name').value;
-        const time = document.getElementById('time').value;
+        <button type="submit">Подтвердить бронь</button>
+        <div id="message"></div>
+      </form>
+    </div>
 
-        if (!name || !time) {
-            alert("Заполните все поля!");
-            return;
+    <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
+    <script>
+      // Заполним время слотами с 12:00 до 23:00 с шагом 30 минут
+      function generateTimeSlots() {
+        const slots = [];
+        let start = new Date();
+        start.setHours(12, 0, 0, 0);
+        const end = new Date();
+        end.setHours(23, 0, 0, 0);
+
+        while (start <= end) {
+          slots.push(start.toTimeString().slice(0, 5));
+          start = new Date(start.getTime() + 30 * 60000);
+        }
+        return slots;
+      }
+
+      function fillTimeSelect() {
+        const select = document.getElementById("time");
+        const slots = generateTimeSlots();
+        slots.forEach((slot) => {
+          const option = document.createElement("option");
+          option.value = slot;
+          option.textContent = slot;
+          select.appendChild(option);
+        });
+      }
+
+      fillTimeSelect();
+
+      const bookingFormContainer = document.getElementById("booking-form-container");
+      const bookingForm = document.getElementById("booking-form");
+      const selectedTableSpan = document.getElementById("selected-table");
+      const messageDiv = document.getElementById("message");
+      const closeBtn = document.getElementById("closeBookingForm");
+
+      // Открытие модалки по клику на кнопку "Забронировать"
+      document.querySelectorAll(".card button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tableNum = btn.getAttribute("data-table");
+          selectedTableSpan.textContent = `№${tableNum}`;
+          messageDiv.textContent = "";
+          bookingForm.reset();
+          bookingFormContainer.style.display = "flex";
+        });
+      });
+
+      // Закрытие модального окна
+      closeBtn.addEventListener("click", () => {
+        bookingFormContainer.style.display = "none";
+      });
+
+      bookingForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const date = document.getElementById("date").value;
+        const time = document.getElementById("time").value;
+        const guests = document.getElementById("guests").value;
+        if (!date || !time || !guests) {
+          messageDiv.textContent = "Пожалуйста, заполните все поля.";
+          return;
         }
 
-        alert(`Столик ${selectedTable} забронирован на ${name} в ${time}`);
-        closeModal();
-    }
-</script>
+        // Здесь можешь добавить отправку данных на сервер через fetch/ajax
+        messageDiv.style.color = "#aaffff";
+        messageDiv.textContent = `Столик успешно забронирован на ${date} в ${time} для ${guests} гостя(ей).`;
 
-</body>
+        setTimeout(() => {
+          bookingFormContainer.style.display = "none";
+        }, 3000);
+      });
+    </script>
+  </body>
 </html>
