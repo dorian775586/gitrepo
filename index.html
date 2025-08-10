@@ -90,7 +90,6 @@
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(4px);
-        display: flex;
         justify-content: center;
         align-items: center;
         padding: 20px;
@@ -306,36 +305,47 @@
       // Открытие модалки по клику на кнопку "Забронировать"
       document.querySelectorAll(".card button").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const tableNum = btn.getAttribute("data-table");
-          selectedTableSpan.textContent = `№${tableNum}`;
+          const tableNumber = btn.getAttribute("data-table");
+          selectedTableSpan.textContent = `№${tableNumber}`;
+          bookingFormContainer.style.display = "flex";
           messageDiv.textContent = "";
           bookingForm.reset();
-          bookingFormContainer.style.display = "flex";
+          document.getElementById("guests").value = 1;
         });
       });
 
-      // Закрытие модального окна
+      // Закрытие модалки по крестику
       closeBtn.addEventListener("click", () => {
         bookingFormContainer.style.display = "none";
       });
 
+      // Закрытие по клику вне формы
+      bookingFormContainer.addEventListener("click", (e) => {
+        if (e.target === bookingFormContainer) {
+          bookingFormContainer.style.display = "none";
+        }
+      });
+
       bookingForm.addEventListener("submit", (e) => {
         e.preventDefault();
+        // Валидация и логика бронирования (пока просто вывод)
         const date = document.getElementById("date").value;
         const time = document.getElementById("time").value;
         const guests = document.getElementById("guests").value;
+        const table = selectedTableSpan.textContent;
+
         if (!date || !time || !guests) {
+          messageDiv.style.color = "red";
           messageDiv.textContent = "Пожалуйста, заполните все поля.";
           return;
         }
 
-        // Здесь можешь добавить отправку данных на сервер через fetch/ajax
+        // Пример сообщения об успешной броне
         messageDiv.style.color = "#aaffff";
-        messageDiv.textContent = `Столик успешно забронирован на ${date} в ${time} для ${guests} гостя(ей).`;
+        messageDiv.textContent = `Спасибо! Бронирование ${table} на ${date} в ${time} для ${guests} гостей принято.`;
 
-        setTimeout(() => {
-          bookingFormContainer.style.display = "none";
-        }, 3000);
+        // Здесь можно отправить данные на сервер или в Telegram
+        // и затем закрыть форму через несколько секунд, если нужно.
       });
     </script>
   </body>
