@@ -1,338 +1,129 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Столики</title>
-    <style>
-      :root {
-        color-scheme: dark;
-      }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<title>Столики</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; padding: 20px; font-family: "Segoe UI", sans-serif; background-color: var(--tg-theme-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #ffffff); }
+h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+.card { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; justify-content: space-between; }
+.card img { width: 100%; height: 100px; object-fit: cover; }
+.card-content { padding: 12px; flex-grow: 1; }
+.card h2 { font-size: 16px; margin: 0 0 6px 0; }
+.card p { font-size: 13px; color: var(--tg-theme-hint-color, #aaaaaa); margin: 0 0 12px 0; }
+.card button { margin: 0 12px 12px; height: 36px; background-color: #007bff; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.3s ease; }
+.card button:hover { background-color: #0056b3; }
+#booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
+#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 20px; max-width: 320px; width: 100%; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; transform: translateX(-40px); }
+#booking-form h2 { margin-top: 0; color: white; }
+#booking-form label { display: block; margin: 15px 0 5px; color: white; }
+#booking-form input, #booking-form select { width: 100%; padding: 8px; border-radius: 6px; border: none; background-color: transparent; color: #eee; font-size: 14px; box-shadow: inset 0 0 0 1px #555; }
+#booking-form input:focus, #booking-form select:focus { outline: none; box-shadow: inset 0 0 0 2px #28a745; }
+#booking-form button { margin-top: 20px; padding: 12px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s ease; }
+#booking-form button:hover:not(:disabled) { background: #1e7e34; }
+#booking-form button:disabled { background: #155d27; cursor: not-allowed; }
+#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; }
+#closeBookingForm { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #28a745; cursor: pointer; user-select: none; }
+</style>
+</head>
+<body>
+<h1>🍽️ Столики</h1>
+<div class="grid">
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 1" /><div class="card-content"><h2>Стол 1</h2><p>Столик с диваном у окна</p></div><button data-table="1">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 2" /><div class="card-content"><h2>Стол 2</h2><p>Уютный столик на двоих</p></div><button data-table="2">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 3" /><div class="card-content"><h2>Стол 3</h2><p>У окна, на 4 персоны</p></div><button data-table="3">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 4" /><div class="card-content"><h2>Стол 4</h2><p>Рядом с барной стойкой</p></div><button data-table="4">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 5" /><div class="card-content"><h2>Стол 5</h2><p>Столик с диваном</p></div><button data-table="5">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 6" /><div class="card-content"><h2>Стол 6</h2><p>Для компании из 6 человек</p></div><button data-table="6">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 7" /><div class="card-content"><h2>Стол 7</h2><p>У окна, рядом с растениями</p></div><button data-table="7">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 8" /><div class="card-content"><h2>Стол 8</h2><p>В глубине зала</p></div><button data-table="8">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 9" /><div class="card-content"><h2>Стол 9</h2><p>Окружён мягкими креслами</p></div><button data-table="9">Забронировать</button></div>
+</div>
 
-      body {
-        margin: 0;
-        padding: 20px;
-        font-family: "Segoe UI", sans-serif;
-        background-color: var(--tg-theme-bg-color, #1f1f1f);
-        color: var(--tg-theme-text-color, #ffffff);
-      }
+<div id="booking-form-container">
+  <form id="booking-form">
+    <div id="closeBookingForm">&times;</div>
+    <h2>Бронирование столика <span id="selected-table"></span></h2>
+    <label for="date">Дата</label>
+    <input type="date" id="date" required />
+    <label for="time">Время</label>
+    <select id="time" required></select>
+    <label for="guests">Количество гостей</label>
+    <input type="number" id="guests" min="1" max="20" value="1" required />
+    <button type="submit">Подтвердить бронь</button>
+    <div id="message"></div>
+  </form>
+</div>
 
-      h1 {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 20px;
-      }
+<script src="https://telegram.org/js/telegram-web-app.js?59"></script>
+<script>
+function generateTimeSlots() {
+    const slots = [];
+    let start = new Date(); start.setHours(12,0,0,0);
+    const end = new Date(); end.setHours(23,0,0,0);
+    while(start <= end){
+        slots.push(start.toTimeString().slice(0,5));
+        start = new Date(start.getTime()+30*60000);
+    }
+    return slots;
+}
+function fillTimeSelect() {
+    const select = document.getElementById("time");
+    generateTimeSlots().forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot;
+        option.textContent = slot;
+        select.appendChild(option);
+    });
+}
+fillTimeSelect();
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 16px;
-      }
+const bookingFormContainer = document.getElementById("booking-form-container");
+const bookingForm = document.getElementById("booking-form");
+const selectedTableSpan = document.getElementById("selected-table");
+const messageDiv = document.getElementById("message");
 
-      .card {
-        background-color: var(--tg-theme-secondary-bg-color, #252525);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+document.querySelectorAll(".card button").forEach(btn => {
+    btn.addEventListener("click", () => {
+        selectedTableSpan.textContent = "№" + btn.dataset.table;
+        bookingFormContainer.style.display = "flex";
+    });
+});
 
-      .card img {
-        width: 100%;
-        height: 100px;
-        object-fit: cover;
-      }
+document.getElementById("closeBookingForm").addEventListener("click", () => {
+    bookingFormContainer.style.display = "none";
+});
 
-      .card-content {
-        padding: 12px;
-        flex-grow: 1;
-      }
+bookingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const guests = document.getElementById("guests").value;
+    const table = selectedTableSpan.textContent.replace('№','');
 
-      .card h2 {
-        font-size: 16px;
-        margin: 0 0 6px 0;
-      }
+    try {
+        const res = await fetch("https://YOUR_DOMAIN/book", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ table, date, time, guests })
+        });
 
-      .card p {
-        font-size: 13px;
-        color: var(--tg-theme-hint-color, #aaaaaa);
-        margin: 0 0 12px 0;
-      }
-
-      .card button {
-        margin: 0 12px 12px;
-        height: 36px;
-        background-color: #007bff; 
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-      }
-
-      .card button:hover {
-        background-color: #0056b3;
-      }
-
-      #booking-form-container {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-      }
-
-      #booking-form {
-        background-color: var(--tg-theme-secondary-bg-color, #252525);
-        border-radius: 16px;
-        padding: 20px;
-        max-width: 320px;
-        width: 100%;
-        box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
-        position: relative;
-        transform: translateX(-40px);
-      }
-
-      #booking-form h2 {
-        margin-top: 0;
-        color: white;
-      }
-
-      #booking-form label {
-        display: block;
-        margin: 15px 0 5px;
-        color: white;
-      }
-
-      #booking-form input,
-      #booking-form select {
-        width: 100%;
-        padding: 8px;
-        border-radius: 6px;
-        border: none;
-        background-color: transparent;
-        color: #eee;
-        font-size: 14px;
-        box-shadow: inset 0 0 0 1px #555;
-      }
-
-      #booking-form input:focus,
-      #booking-form select:focus {
-        outline: none;
-        box-shadow: inset 0 0 0 2px #28a745;
-      }
-
-      #booking-form button {
-        margin-top: 20px;
-        padding: 12px;
-        background: #28a745;
-        color: white;
-        font-weight: bold;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 16px;
-        width: 100%;
-        transition: background 0.3s ease;
-      }
-
-      #booking-form button:hover:not(:disabled) {
-        background: #1e7e34;
-      }
-
-      #booking-form button:disabled {
-        background: #155d27;
-        cursor: not-allowed;
-      }
-
-      #message {
-        margin-top: 15px;
-        font-size: 1.1em;
-        color: #aaffff;
-      }
-
-      #closeBookingForm {
-        position: absolute;
-        top: 12px;
-        right: 16px;
-        font-size: 24px;
-        color: #28a745;
-        cursor: pointer;
-        user-select: none;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>🍽️ Столики</h1>
-    <div class="grid">
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 1" />
-        <div class="card-content">
-          <h2>Стол 1</h2>
-          <p>Столик с диваном у окна</p>
-        </div>
-        <button data-table="1">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 2" />
-        <div class="card-content">
-          <h2>Стол 2</h2>
-          <p>Уютный столик на двоих</p>
-        </div>
-        <button data-table="2">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 3" />
-        <div class="card-content">
-          <h2>Стол 3</h2>
-          <p>У окна, на 4 персоны</p>
-        </div>
-        <button data-table="3">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 4" />
-        <div class="card-content">
-          <h2>Стол 4</h2>
-          <p>Рядом с барной стойкой</p>
-        </div>
-        <button data-table="4">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 5" />
-        <div class="card-content">
-          <h2>Стол 5</h2>
-          <p>Столик с диваном</p>
-        </div>
-        <button data-table="5">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 6" />
-        <div class="card-content">
-          <h2>Стол 6</h2>
-          <p>Для компании из 6 человек</p>
-        </div>
-        <button data-table="6">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 7" />
-        <div class="card-content">
-          <h2>Стол 7</h2>
-          <p>У окна, рядом с растениями</p>
-        </div>
-        <button data-table="7">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 8" />
-        <div class="card-content">
-          <h2>Стол 8</h2>
-          <p>В глубине зала</p>
-        </div>
-        <button data-table="8">Забронировать</button>
-      </div>
-      <div class="card">
-        <img src="/images/tabel1.jpg" alt="Стол 9" />
-        <div class="card-content">
-          <h2>Стол 9</h2>
-          <p>Окружён мягкими креслами</p>
-        </div>
-        <button data-table="9">Забронировать</button>
-      </div>
-    </div>
-
-    <div id="booking-form-container">
-      <form id="booking-form">
-        <div id="closeBookingForm">&times;</div>
-        <h2>Бронирование столика <span id="selected-table"></span></h2>
-
-        <label for="date">Дата</label>
-        <input type="date" id="date" required />
-
-        <label for="time">Время</label>
-        <select id="time" required></select>
-
-        <label for="guests">Количество гостей</label>
-        <input type="number" id="guests" min="1" max="20" value="1" required />
-
-        <button type="submit">Подтвердить бронь</button>
-        <div id="message"></div>
-      </form>
-    </div>
-
-    <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
-    <script>
-      function generateTimeSlots() {
-        const slots = [];
-        let start = new Date();
-        start.setHours(12, 0, 0, 0);
-        const end = new Date();
-        end.setHours(23, 0, 0, 0);
-
-        while (start <= end) {
-          slots.push(start.toTimeString().slice(0, 5));
-          start = new Date(start.getTime() + 30 * 60000);
+        if(res.ok){
+            messageDiv.textContent = `✅ Столик забронирован на ${date} в ${time} на ${guests} гостя(ей).`;
+            bookingForm.reset();
+            setTimeout(() => { bookingFormContainer.style.display = "none"; }, 2000);
+        } else {
+            messageDiv.textContent = "❌ Ошибка при бронировании. Попробуйте ещё раз.";
         }
-        return slots;
-      }
-
-      function fillTimeSelect() {
-        const select = document.getElementById("time");
-        const slots = generateTimeSlots();
-        slots.forEach((slot) => {
-          const option = document.createElement("option");
-          option.value = slot;
-          option.textContent = slot;
-          select.appendChild(option);
-        });
-      }
-
-      fillTimeSelect();
-
-      const bookingFormContainer = document.getElementById("booking-form-container");
-      const bookingForm = document.getElementById("booking-form");
-      const selectedTableSpan = document.getElementById("selected-table");
-      const messageDiv = document.getElementById("message");
-      const closeBtn = document.getElementById("closeBookingForm");
-
-      document.querySelectorAll(".card button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const tableNum = btn.getAttribute("data-table");
-          selectedTableSpan.textContent = tableNum;
-          bookingFormContainer.style.display = "flex";
-          bookingForm.style.transform = "translateX(0)";
-        });
-      });
-
-      closeBtn.addEventListener("click", () => {
-        bookingFormContainer.style.display = "none";
-      });
-
-      bookingForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const data = {
-          table: selectedTableSpan.textContent,
-          date: document.getElementById("date").value,
-          time: document.getElementById("time").value,
-          guests: document.getElementById("guests").value,
-        };
-        messageDiv.textContent = `Вы забронировали столик ${data.table} на ${data.date} в ${data.time} для ${data.guests} гостей.`;
-        bookingForm.reset();
-        setTimeout(() => {
-          bookingFormContainer.style.display = "none";
-          messageDiv.textContent = "";
-        }, 4000);
-      });
-    </script>
-  </body>
+    } catch (err) {
+        console.error(err);
+        messageDiv.textContent = "❌ Ошибка сети. Попробуйте ещё раз.";
+    }
+});
+</script>
+</body>
 </html>
