@@ -89,7 +89,7 @@ const messageDiv = document.getElementById("message");
 
 document.querySelectorAll(".card button").forEach(btn => {
     btn.addEventListener("click", () => {
-        selectedTableSpan.textContent = "№" + btn.dataset.table;
+        selectedTableSpan.textContent = btn.dataset.table;
         bookingFormContainer.style.display = "flex";
     });
 });
@@ -103,10 +103,10 @@ bookingForm.addEventListener("submit", async (e) => {
     const date = document.getElementById("date").value;
     const time = document.getElementById("time").value;
     const guests = document.getElementById("guests").value;
-    const table = selectedTableSpan.textContent.replace('№','');
+    const table = selectedTableSpan.textContent;
 
     try {
-        const res = await fetch("https://YOUR_DOMAIN/book", {
+        const res = await fetch("https://readytoearn-4.onrender.com/book", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ table, date, time, guests })
