@@ -65,7 +65,7 @@
       .card button {
         margin: 0 12px 12px;
         height: 36px;
-        background-color: #007bff; /* синий цвет кнопок */
+        background-color: #007bff; 
         color: white;
         border: none;
         border-radius: 10px;
@@ -79,9 +79,8 @@
         background-color: #0056b3;
       }
 
-      /* Модальное окно бронирования */
       #booking-form-container {
-        display: none; /* Скрываем по умолчанию */
+        display: none;
         position: fixed;
         z-index: 1000;
         left: 0;
@@ -90,7 +89,6 @@
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(4px);
-
         justify-content: center;
         align-items: center;
         padding: 20px;
@@ -100,17 +98,16 @@
         background-color: var(--tg-theme-secondary-bg-color, #252525);
         border-radius: 16px;
         padding: 20px;
-        max-width: 320px; /* уменьшена ширина */
+        max-width: 320px;
         width: 100%;
         box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
         position: relative;
-
-        /* сдвиг влево */
         transform: translateX(-40px);
       }
+
       #booking-form h2 {
         margin-top: 0;
-        color: white; /* Белый цвет заголовка */
+        color: white;
       }
 
       #booking-form label {
@@ -119,7 +116,6 @@
         color: white;
       }
 
-      /* Убираем синие фоны у input и select, делаем прозрачный фон */
       #booking-form input,
       #booking-form select {
         width: 100%;
@@ -129,20 +125,19 @@
         background-color: transparent;
         color: #eee;
         font-size: 14px;
-        box-shadow: inset 0 0 0 1px #555; /* лёгкая рамка */
+        box-shadow: inset 0 0 0 1px #555;
       }
 
       #booking-form input:focus,
       #booking-form select:focus {
         outline: none;
-        box-shadow: inset 0 0 0 2px #28a745; /* зелёная подсветка при фокусе */
+        box-shadow: inset 0 0 0 2px #28a745;
       }
 
-      /* Зелёная кнопка подтверждения */
       #booking-form button {
         margin-top: 20px;
         padding: 12px;
-        background: #28a745; /* зелёный цвет кнопки */
+        background: #28a745;
         color: white;
         font-weight: bold;
         border: none;
@@ -165,16 +160,15 @@
       #message {
         margin-top: 15px;
         font-size: 1.1em;
-        color: #aaffff; /* голубоватый для успешных сообщений */
+        color: #aaffff;
       }
 
-      /* Кнопка закрытия */
       #closeBookingForm {
         position: absolute;
         top: 12px;
         right: 16px;
         font-size: 24px;
-        color: #28a745; /* зелёный крестик */
+        color: #28a745;
         cursor: pointer;
         user-select: none;
       }
@@ -183,7 +177,6 @@
   <body>
     <h1>🍽️ Столики</h1>
     <div class="grid">
-      <!-- Карточки столов -->
       <div class="card">
         <img src="/images/tabel1.jpg" alt="Стол 1" />
         <div class="card-content">
@@ -258,7 +251,6 @@
       </div>
     </div>
 
-    <!-- Модальное окно формы бронирования -->
     <div id="booking-form-container">
       <form id="booking-form">
         <div id="closeBookingForm">&times;</div>
@@ -280,7 +272,6 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
     <script>
-      // Заполним время слотами с 12:00 до 23:00 с шагом 30 минут
       function generateTimeSlots() {
         const slots = [];
         let start = new Date();
@@ -314,35 +305,33 @@
       const messageDiv = document.getElementById("message");
       const closeBtn = document.getElementById("closeBookingForm");
 
-      // Открытие модалки по клику на кнопку "Забронировать"
       document.querySelectorAll(".card button").forEach((btn) => {
         btn.addEventListener("click", () => {
           const tableNum = btn.getAttribute("data-table");
-          selectedTableSpan.textContent = `№${tableNum}`;
-          messageDiv.textContent = "";
-          bookingForm.reset();
+          selectedTableSpan.textContent = tableNum;
           bookingFormContainer.style.display = "flex";
+          bookingForm.style.transform = "translateX(0)";
         });
       });
 
-      // Закрытие модального окна
       closeBtn.addEventListener("click", () => {
         bookingFormContainer.style.display = "none";
       });
 
       bookingForm.addEventListener("submit", (e) => {
         e.preventDefault();
-        const date = document.getElementById("date").value;
-        const time = document.getElementById("time").value;
-        const guests = document.getElementById("guests").value;
-
-        // Можно добавить здесь отправку данных на сервер или Telegram API
-        messageDiv.textContent = `Столик забронирован на ${date} в ${time} на ${guests} гостя(ей).`;
+        const data = {
+          table: selectedTableSpan.textContent,
+          date: document.getElementById("date").value,
+          time: document.getElementById("time").value,
+          guests: document.getElementById("guests").value,
+        };
+        messageDiv.textContent = `Вы забронировали столик ${data.table} на ${data.date} в ${data.time} для ${data.guests} гостей.`;
         bookingForm.reset();
-
         setTimeout(() => {
           bookingFormContainer.style.display = "none";
-        }, 2000);
+          messageDiv.textContent = "";
+        }, 4000);
       });
     </script>
   </body>
