@@ -54,6 +54,8 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
     <select id="time" required></select>
     <label for="guests">Количество гостей</label>
     <input type="number" id="guests" min="1" max="20" value="1" required />
+    <label for="phone">Телефон</label>
+    <input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required />
     <button type="submit">Подтвердить бронь</button>
     <div id="message"></div>
   </form>
@@ -82,46 +84,68 @@ function fillTimeSelect() {
 }
 fillTimeSelect();
 
-const bookingFormContainer = document.getElementById("booking-form-container");
+const bookingContainer = document.getElementById("booking-form-container");
 const bookingForm = document.getElementById("booking-form");
 const selectedTableSpan = document.getElementById("selected-table");
-const messageDiv = document.getElementById("message");
+let selectedTable = null;
 
-document.querySelectorAll(".card button").forEach(btn => {
-    btn.addEventListener("click", () => {
-        selectedTableSpan.textContent = btn.dataset.table;
-        bookingFormContainer.style.display = "flex";
+document.querySelectorAll('.card button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        selectedTable = btn.dataset.table;
+        selectedTableSpan.textContent = selectedTable;
+        bookingContainer.style.display = "flex";
+        document.getElementById("date").valueAsDate = new Date();
+        document.getElementById("message").textContent = "";
     });
 });
 
-document.getElementById("closeBookingForm").addEventListener("click", () => {
-    bookingFormContainer.style.display = "none";
+document.getElementById("closeBookingForm").addEventListener('click', () => {
+    bookingContainer.style.display = "none";
 });
 
-bookingForm.addEventListener("submit", async (e) => {
+bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const date = document.getElementById("date").value;
-    const time = document.getElementById("time").value;
-    const guests = document.getElementById("guests").value;
-    const table = selectedTableSpan.textContent;
+    const dateInput = document.getElementById("date");
+    const timeInput = document.getElementById("time");
+    const guestsInput = document.getElementById("guests");
+    const phoneInput = document.getElementById("phone");
+    const messageDiv = document.getElementById("message");
 
-    try {
+    // Проверка даты
+    const today = new Date();
+    const selectedDate = new Date(dateInput.value);
+    selectedDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    if(selectedDate < today){
+        messageDiv.textContent = "❌ Нельзя выбрать прошлую дату";
+        return;
+    }
+
+    const data = {
+        table: selectedTable,
+        date: dateInput.value,
+        time: timeInput.value,
+        guests: guestsInput.value,
+        phone: phoneInput.value
+    };
+
+    try{
         const res = await fetch("https://readytoearn-4.onrender.com/book", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ table, date, time, guests })
+            body: JSON.stringify(data)
         });
-
+        const result = await res.json();
         if(res.ok){
-            messageDiv.textContent = `✅ Столик забронирован на ${date} в ${time} на ${guests} гостя(ей).`;
+            messageDiv.textContent = "✅ Столик забронирован";
             bookingForm.reset();
-            setTimeout(() => { bookingFormContainer.style.display = "none"; }, 2000);
+            setTimeout(()=>{bookingContainer.style.display="none"},2000);
         } else {
-            messageDiv.textContent = "❌ Ошибка при бронировании. Попробуйте ещё раз.";
+            messageDiv.textContent = `❌ Ошибка: ${result.error||'Не удалось забронировать'}`;
         }
-    } catch (err) {
+    } catch(err){
         console.error(err);
-        messageDiv.textContent = "❌ Ошибка сети. Попробуйте ещё раз.";
+        messageDiv.textContent = "❌ Ошибка сети. Попробуйте позже.";
     }
 });
 </script>
