@@ -143,7 +143,8 @@ bookingForm.addEventListener('submit', async (e) => {
         guests: guestsInput.value,
         phone: phoneInput.value
     };
-
+    
+    console.log(data);
     try{
         const res = await fetch("https://readytoearn-4.onrender.com/book", {
             method: "POST",
