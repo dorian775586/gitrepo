@@ -7,7 +7,7 @@
 <title>Столики</title>
 <style>
 :root { color-scheme: dark; }
-body { margin: 0; padding: 20px; font-family: "Segoe UI", sans-serif; background-color: var(--tg-theme-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #ffffff); }
+body { margin: 0; padding: 20px; font-family: "Segoe UI", sans-serif; background-color: var(--tg-theme-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #ffffff); box-sizing: border-box; }
 h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }
 .grid { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .card { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; width: 100%; max-width: 400px; }
@@ -18,10 +18,10 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
 .card button { margin: 0 16px 16px; height: 44px; background-color: #007bff; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
 .card button:hover { background-color: #0056b3; }
 #booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
-#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 20px; max-width: 360px; width: 100%; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; }
+#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; box-sizing: border-box; }
 #booking-form h2 { margin-top: 0; color: white; text-align: center; }
 #booking-form label { display: block; margin: 15px 0 5px; color: white; }
-#booking-form input, #booking-form select { width: 100%; padding: 10px; border-radius: 8px; border: none; background-color: transparent; color: #eee; font-size: 16px; box-shadow: inset 0 0 0 1px #555; }
+#booking-form input, #booking-form select { width: 100%; padding: 10px; border-radius: 8px; border: none; background-color: transparent; color: #eee; font-size: 16px; box-shadow: inset 0 0 0 1px #555; box-sizing: border-box; }
 #booking-form input:focus, #booking-form select:focus { outline: none; box-shadow: inset 0 0 0 2px #28a745; }
 #booking-form button { margin-top: 20px; padding: 14px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s ease; }
 #booking-form button:hover:not(:disabled) { background: #1e7e34; }
