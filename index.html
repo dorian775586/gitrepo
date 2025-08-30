@@ -8,25 +8,25 @@
 <style>
 :root { color-scheme: dark; }
 body { margin: 0; padding: 20px; font-family: "Segoe UI", sans-serif; background-color: var(--tg-theme-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #ffffff); }
-h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
-.card { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; justify-content: space-between; }
-.card img { width: 100%; height: 100px; object-fit: cover; }
-.card-content { padding: 12px; flex-grow: 1; }
-.card h2 { font-size: 16px; margin: 0 0 6px 0; }
-.card p { font-size: 13px; color: var(--tg-theme-hint-color, #aaaaaa); margin: 0 0 12px 0; }
-.card button { margin: 0 12px 12px; height: 36px; background-color: #007bff; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.3s ease; }
+h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }
+.grid { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.card { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; width: 100%; max-width: 400px; }
+.card img { width: 100%; height: 150px; object-fit: cover; }
+.card-content { padding: 16px; flex-grow: 1; }
+.card h2 { font-size: 18px; margin: 0 0 8px 0; }
+.card p { font-size: 14px; color: var(--tg-theme-hint-color, #aaaaaa); margin: 0 0 16px 0; }
+.card button { margin: 0 16px 16px; height: 44px; background-color: #007bff; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
 .card button:hover { background-color: #0056b3; }
 #booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
-#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 20px; max-width: 320px; width: 100%; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; transform: translateX(-40px); }
-#booking-form h2 { margin-top: 0; color: white; }
+#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 20px; max-width: 360px; width: 100%; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; }
+#booking-form h2 { margin-top: 0; color: white; text-align: center; }
 #booking-form label { display: block; margin: 15px 0 5px; color: white; }
-#booking-form input, #booking-form select { width: 100%; padding: 8px; border-radius: 6px; border: none; background-color: transparent; color: #eee; font-size: 14px; box-shadow: inset 0 0 0 1px #555; }
+#booking-form input, #booking-form select { width: 100%; padding: 10px; border-radius: 8px; border: none; background-color: transparent; color: #eee; font-size: 16px; box-shadow: inset 0 0 0 1px #555; }
 #booking-form input:focus, #booking-form select:focus { outline: none; box-shadow: inset 0 0 0 2px #28a745; }
-#booking-form button { margin-top: 20px; padding: 12px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s ease; }
+#booking-form button { margin-top: 20px; padding: 14px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s ease; }
 #booking-form button:hover:not(:disabled) { background: #1e7e34; }
 #booking-form button:disabled { background: #155d27; cursor: not-allowed; }
-#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; }
+#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; text-align: center; }
 #closeBookingForm { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #28a745; cursor: pointer; user-select: none; }
 </style>
 </head>
@@ -105,66 +105,66 @@ document.getElementById("closeBookingForm").addEventListener('click', () => {
 
 // ОБНОВЛЁННЫЙ БЛОК:
 bookingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const dateInput = document.getElementById("date");
-    const timeInput = document.getElementById("time");
-    const guestsInput = document.getElementById("guests");
-    const phoneInput = document.getElementById("phone");
-    const messageDiv = document.getElementById("message");
+    e.preventDefault();
+    const dateInput = document.getElementById("date");
+    const timeInput = document.getElementById("time");
+    const guestsInput = document.getElementById("guests");
+    const phoneInput = document.getElementById("phone");
+    const messageDiv = document.getElementById("message");
 
-    // Проверка даты
-    const today = new Date();
-    const selectedDate = new Date(dateInput.value);
-    selectedDate.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-    if(selectedDate < today){
-        messageDiv.textContent = "❌ Нельзя выбрать прошлую дату";
-        return;
-    }
+    // Проверка даты
+    const today = new Date();
+    const selectedDate = new Date(dateInput.value);
+    selectedDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    if(selectedDate < today){
+        messageDiv.textContent = "❌ Нельзя выбрать прошлую дату";
+        return;
+    }
 
-    // 🆕 Получаем данные о пользователе из Telegram WebApp
-    let userId = null;
-    let userName = "Неизвестный";
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-        const user = window.Telegram.WebApp.initDataUnsafe.user;
-        if (user) {
-            userId = user.id;
-            userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-        }
-    }
-    
-    // 🆕 Объект с данными для отправки, теперь включает информацию о пользователе
-    const data = {
-        user_id: userId,
-        user_name: userName,
-        table: selectedTable,
-        date: dateInput.value,
-        time: timeInput.value,
-        guests: guestsInput.value,
-        phone: phoneInput.value
-    };
-    
-    console.log(data);
-    try{
-        const res = await fetch("https://readytoearn-4.onrender.com/book", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if(res.ok){
-            messageDiv.textContent = "✅ Столик забронирован";
-            bookingForm.reset();
-            // Закрываем форму через 2 секунды
-            setTimeout(()=>{bookingContainer.style.display="none";},2000);
-        } else {
-            // Улучшенный вывод ошибки с сервера
-            messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
-        }
-    } catch(err){
-        console.error('Fetch error:', err);
-        messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
-    }
+    // 🆕 Получаем данные о пользователе из Telegram WebApp
+    let userId = null;
+    let userName = "Неизвестный";
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+        const user = window.Telegram.WebApp.initDataUnsafe.user;
+        if (user) {
+            userId = user.id;
+            userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+        }
+    }
+    
+    // 🆕 Объект с данными для отправки, теперь включает информацию о пользователе
+    const data = {
+        user_id: userId,
+        user_name: userName,
+        table: selectedTable,
+        date: dateInput.value,
+        time: timeInput.value,
+        guests: guestsInput.value,
+        phone: phoneInput.value
+    };
+    
+    console.log(data);
+    try{
+        const res = await fetch("https://readytoearn-4.onrender.com/book", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if(res.ok){
+            messageDiv.textContent = "✅ Столик забронирован";
+            bookingForm.reset();
+            // Закрываем форму через 2 секунды
+            setTimeout(()=>{bookingContainer.style.display="none";},2000);
+        } else {
+            // Улучшенный вывод ошибки с сервера
+            messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
+        }
+    } catch(err){
+        console.error('Fetch error:', err);
+        messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
+    }
 });
 </script>
 </body>
