@@ -63,109 +63,144 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
 
 <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
 <script>
-function generateTimeSlots() {
-    const slots = [];
-    let start = new Date(); start.setHours(12,0,0,0);
-    const end = new Date(); end.setHours(23,0,0,0);
-    while(start <= end){
-        slots.push(start.toTimeString().slice(0,5));
-        start = new Date(start.getTime()+30*60000);
-    }
-    return slots;
-}
-function fillTimeSelect() {
-    const select = document.getElementById("time");
-    generateTimeSlots().forEach(slot => {
-        const option = document.createElement("option");
-        option.value = slot;
-        option.textContent = slot;
-        select.appendChild(option);
-    });
-}
-fillTimeSelect();
+    // URL вашего деплоя на Render
+    const RENDER_URL = "https://readytoearn-4.onrender.com";
 
-const bookingContainer = document.getElementById("booking-form-container");
-const bookingForm = document.getElementById("booking-form");
-const selectedTableSpan = document.getElementById("selected-table");
-let selectedTable = null;
+    // Функция, которая генерирует все возможные временные слоты
+    function generateAllTimeSlots() {
+        const slots = [];
+        let start = new Date(); start.setHours(12, 0, 0, 0);
+        const end = new Date(); end.setHours(23, 0, 0, 0);
+        while (start <= end) {
+            slots.push(start.toTimeString().slice(0, 5));
+            start = new Date(start.getTime() + 30 * 60000);
+        }
+        return slots;
+    }
 
-document.querySelectorAll('.card button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        selectedTable = btn.dataset.table;
-        selectedTableSpan.textContent = selectedTable;
-        bookingContainer.style.display = "flex";
-        document.getElementById("date").valueAsDate = new Date();
-        document.getElementById("message").textContent = "";
-    });
-});
+    // 🆕 Асинхронная функция для заполнения выпадающего списка времени
+    async function fillTimeSelect(selectedTable, selectedDate) {
+        const select = document.getElementById("time");
+        select.innerHTML = ''; // Очищаем список перед заполнением
+        
+        // Получаем все возможные слоты
+        const allSlots = generateAllTimeSlots();
 
-document.getElementById("closeBookingForm").addEventListener('click', () => {
-    bookingContainer.style.display = "none";
-});
+        // Получаем занятые слоты с сервера
+        let bookedTimes = [];
+        try {
+            const url = `${RENDER_URL}/get_booked_times?table=${selectedTable}&date=${selectedDate}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.status === 'ok') {
+                bookedTimes = data.booked_times;
+            }
+        } catch (error) {
+            console.error('Ошибка при получении занятых времен:', error);
+        }
 
-// ОБНОВЛЁННЫЙ БЛОК:
-bookingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const dateInput = document.getElementById("date");
-    const timeInput = document.getElementById("time");
-    const guestsInput = document.getElementById("guests");
-    const phoneInput = document.getElementById("phone");
-    const messageDiv = document.getElementById("message");
+        // Заполняем выпадающий список только доступными слотами
+        allSlots.forEach(slot => {
+            // Если слот не находится в списке занятых
+            if (!bookedTimes.includes(slot)) {
+                const option = document.createElement("option");
+                option.value = slot;
+                option.textContent = slot;
+                select.appendChild(option);
+            }
+        });
+    }
 
-    // Проверка даты
-    const today = new Date();
-    const selectedDate = new Date(dateInput.value);
-    selectedDate.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-    if(selectedDate < today){
-        messageDiv.textContent = "❌ Нельзя выбрать прошлую дату";
-        return;
-    }
+    const bookingContainer = document.getElementById("booking-form-container");
+    const bookingForm = document.getElementById("booking-form");
+    const selectedTableSpan = document.getElementById("selected-table");
+    const dateInput = document.getElementById("date");
+    let selectedTable = null;
 
-    // 🆕 Получаем данные о пользователе из Telegram WebApp
-    let userId = null;
-    let userName = "Неизвестный";
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-        const user = window.Telegram.WebApp.initDataUnsafe.user;
-        if (user) {
-            userId = user.id;
-            userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-        }
-    }
-    
-    // 🆕 Объект с данными для отправки, теперь включает информацию о пользователе
-    const data = {
-        user_id: userId,
-        user_name: userName,
-        table: selectedTable,
-        date: dateInput.value,
-        time: timeInput.value,
-        guests: guestsInput.value,
-        phone: phoneInput.value
-    };
-    
-    console.log(data);
-    try{
-        const res = await fetch("https://readytoearn-4.onrender.com/book", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if(res.ok){
-            messageDiv.textContent = "✅ Столик забронирован";
-            bookingForm.reset();
-            // Закрываем форму через 2 секунды
-            setTimeout(()=>{bookingContainer.style.display="none";},2000);
-        } else {
-            // Улучшенный вывод ошибки с сервера
-            messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
-        }
-    } catch(err){
-        console.error('Fetch error:', err);
-        messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
-    }
-});
+    // 🆕 Обновляем выпадающий список при выборе стола
+    document.querySelectorAll('.card button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedTable = btn.dataset.table;
+            selectedTableSpan.textContent = selectedTable;
+            bookingContainer.style.display = "flex";
+            const today = new Date().toISOString().slice(0, 10);
+            dateInput.value = today;
+            document.getElementById("message").textContent = "";
+            
+            // Вызываем функцию заполнения для выбранного стола и текущей даты
+            fillTimeSelect(selectedTable, today);
+        });
+    });
+
+    // 🆕 Обновляем выпадающий список при изменении даты
+    dateInput.addEventListener('change', (e) => {
+        const selectedDate = e.target.value;
+        if (selectedTable) {
+            fillTimeSelect(selectedTable, selectedDate);
+        }
+    });
+
+    document.getElementById("closeBookingForm").addEventListener('click', () => {
+        bookingContainer.style.display = "none";
+    });
+
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const timeInput = document.getElementById("time");
+        const guestsInput = document.getElementById("guests");
+        const phoneInput = document.getElementById("phone");
+        const messageDiv = document.getElementById("message");
+
+        // Проверка даты
+        const today = new Date();
+        const selectedDate = new Date(dateInput.value);
+        selectedDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+            messageDiv.textContent = "❌ Нельзя выбрать прошлую дату";
+            return;
+        }
+
+        let userId = null;
+        let userName = "Неизвестный";
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            if (user) {
+                userId = user.id;
+                userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+            }
+        }
+        
+        const data = {
+            user_id: userId,
+            user_name: userName,
+            table: selectedTable,
+            date: dateInput.value,
+            time: timeInput.value,
+            guests: guestsInput.value,
+            phone: phoneInput.value
+        };
+        
+        console.log(data);
+        try {
+            const res = await fetch(`${RENDER_URL}/book`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                messageDiv.textContent = "✅ Столик забронирован";
+                bookingForm.reset();
+                setTimeout(() => { bookingContainer.style.display = "none"; }, 2000);
+            } else {
+                messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
+            }
+        } catch (err) {
+            console.error('Fetch error:', err);
+            messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
+        }
+    });
 </script>
 </body>
 </html>
