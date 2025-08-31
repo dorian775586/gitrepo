@@ -25,6 +25,17 @@
             width: 100%;
             max-width: 450px;
             box-sizing: border-box;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         h1 {
@@ -70,7 +81,7 @@
             gap: 15px;
             margin-top: 25px;
         }
-        
+
         button {
             width: 100%;
             padding: 15px;
@@ -111,7 +122,7 @@
             color: #5cb85c;
             background-color: #dff0d8;
         }
-        
+
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -149,7 +160,7 @@
                 <label for="date">Дата</label>
                 <input type="date" id="date" name="date" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="time">Время</label>
                 <select id="time" name="time" required></select>
@@ -182,6 +193,7 @@
         const dateInput = document.getElementById('date');
         const timeSelect = document.getElementById('time');
         const loadingOverlay = document.getElementById('loadingOverlay');
+
         let user_id = null;
         let user_name = null;
         let table_id = null;
@@ -206,37 +218,37 @@
             if (table_id) {
                 tableNumberSpan.textContent = table_id;
             } else {
-                tableNumberSpan.textContent = '1'; // Default table if not specified
+                tableNumberSpan.textContent = '1';
                 table_id = '1';
             }
 
             if (!botApiUrl) {
                 botApiUrl = 'https://readytoearn-4.onrender.com';
             }
-            
+
             const today = new Date().toISOString().split('T')[0];
             dateInput.setAttribute('min', today);
             dateInput.value = today;
             updateAvailableTimes();
         };
-        
+
         async function updateAvailableTimes() {
             const date = dateInput.value;
-            
+
             if (!table_id || !date) return;
-            
+
             showLoading();
-            
+
             try {
                 const response = await fetch(`${botApiUrl}/get_booked_times?table=${table_id}&date=${date}`);
                 const data = await response.json();
-                
+
                 timeSelect.innerHTML = '';
-                
+
                 if (data.status === 'ok') {
                     const bookedTimes = data.booked_times;
                     const allTimes = generateTimeSlots();
-                    
+
                     allTimes.forEach(time => {
                         const option = document.createElement('option');
                         option.value = time;
@@ -275,7 +287,7 @@
         bookingForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             showLoading();
-            
+
             const formData = new FormData(bookingForm);
             const data = Object.fromEntries(formData.entries());
             data.user_id = user_id;
@@ -290,9 +302,9 @@
                     },
                     body: JSON.stringify(data)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.status === 'ok') {
                     showMessage('Бронь успешно создана!', 'success');
                     telegram.sendData(JSON.stringify(data));
