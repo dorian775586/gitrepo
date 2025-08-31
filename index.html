@@ -67,7 +67,6 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
     let user_name = null;
     let botApiUrl = '';
 
-    // Функция для получения параметров из URL
     function getQueryParams() {
         const params = {};
         new URLSearchParams(window.location.search).forEach((value, key) => {
@@ -76,20 +75,17 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         return params;
     }
 
-    // При загрузке страницы получаем данные
     window.onload = function() {
         const params = getQueryParams();
         user_id = params.user_id;
         user_name = params.user_name;
         botApiUrl = params.bot_url;
 
-        // Если бот URL не передан, используем старый хардкод
         if (!botApiUrl) {
             botApiUrl = "https://readytoearn-4.onrender.com";
         }
     };
 
-    // Функция, которая генерирует все возможные временные слоты
     function generateAllTimeSlots() {
         const slots = [];
         let start = new Date(); start.setHours(12, 0, 0, 0);
@@ -101,10 +97,9 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         return slots;
     }
 
-    // Асинхронная функция для заполнения выпадающего списка времени
     async function fillTimeSelect(selectedTable, selectedDate) {
         const select = document.getElementById("time");
-        select.innerHTML = ''; // Очищаем список перед заполнением
+        select.innerHTML = '';
         
         const allSlots = generateAllTimeSlots();
 
@@ -124,13 +119,11 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         const todayDateStr = now.toISOString().slice(0, 10);
 
         allSlots.forEach(slot => {
-            // Проверяем, что слот не забронирован
             if (!bookedTimes.includes(slot)) {
-                // Проверяем, что время не в прошлом (если это сегодня)
                 if (selectedDate === todayDateStr) {
                     const slotTime = new Date(`${selectedDate}T${slot}:00`);
                     if (slotTime < now) {
-                        return; // Пропускаем прошедшие слоты
+                        return;
                     }
                 }
 
@@ -180,10 +173,8 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         const phoneInput = document.getElementById("phone");
         const messageDiv = document.getElementById("message");
         
-        // Скрываем сообщение, пока идёт бронирование
         messageDiv.textContent = "";
         messageDiv.style.display = "none";
-
 
         const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
         const now = new Date();
@@ -193,7 +184,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
             messageDiv.style.display = "block";
             return;
         }
-
+        
         const data = {
             user_id: user_id,
             user_name: user_name,
@@ -214,10 +205,8 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
             const result = await res.json();
             if (res.ok) {
                 messageDiv.textContent = "✅ Столик забронирован";
-                // Отправляем данные обратно в бота
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 
-                // Таймер для скрытия формы
                 setTimeout(() => {
                     bookingContainer.style.display = "none";
                 }, 2000);
