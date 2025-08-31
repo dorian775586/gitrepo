@@ -61,7 +61,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
   </form>
 </div>
 
-<script src="https://telegram.org/js/telegram-web-app.js?60"></script>
+<script src="https://telegram.org/js/telegram-web-app.js?62"></script>
 <script>
     // URL вашего деплоя на Render
     const RENDER_URL = "https://readytoearn-4.onrender.com";
@@ -78,7 +78,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         return slots;
     }
 
-    // 🆕 Асинхронная функция для заполнения выпадающего списка времени
+    // Асинхронная функция для заполнения выпадающего списка времени
     async function fillTimeSelect(selectedTable, selectedDate) {
         const select = document.getElementById("time");
         select.innerHTML = ''; // Очищаем список перед заполнением
@@ -103,7 +103,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         allSlots.forEach(slot => {
             // Проверяем, что слот не забронирован
             if (!bookedTimes.includes(slot)) {
-                // ✅ Проверяем, что время не в прошлом (если это сегодня)
+                // Проверяем, что время не в прошлом (если это сегодня)
                 if (selectedDate === todayDateStr) {
                     const slotTime = new Date(`${selectedDate}T${slot}:00`);
                     if (slotTime < now) {
@@ -164,6 +164,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
             return;
         }
 
+        // ✅ ИСПРАВЛЕННЫЙ КОД
         let userId = null;
         let userName = "Неизвестный";
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
@@ -183,7 +184,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
             guests: guestsInput.value,
             phone: phoneInput.value
         };
-        
+
         console.log(data);
         try {
             const res = await fetch(`${RENDER_URL}/book`, {
