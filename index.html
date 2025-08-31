@@ -83,10 +83,8 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         const select = document.getElementById("time");
         select.innerHTML = ''; // Очищаем список перед заполнением
         
-        // Получаем все возможные слоты
         const allSlots = generateAllTimeSlots();
 
-        // Получаем занятые слоты с сервера
         let bookedTimes = [];
         try {
             const url = `${RENDER_URL}/get_booked_times?table=${selectedTable}&date=${selectedDate}`;
@@ -99,10 +97,20 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
             console.error('Ошибка при получении занятых времен:', error);
         }
 
-        // Заполняем выпадающий список только доступными слотами
+        const now = new Date();
+        const todayDateStr = now.toISOString().slice(0, 10);
+
         allSlots.forEach(slot => {
-            // Если слот не находится в списке занятых
+            // Проверяем, что слот не забронирован
             if (!bookedTimes.includes(slot)) {
+                // ✅ НОВОЕ: Проверяем, что время не в прошлом (если это сегодня)
+                if (selectedDate === todayDateStr) {
+                    const slotTime = new Date(`${selectedDate}T${slot}:00`);
+                    if (slotTime < now) {
+                        return; // Пропускаем прошедшие слоты
+                    }
+                }
+
                 const option = document.createElement("option");
                 option.value = slot;
                 option.textContent = slot;
@@ -117,7 +125,6 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
     const dateInput = document.getElementById("date");
     let selectedTable = null;
 
-    // 🆕 Обновляем выпадающий список при выборе стола
     document.querySelectorAll('.card button').forEach(btn => {
         btn.addEventListener('click', () => {
             selectedTable = btn.dataset.table;
@@ -127,12 +134,10 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
             dateInput.value = today;
             document.getElementById("message").textContent = "";
             
-            // Вызываем функцию заполнения для выбранного стола и текущей даты
             fillTimeSelect(selectedTable, today);
         });
     });
 
-    // 🆕 Обновляем выпадающий список при изменении даты
     dateInput.addEventListener('change', (e) => {
         const selectedDate = e.target.value;
         if (selectedTable) {
@@ -151,13 +156,12 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         const phoneInput = document.getElementById("phone");
         const messageDiv = document.getElementById("message");
 
-        // Проверка даты
-        const today = new Date();
-        const selectedDate = new Date(dateInput.value);
-        selectedDate.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-        if (selectedDate < today) {
-            messageDiv.textContent = "❌ Нельзя выбрать прошлую дату";
+        const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
+        const now = new Date();
+        
+        // ✅ НОВОЕ: Полная проверка даты и времени на стороне клиента
+        if (selectedDateTime < now) {
+            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
             return;
         }
 
