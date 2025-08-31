@@ -103,7 +103,7 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         allSlots.forEach(slot => {
             // Проверяем, что слот не забронирован
             if (!bookedTimes.includes(slot)) {
-                // ✅ НОВОЕ: Проверяем, что время не в прошлом (если это сегодня)
+                // ✅ Проверяем, что время не в прошлом (если это сегодня)
                 if (selectedDate === todayDateStr) {
                     const slotTime = new Date(`${selectedDate}T${slot}:00`);
                     if (slotTime < now) {
@@ -159,7 +159,6 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
         const now = new Date();
         
-        // ✅ НОВОЕ: Полная проверка даты и времени на стороне клиента
         if (selectedDateTime < now) {
             messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
             return;
