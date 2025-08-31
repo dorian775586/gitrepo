@@ -1,337 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>White Fox</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #333;
-            color: #fff;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background-color: #444;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-            width: 100%;
-            max-width: 450px;
-            box-sizing: border-box;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 0.5s forwards;
-            position: relative;
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        h1 {
-            color: #ff6f61;
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 26px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #ddd;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        select,
-        input[type="date"],
-        input[type="time"] {
-            width: 100%;
-            padding: 12px;
-            background-color: #555;
-            color: #fff;
-            border: 1px solid #666;
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        input[type="date"] {
-            -webkit-appearance: none;
-            color-scheme: dark;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background-color: #ff6f61;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        button:hover {
-            background-color: #e55c50;
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        #message {
-            margin-top: 25px;
-            text-align: center;
-            font-weight: bold;
-            display: none;
-            padding: 15px;
-            border-radius: 10px;
-        }
-
-        .error {
-            color: #d9534f;
-            background-color: #f2dede;
-        }
-
-        .success {
-            color: #5cb85c;
-            background-color: #dff0d8;
-        }
-
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(68, 68, 68, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            border-radius: 15px;
-        }
-
-        .loader {
-            border: 5px solid #555;
-            border-top: 5px solid #ff6f61;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<title>Столики</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; padding: 20px; font-family: "Segoe UI", sans-serif; background-color: var(--tg-theme-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #ffffff); box-sizing: border-box; }
+h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }
+.grid { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.card { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; width: 100%; max-width: 400px; }
+.card img { width: 100%; height: 150px; object-fit: cover; }
+.card-content { padding: 16px; flex-grow: 1; }
+.card h2 { font-size: 18px; margin: 0 0 8px 0; }
+.card p { font-size: 14px; color: var(--tg-theme-hint-color, #aaaaaa); margin: 0 0 16px 0; }
+.card button { margin: 0 16px 16px; height: 44px; background-color: #007bff; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
+.card button:hover { background-color: #0056b3; }
+#booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
+#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 15px; width: 90%; max-width: 350px; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; box-sizing: border-box; }
+#booking-form h2 { margin-top: 0; color: white; text-align: center; }
+#booking-form label { display: block; margin: 6px 0 3px; color: white; }
+#booking-form input, #booking-form select { width: 100%; padding: 6px; border-radius: 6px; border: none; background-color: transparent; color: #eee; font-size: 14px; box-shadow: none; box-sizing: border-box; border: 1px solid #555; }
+#booking-form input:focus, #booking-form select:focus { outline: none; border: 1px solid #28a745; box-shadow: none; }
+#booking-form button { margin-top: 15px; padding: 12px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; width: 100%; transition: background 0.3s ease; }
+#booking-form button:hover:not(:disabled) { background: #1e7e34; }
+#booking-form button:disabled { background: #155d27; cursor: not-allowed; }
+#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; text-align: center; }
+#closeBookingForm { position: absolute; top: 8px; right: 12px; font-size: 24px; color: #28a745; cursor: pointer; user-select: none; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Бронирование столика <span id="tableNumber"></span></h1>
-        <form id="bookingForm">
-            <div class="form-group">
-                <label for="date">Дата</label>
-                <input type="date" id="date" name="date" required>
-            </div>
+<h1>🍽️ Столики</h1>
+<div class="grid">
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 1" /><div class="card-content"><h2>Стол 1</h2><p>Столик с диваном у окна</p></div><button data-table="1">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 2" /><div class="card-content"><h2>Стол 2</h2><p>Уютный столик на двоих</p></div><button data-table="2">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 3" /><div class="card-content"><h2>Стол 3</h2><p>У окна, на 4 персоны</p></div><button data-table="3">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 4" /><div class="card-content"><h2>Стол 4</h2><p>Рядом с барной стойкой</p></div><button data-table="4">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 5" /><div class="card-content"><h2>Стол 5</h2><p>Столик с диваном</p></div><button data-table="5">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 6" /><div class="card-content"><h2>Стол 6</h2><p>Для компании из 6 человек</p></div><button data-table="6">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 7" /><div class="card-content"><h2>Стол 7</h2><p>У окна, рядом с растениями</p></div><button data-table="7">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 8" /><div class="card-content"><h2>Стол 8</h2><p>В глубине зала</p></div><button data-table="8">Забронировать</p></div><button data-table="8">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 9" /><div class="card-content"><h2>Стол 9</h2><p>Окружён мягкими креслами</p></div><button data-table="9">Забронировать</button></div>
+</div>
 
-            <div class="form-group">
-                <label for="time">Время</label>
-                <select id="time" name="time" required></select>
-            </div>
+<div id="booking-form-container">
+  <form id="booking-form">
+    <div id="closeBookingForm">&times;</div>
+    <h2>Бронирование столика <span id="selected-table"></span></h2>
+    <label for="date">Дата</label>
+    <input type="date" id="date" required />
+    <label for="time">Время</label>
+    <select id="time" required></select>
+    <label for="guests">Количество гостей</label>
+    <input type="number" id="guests" min="1" max="20" value="1" required />
+    <label for="phone">Телефон</label>
+    <input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required />
+    <button type="submit">Подтвердить бронь</button>
+    <div id="message"></div>
+  </form>
+</div>
 
-            <div class="form-group">
-                <label for="guests">Количество гостей</label>
-                <input type="number" id="guests" name="guests" min="1" required>
-            </div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+    let user_id = null;
+    let user_name = null;
+    let botApiUrl = '';
 
-            <div class="form-group">
-                <label for="phone">Номер телефона</label>
-                <input type="text" id="phone" name="phone" placeholder="+375XXXXXXXXX" required>
-            </div>
+    // Функция для получения параметров из URL
+    function getQueryParams() {
+        const params = {};
+        new URLSearchParams(window.location.search).forEach((value, key) => {
+            params[key] = value;
+        });
+        return params;
+    }
 
-            <div class="button-group">
-                <button type="submit">Подтвердить бронь</button>
-            </div>
-        </form>
-        <div id="message"></div>
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loader"></div>
-        </div>
-    </div>
+    // При загрузке страницы получаем данные
+    window.onload = function() {
+        const params = getQueryParams();
+        user_id = params.user_id;
+        user_name = params.user_name;
+        botApiUrl = params.bot_url;
 
-    <script>
-        const bookingForm = document.getElementById('bookingForm');
-        const messageDiv = document.getElementById('message');
-        const tableNumberSpan = document.getElementById('tableNumber');
-        const dateInput = document.getElementById('date');
-        const timeSelect = document.getElementById('time');
-        const loadingOverlay = document.getElementById('loadingOverlay');
+        // Если бот URL не передан, используем старый хардкод
+        if (!botApiUrl) {
+            botApiUrl = "https://readytoearn-4.onrender.com";
+        }
+    };
 
-        let user_id = null;
-        let user_name = null;
-        let table_id = null;
-        let botApiUrl = '';
-        let telegram = window.Telegram.WebApp;
+    // Функция, которая генерирует все возможные временные слоты
+    function generateAllTimeSlots() {
+        const slots = [];
+        let start = new Date(); start.setHours(12, 0, 0, 0);
+        const end = new Date(); end.setHours(23, 0, 0, 0);
+        while (start <= end) {
+            slots.push(start.toTimeString().slice(0, 5));
+            start = new Date(start.getTime() + 30 * 60000);
+        }
+        return slots;
+    }
 
-        function getQueryParams() {
-            const params = {};
-            new URLSearchParams(window.location.search).forEach((value, key) => {
-                params[key] = value;
-            });
-            return params;
+    // Асинхронная функция для заполнения выпадающего списка времени
+    async function fillTimeSelect(selectedTable, selectedDate) {
+        const select = document.getElementById("time");
+        select.innerHTML = ''; // Очищаем список перед заполнением
+        
+        const allSlots = generateAllTimeSlots();
+
+        let bookedTimes = [];
+        try {
+            const url = `${botApiUrl}/get_booked_times?table=${selectedTable}&date=${selectedDate}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.status === 'ok') {
+                bookedTimes = data.booked_times;
+            }
+        } catch (error) {
+            console.error('Ошибка при получении занятых времен:', error);
         }
 
-        window.onload = function() {
-            const params = getQueryParams();
-            user_id = params.user_id;
-            user_name = params.user_name;
-            table_id = params.table;
-            botApiUrl = params.bot_url;
+        const now = new Date();
+        const todayDateStr = now.toISOString().slice(0, 10);
 
-            if (table_id) {
-                tableNumberSpan.textContent = table_id;
-            } else {
-                tableNumberSpan.textContent = '1';
-                table_id = '1';
-            }
-
-            if (!botApiUrl) {
-                botApiUrl = 'https://readytoearn-4.onrender.com';
-            }
-
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.setAttribute('min', today);
-            dateInput.value = today;
-            updateAvailableTimes();
-        };
-
-        async function updateAvailableTimes() {
-            const date = dateInput.value;
-
-            if (!table_id || !date) return;
-
-            showLoading();
-
-            try {
-                const response = await fetch(`${botApiUrl}/get_booked_times?table=${table_id}&date=${date}`);
-                const data = await response.json();
-
-                timeSelect.innerHTML = '';
-
-                if (data.status === 'ok') {
-                    const bookedTimes = data.booked_times;
-                    const allTimes = generateTimeSlots();
-
-                    allTimes.forEach(time => {
-                        const option = document.createElement('option');
-                        option.value = time;
-                        option.textContent = time;
-                        if (bookedTimes.includes(time)) {
-                            option.disabled = true;
-                            option.textContent += ' (занято)';
-                        }
-                        timeSelect.appendChild(option);
-                    });
-                } else {
-                    showMessage(data.message, 'error');
+        allSlots.forEach(slot => {
+            // Проверяем, что слот не забронирован
+            if (!bookedTimes.includes(slot)) {
+                // Проверяем, что время не в прошлом (если это сегодня)
+                if (selectedDate === todayDateStr) {
+                    const slotTime = new Date(`${selectedDate}T${slot}:00`);
+                    if (slotTime < now) {
+                        return; // Пропускаем прошедшие слоты
+                    }
                 }
-            } catch (error) {
-                showMessage('Не удалось загрузить доступное время. Попробуйте еще раз.', 'error');
-                console.error('Error fetching booked times:', error);
-            } finally {
-                hideLoading();
-            }
-        }
 
-        function generateTimeSlots() {
-            const times = [];
-            for (let h = 10; h <= 23; h++) {
-                for (let m = 0; m < 60; m += 30) {
-                    const hour = String(h).padStart(2, '0');
-                    const minute = String(m).padStart(2, '0');
-                    times.push(`${hour}:${minute}`);
-                }
-            }
-            return times;
-        }
-
-        dateInput.addEventListener('change', updateAvailableTimes);
-
-        bookingForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            showLoading();
-
-            const formData = new FormData(bookingForm);
-            const data = Object.fromEntries(formData.entries());
-            data.user_id = user_id;
-            data.user_name = user_name;
-            data.table = table_id;
-
-            try {
-                const response = await fetch(`${botApiUrl}/book`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.status === 'ok') {
-                    showMessage('Бронь успешно создана!', 'success');
-                    telegram.sendData(JSON.stringify(data));
-                } else {
-                    showMessage(result.message, 'error');
-                }
-            } catch (error) {
-                showMessage('Ошибка при отправке брони. Попробуйте еще раз.', 'error');
-                console.error('Error submitting booking:', error);
-            } finally {
-                hideLoading();
+                const option = document.createElement("option");
+                option.value = slot;
+                option.textContent = slot;
+                select.appendChild(option);
             }
         });
+    }
 
-        function showMessage(msg, type) {
-            messageDiv.textContent = msg;
-            messageDiv.className = type;
-            messageDiv.style.display = 'block';
+    const bookingContainer = document.getElementById("booking-form-container");
+    const bookingForm = document.getElementById("booking-form");
+    const selectedTableSpan = document.getElementById("selected-table");
+    const dateInput = document.getElementById("date");
+    let selectedTable = null;
+
+    document.querySelectorAll('.card button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedTable = btn.dataset.table;
+            selectedTableSpan.textContent = selectedTable;
+            bookingContainer.style.display = "flex";
+            const today = new Date().toISOString().slice(0, 10);
+            dateInput.value = today;
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").style.display = "none";
+            
+            fillTimeSelect(selectedTable, today);
+        });
+    });
+
+    dateInput.addEventListener('change', (e) => {
+        const selectedDate = e.target.value;
+        if (selectedTable) {
+            fillTimeSelect(selectedTable, selectedDate);
+        }
+    });
+
+    document.getElementById("closeBookingForm").addEventListener('click', () => {
+        bookingContainer.style.display = "none";
+    });
+
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const timeInput = document.getElementById("time");
+        const guestsInput = document.getElementById("guests");
+        const phoneInput = document.getElementById("phone");
+        const messageDiv = document.getElementById("message");
+        
+        // Скрываем сообщение, пока идёт бронирование
+        messageDiv.textContent = "";
+        messageDiv.style.display = "none";
+
+
+        const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
+        const now = new Date();
+        
+        if (selectedDateTime < now) {
+            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
+            messageDiv.style.display = "block";
+            return;
         }
 
-        function showLoading() {
-            loadingOverlay.style.display = 'flex';
-        }
+        const data = {
+            user_id: user_id,
+            user_name: user_name,
+            table: selectedTable,
+            date: dateInput.value,
+            time: timeInput.value,
+            guests: guestsInput.value,
+            phone: phoneInput.value
+        };
 
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
+        console.log(data);
+        try {
+            const res = await fetch(`${botApiUrl}/book`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                messageDiv.textContent = "✅ Столик забронирован";
+                // Отправляем данные обратно в бота
+                window.Telegram.WebApp.sendData(JSON.stringify(data));
+                
+                // Таймер для скрытия формы
+                setTimeout(() => {
+                    bookingContainer.style.display = "none";
+                }, 2000);
+
+            } else {
+                messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
+            }
+            messageDiv.style.display = "block";
+        } catch (err) {
+            console.error('Fetch error:', err);
+            messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
+            messageDiv.style.display = "block";
         }
-    </script>
+    });
+</script>
 </body>
 </html>
