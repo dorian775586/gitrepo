@@ -17,8 +17,8 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
 .card p { font-size: 14px; color: var(--tg-theme-hint-color, #aaaaaa); margin: 0 0 16px 0; }
 .card button { margin: 0 16px 16px; height: 44px; background-color: #007bff; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
 .card button:hover { background-color: #0056b3; }
-#booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
-#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 15px; width: 90%; max-width: 350px; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; box-sizing: border-box; }
+#booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 15px; width: 90%; max-width: 350px; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; box-sizing: border-box; padding-bottom: 30px; }
 #booking-form h2 { margin-top: 0; color: white; text-align: center; }
 #booking-form label { display: block; margin: 6px 0 3px; color: white; }
 #booking-form input, #booking-form select { width: 100%; padding: 6px; border-radius: 6px; border: none; background-color: transparent; color: #eee; font-size: 14px; box-shadow: none; box-sizing: border-box; border: 1px solid #555; }
@@ -26,185 +26,195 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
 #booking-form button { margin-top: 15px; padding: 12px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; width: 100%; transition: background 0.3s ease; }
 #booking-form button:hover:not(:disabled) { background: #1e7e34; }
 #booking-form button:disabled { background: #155d27; cursor: not-allowed; }
-#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; text-align: center; }
+#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; text-align: center; display: none; }
 #closeBookingForm { position: absolute; top: 8px; right: 12px; font-size: 24px; color: #28a745; cursor: pointer; user-select: none; }
 </style>
 </head>
 <body>
 <h1>🍽️ Столики</h1>
 <div class="grid">
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 1" /><div class="card-content"><h2>Стол 1</h2><p>Столик с диваном у окна</p></div><button data-table="1">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 2" /><div class="card-content"><h2>Стол 2</h2><p>Уютный столик на двоих</p></div><button data-table="2">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 3" /><div class="card-content"><h2>Стол 3</h2><p>У окна, на 4 персоны</p></div><button data-table="3">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 4" /><div class="card-content"><h2>Стол 4</h2><p>Рядом с барной стойкой</p></div><button data-table="4">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 5" /><div class="card-content"><h2>Стол 5</h2><p>Столик с диваном</p></div><button data-table="5">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 6" /><div class="card-content"><h2>Стол 6</h2><p>Для компании из 6 человек</p></div><button data-table="6">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 7" /><div class="card-content"><h2>Стол 7</h2><p>У окна, рядом с растениями</p></div><button data-table="7">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 8" /><div class="card-content"><h2>Стол 8</h2><p>В глубине зала</p></div><button data-table="8">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 9" /><div class="card-content"><h2>Стол 9</h2><p>Окружён мягкими креслами</p></div><button data-table="9">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 1" /><div class="card-content"><h2>Стол 1</h2><p>Столик с диваном у окна</p></div><button data-table="1">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 2" /><div class="card-content"><h2>Стол 2</h2><p>Уютный столик на двоих</p></div><button data-table="2">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 3" /><div class="card-content"><h2>Стол 3</h2><p>У окна, на 4 персоны</p></div><button data-table="3">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 4" /><div class="card-content"><h2>Стол 4</h2><p>Рядом с барной стойкой</p></div><button data-table="4">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 5" /><div class="card-content"><h2>Стол 5</h2><p>Столик с диваном</p></div><button data-table="5">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 6" /><div class="card-content"><h2>Стол 6</h2><p>Для компании из 6 человек</p></div><button data-table="6">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 7" /><div class="card-content"><h2>Стол 7</h2><p>У окна, рядом с растениями</p></div><button data-table="7">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 8" /><div class="card-content"><h2>Стол 8</h2><p>В глубине зала</p></div><button data-table="8">Забронировать</button></div>
+  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 9" /><div class="card-content"><h2>Стол 9</h2><p>Окружён мягкими креслами</p></div><button data-table="9">Забронировать</button></div>
 </div>
 
 <div id="booking-form-container">
-  <form id="booking-form">
-    <div id="closeBookingForm">&times;</div>
-    <h2>Бронирование столика <span id="selected-table"></span></h2>
-    <label for="date">Дата</label>
-    <input type="date" id="date" required />
-    <label for="time">Время</label>
-    <select id="time" required></select>
-    <label for="guests">Количество гостей</label>
-    <input type="number" id="guests" min="1" max="20" value="1" required />
-    <label for="phone">Телефон</label>
-    <input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required />
-    <button type="submit">Подтвердить бронь</button>
-    <div id="message"></div>
-  </form>
+  <form id="booking-form">
+    <div id="closeBookingForm">&times;</div>
+    <h2>Бронирование столика <span id="selected-table"></span></h2>
+    <label for="date">Дата</label>
+    <input type="date" id="date" required />
+    <label for="time">Время</label>
+    <select id="time" required></select>
+    <label for="guests">Количество гостей</label>
+    <input type="number" id="guests" min="1" max="20" value="1" required />
+    <label for="phone">Телефон</label>
+    <input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required />
+    <button type="submit">Подтвердить бронь</button>
+    <div id="message"></div>
+  </form>
 </div>
 
 <script src="https://telegram.org/js/telegram-web-app.js?123456789"></script>
 <script>
-    // URL вашего деплоя на Render
-    const RENDER_URL = "https://readytoearn-4.onrender.com";
+    // URL вашего деплоя на Render
+    const RENDER_URL = "https://readytoearn-4.onrender.com";
 
-    // Функция, которая генерирует все возможные временные слоты
-    function generateAllTimeSlots() {
-        const slots = [];
-        let start = new Date(); start.setHours(12, 0, 0, 0);
-        const end = new Date(); end.setHours(23, 0, 0, 0);
-        while (start <= end) {
-            slots.push(start.toTimeString().slice(0, 5));
-            start = new Date(start.getTime() + 30 * 60000);
-        }
-        return slots;
-    }
+    // Функция, которая генерирует все возможные временные слоты
+    function generateAllTimeSlots() {
+        const slots = [];
+        let start = new Date(); start.setHours(12, 0, 0, 0);
+        const end = new Date(); end.setHours(23, 0, 0, 0);
+        while (start <= end) {
+            slots.push(start.toTimeString().slice(0, 5));
+            start = new Date(start.getTime() + 30 * 60000);
+        }
+        return slots;
+    }
 
-    // Асинхронная функция для заполнения выпадающего списка времени
-    async function fillTimeSelect(selectedTable, selectedDate) {
-        const select = document.getElementById("time");
-        select.innerHTML = ''; // Очищаем список перед заполнением
-        
-        const allSlots = generateAllTimeSlots();
+    // Асинхронная функция для заполнения выпадающего списка времени
+    async function fillTimeSelect(selectedTable, selectedDate) {
+        const select = document.getElementById("time");
+        select.innerHTML = ''; // Очищаем список перед заполнением
+        
+        const allSlots = generateAllTimeSlots();
 
-        let bookedTimes = [];
-        try {
-            const url = `${RENDER_URL}/get_booked_times?table=${selectedTable}&date=${selectedDate}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.status === 'ok') {
-                bookedTimes = data.booked_times;
-            }
-        } catch (error) {
-            console.error('Ошибка при получении занятых времен:', error);
-        }
+        let bookedTimes = [];
+        try {
+            const url = `${RENDER_URL}/get_booked_times?table=${selectedTable}&date=${selectedDate}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.status === 'ok') {
+                bookedTimes = data.booked_times;
+            }
+        } catch (error) {
+            console.error('Ошибка при получении занятых времен:', error);
+        }
 
-        const now = new Date();
-        const todayDateStr = now.toISOString().slice(0, 10);
+        const now = new Date();
+        const todayDateStr = now.toISOString().slice(0, 10);
 
-        allSlots.forEach(slot => {
-            // Проверяем, что слот не забронирован
-            if (!bookedTimes.includes(slot)) {
-                // Проверяем, что время не в прошлом (если это сегодня)
-                if (selectedDate === todayDateStr) {
-                    const slotTime = new Date(`${selectedDate}T${slot}:00`);
-                    if (slotTime < now) {
-                        return; // Пропускаем прошедшие слоты
-                    }
-                }
+        allSlots.forEach(slot => {
+            // Проверяем, что слот не забронирован
+            if (!bookedTimes.includes(slot)) {
+                // Проверяем, что время не в прошлом (если это сегодня)
+                if (selectedDate === todayDateStr) {
+                    const slotTime = new Date(`${selectedDate}T${slot}:00`);
+                    if (slotTime < now) {
+                        return; // Пропускаем прошедшие слоты
+                    }
+                }
 
-                const option = document.createElement("option");
-                option.value = slot;
-                option.textContent = slot;
-                select.appendChild(option);
-            }
-        });
-    }
+                const option = document.createElement("option");
+                option.value = slot;
+                option.textContent = slot;
+                select.appendChild(option);
+            }
+        });
+    }
 
-    const bookingContainer = document.getElementById("booking-form-container");
-    const bookingForm = document.getElementById("booking-form");
-    const selectedTableSpan = document.getElementById("selected-table");
-    const dateInput = document.getElementById("date");
-    let selectedTable = null;
+    const bookingContainer = document.getElementById("booking-form-container");
+    const bookingForm = document.getElementById("booking-form");
+    const selectedTableSpan = document.getElementById("selected-table");
+    const dateInput = document.getElementById("date");
+    let selectedTable = null;
 
-    document.querySelectorAll('.card button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            selectedTable = btn.dataset.table;
-            selectedTableSpan.textContent = selectedTable;
-            bookingContainer.style.display = "flex";
-            const today = new Date().toISOString().slice(0, 10);
-            dateInput.value = today;
-            document.getElementById("message").textContent = "";
-            
-            fillTimeSelect(selectedTable, today);
-        });
-    });
+    document.querySelectorAll('.card button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedTable = btn.dataset.table;
+            selectedTableSpan.textContent = selectedTable;
+            bookingContainer.style.display = "flex";
+            const today = new Date().toISOString().slice(0, 10);
+            dateInput.value = today;
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").style.display = "none";
+            
+            fillTimeSelect(selectedTable, today);
+        });
+    });
 
-    dateInput.addEventListener('change', (e) => {
-        const selectedDate = e.target.value;
-        if (selectedTable) {
-            fillTimeSelect(selectedTable, selectedDate);
-        }
-    });
+    dateInput.addEventListener('change', (e) => {
+        const selectedDate = e.target.value;
+        if (selectedTable) {
+            fillTimeSelect(selectedTable, selectedDate);
+        }
+    });
 
-    document.getElementById("closeBookingForm").addEventListener('click', () => {
-        bookingContainer.style.display = "none";
-    });
+    document.getElementById("closeBookingForm").addEventListener('click', () => {
+        bookingContainer.style.display = "none";
+    });
 
-    bookingForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const timeInput = document.getElementById("time");
-        const guestsInput = document.getElementById("guests");
-        const phoneInput = document.getElementById("phone");
-        const messageDiv = document.getElementById("message");
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const timeInput = document.getElementById("time");
+        const guestsInput = document.getElementById("guests");
+        const phoneInput = document.getElementById("phone");
+        const messageDiv = document.getElementById("message");
+        
+        // Скрываем сообщение, пока идёт бронирование
+        messageDiv.textContent = "";
+        messageDiv.style.display = "none";
 
-        const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
-        const now = new Date();
-        
-        if (selectedDateTime < now) {
-            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
-            return;
-        }
 
-        // ✅ ИСПРАВЛЕННЫЙ КОД
-        let userId = null;
-        let userName = "Неизвестный";
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-            const user = window.Telegram.WebApp.initDataUnsafe.user;
-            if (user) {
-                userId = user.id;
-                userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-            }
-        }
-        
-        const data = {
-            user_id: userId,
-            user_name: userName,
-            table: selectedTable,
-            date: dateInput.value,
-            time: timeInput.value,
-            guests: guestsInput.value,
-            phone: phoneInput.value
-        };
+        const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
+        const now = new Date();
+        
+        if (selectedDateTime < now) {
+            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
+            messageDiv.style.display = "block";
+            return;
+        }
 
-        console.log(data);
-        try {
-            const res = await fetch(`${RENDER_URL}/book`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            if (res.ok) {
-                messageDiv.textContent = "✅ Столик забронирован";
-                bookingForm.reset();
-                setTimeout(() => { bookingContainer.style.display = "none"; }, 2000);
-            } else {
-                messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
-            }
-        } catch (err) {
-            console.error('Fetch error:', err);
-            messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
-        }
-    });
+        let userId = null;
+        let userName = "Неизвестный";
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            if (user) {
+                userId = user.id;
+                userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+            }
+        }
+        
+        const data = {
+            user_id: userId,
+            user_name: userName,
+            table: selectedTable,
+            date: dateInput.value,
+            time: timeInput.value,
+            guests: guestsInput.value,
+            phone: phoneInput.value
+        };
+
+        console.log(data);
+        try {
+            const res = await fetch(`${RENDER_URL}/book`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                messageDiv.textContent = "✅ Столик забронирован";
+            } else {
+                messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
+            }
+            messageDiv.style.display = "block";
+            setTimeout(() => { 
+                bookingContainer.style.display = "none";
+                messageDiv.style.display = "none";
+            }, 2000);
+        } catch (err) {
+            console.error('Fetch error:', err);
+            messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
+            messageDiv.style.display = "block";
+        }
+    });
 </script>
 </body>
 </html>
