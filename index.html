@@ -2,57 +2,47 @@
 <html>
 <head>
     <title>White Fox</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f7f7f7;
-            color: #333;
+            background-color: #333;
+            color: #fff;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: center;
             min-height: 100vh;
         }
 
         .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: #444;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 600px;
+            max-width: 450px;
             box-sizing: border-box;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 0.5s forwards;
-            position: relative;
-        }
-        
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         h1 {
             color: #ff6f61;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 25px;
+            font-size: 26px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #555;
+            color: #ddd;
         }
 
         input[type="text"],
@@ -61,31 +51,35 @@
         input[type="date"],
         input[type="time"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            padding: 12px;
+            background-color: #555;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 10px;
             box-sizing: border-box;
             font-size: 16px;
         }
 
         input[type="date"] {
             -webkit-appearance: none;
+            color-scheme: dark;
         }
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            margin-top: 25px;
         }
         
         button {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             background-color: #ff6f61;
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             transition: background-color 0.3s, transform 0.2s;
         }
@@ -100,12 +94,12 @@
         }
 
         #message {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
             font-weight: bold;
             display: none;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 10px;
         }
 
         .error {
@@ -124,20 +118,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(68, 68, 68, 0.8);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 10;
-            border-radius: 12px;
+            border-radius: 15px;
         }
 
         .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #ff6f61;
+            border: 5px solid #555;
+            border-top: 5px solid #ff6f61;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
         }
 
@@ -149,13 +143,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Бронирование столика</h1>
+        <h1>Бронирование столика <span id="tableNumber"></span></h1>
         <form id="bookingForm">
-            <div class="form-group">
-                <label for="table">Столик</label>
-                <select id="table" name="table" required></select>
-            </div>
-            
             <div class="form-group">
                 <label for="date">Дата</label>
                 <input type="date" id="date" name="date" required>
@@ -177,7 +166,7 @@
             </div>
 
             <div class="button-group">
-                <button type="submit">Забронировать</button>
+                <button type="submit">Подтвердить бронь</button>
             </div>
         </form>
         <div id="message"></div>
@@ -189,15 +178,16 @@
     <script>
         const bookingForm = document.getElementById('bookingForm');
         const messageDiv = document.getElementById('message');
-        const tableSelect = document.getElementById('table');
+        const tableNumberSpan = document.getElementById('tableNumber');
         const dateInput = document.getElementById('date');
         const timeSelect = document.getElementById('time');
         const loadingOverlay = document.getElementById('loadingOverlay');
         let user_id = null;
         let user_name = null;
+        let table_id = null;
         let botApiUrl = '';
+        let telegram = window.Telegram.WebApp;
 
-        // Функция для парсинга URL
         function getQueryParams() {
             const params = {};
             new URLSearchParams(window.location.search).forEach((value, key) => {
@@ -206,49 +196,39 @@
             return params;
         }
 
-        // Загрузка данных при старте
         window.onload = function() {
             const params = getQueryParams();
             user_id = params.user_id;
             user_name = params.user_name;
-            
-            // Получаем URL API бота из параметра url
+            table_id = params.table;
             botApiUrl = params.bot_url;
 
-            // Если не передан URL, используем старый хардкод (на всякий случай)
+            if (table_id) {
+                tableNumberSpan.textContent = table_id;
+            } else {
+                tableNumberSpan.textContent = '1'; // Default table if not specified
+                table_id = '1';
+            }
+
             if (!botApiUrl) {
                 botApiUrl = 'https://readytoearn-4.onrender.com';
             }
-            
-            populateTables();
             
             const today = new Date().toISOString().split('T')[0];
             dateInput.setAttribute('min', today);
             dateInput.value = today;
             updateAvailableTimes();
         };
-
-        // Заполнение списка столиков
-        function populateTables() {
-            for (let i = 1; i <= 10; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `Столик ${i}`;
-                tableSelect.appendChild(option);
-            }
-        }
-
-        // Обновление доступного времени в зависимости от даты и столика
+        
         async function updateAvailableTimes() {
-            const tableId = tableSelect.value;
             const date = dateInput.value;
             
-            if (!tableId || !date) return;
+            if (!table_id || !date) return;
             
             showLoading();
             
             try {
-                const response = await fetch(`${botApiUrl}/get_booked_times?table=${tableId}&date=${date}`);
+                const response = await fetch(`${botApiUrl}/get_booked_times?table=${table_id}&date=${date}`);
                 const data = await response.json();
                 
                 timeSelect.innerHTML = '';
@@ -290,10 +270,8 @@
             return times;
         }
 
-        tableSelect.addEventListener('change', updateAvailableTimes);
         dateInput.addEventListener('change', updateAvailableTimes);
 
-        // Отправка данных на сервер
         bookingForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             showLoading();
@@ -302,6 +280,7 @@
             const data = Object.fromEntries(formData.entries());
             data.user_id = user_id;
             data.user_name = user_name;
+            data.table = table_id;
 
             try {
                 const response = await fetch(`${botApiUrl}/book`, {
@@ -316,7 +295,7 @@
                 
                 if (result.status === 'ok') {
                     showMessage('Бронь успешно создана!', 'success');
-                    // Telegram.WebApp.sendData(JSON.stringify(data));
+                    telegram.sendData(JSON.stringify(data));
                 } else {
                     showMessage(result.message, 'error');
                 }
@@ -330,8 +309,7 @@
 
         function showMessage(msg, type) {
             messageDiv.textContent = msg;
-            messageDiv.className = '';
-            messageDiv.classList.add(type);
+            messageDiv.className = type;
             messageDiv.style.display = 'block';
         }
 
