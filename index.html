@@ -1,64 +1,214 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta http-equiv="X-UA-Compatible" content="ie=edge" />
-<title>Столики</title>
-<style>
-:root { color-scheme: dark; }
-body { margin: 0; padding: 20px; font-family: "Segoe UI", sans-serif; background-color: var(--tg-theme-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #ffffff); box-sizing: border-box; }
-h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }
-.grid { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.card { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; width: 100%; max-width: 400px; }
-.card img { width: 100%; height: 150px; object-fit: cover; }
-.card-content { padding: 16px; flex-grow: 1; }
-.card h2 { font-size: 18px; margin: 0 0 8px 0; }
-.card p { font-size: 14px; color: var(--tg-theme-hint-color, #aaaaaa); margin: 0 0 16px 0; }
-.card button { margin: 0 16px 16px; height: 44px; background-color: #007bff; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
-.card button:hover { background-color: #0056b3; }
-#booking-form-container { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
-#booking-form { background-color: var(--tg-theme-secondary-bg-color, #252525); border-radius: 16px; padding: 15px; width: 90%; max-width: 350px; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); position: relative; box-sizing: border-box; }
-#booking-form h2 { margin-top: 0; color: white; text-align: center; }
-#booking-form label { display: block; margin: 6px 0 3px; color: white; }
-#booking-form input, #booking-form select { width: 100%; padding: 6px; border-radius: 6px; border: none; background-color: transparent; color: #eee; font-size: 14px; box-shadow: none; box-sizing: border-box; border: 1px solid #555; }
-#booking-form input:focus, #booking-form select:focus { outline: none; border: 1px solid #28a745; box-shadow: none; }
-#booking-form button { margin-top: 15px; padding: 12px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; width: 100%; transition: background 0.3s ease; }
-#booking-form button:hover:not(:disabled) { background: #1e7e34; }
-#booking-form button:disabled { background: #155d27; cursor: not-allowed; }
-#message { margin-top: 15px; font-size: 1.1em; color: #aaffff; text-align: center; }
-#closeBookingForm { position: absolute; top: 8px; right: 12px; font-size: 24px; color: #28a745; cursor: pointer; user-select: none; }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Столики</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: "Segoe UI", sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 16px;
+            flex-grow: 1;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin: 0 0 8px 0;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            margin: 0 0 16px 0;
+        }
+
+        .card button {
+            margin: 0 16px 16px;
+            height: 44px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .card button:hover {
+            opacity: 0.8;
+        }
+        
+        #booking-form-container {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--tg-theme-bg-color);
+            opacity: 0.95;
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #booking-form {
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 16px;
+            padding: 15px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        #booking-form h2 {
+            margin-top: 0;
+            color: var(--tg-theme-text-color);
+            text-align: center;
+        }
+        
+        #booking-form label {
+            display: block;
+            margin: 6px 0 3px;
+            color: var(--tg-theme-text-color);
+        }
+        
+        #booking-form input,
+        #booking-form select {
+            width: 100%;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid var(--tg-theme-hint-color);
+            background-color: transparent;
+            color: var(--tg-theme-text-color);
+            font-size: 14px;
+            box-shadow: none;
+            box-sizing: border-box;
+        }
+        
+        #booking-form input:focus,
+        #booking-form select:focus {
+            outline: none;
+            border: 1px solid var(--tg-theme-link-color);
+            box-shadow: none;
+        }
+        
+        #booking-form button[type="submit"] {
+            margin-top: 15px;
+            padding: 12px;
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            transition: background 0.3s ease;
+        }
+        
+        #booking-form button:disabled {
+            background-color: var(--tg-theme-hint-color);
+            cursor: not-allowed;
+        }
+        
+        #message {
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: var(--tg-theme-link-color);
+            text-align: center;
+        }
+        
+        #closeBookingForm {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 24px;
+            color: var(--tg-theme-link-color);
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
 </head>
 <body>
 <h1>🍽️ Столики</h1>
 <div class="grid">
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 1" /><div class="card-content"><h2>Стол 1</h2><p>Столик с диваном у окна</p></div><button data-table="1">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 2" /><div class="card-content"><h2>Стол 2</h2><p>Уютный столик на двоих</p></div><button data-table="2">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 3" /><div class="card-content"><h2>Стол 3</h2><p>У окна, на 4 персоны</p></div><button data-table="3">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 4" /><div class="card-content"><h2>Стол 4</h2><p>Рядом с барной стойкой</p></div><button data-table="4">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 5" /><div class="card-content"><h2>Стол 5</h2><p>Столик с диваном</p></div><button data-table="5">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 6" /><div class="card-content"><h2>Стол 6</h2><p>Для компании из 6 человек</p></div><button data-table="6">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 7" /><div class="card-content"><h2>Стол 7</h2><p>У окна, рядом с растениями</p></div><button data-table="7">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 8" /><div class="card-content"><h2>Стол 8</h2><p>В глубине зала</p></div><button data-table="8">Забронировать</p></div><button data-table="8">Забронировать</button></div>
-  <div class="card"><img src="/images/tabel1.jpg" alt="Стол 9" /><div class="card-content"><h2>Стол 9</h2><p>Окружён мягкими креслами</p></div><button data-table="9">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 1" /><div class="card-content"><h2>Стол 1</h2><p>Столик с диваном у окна</p></div><button data-table="1">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 2" /><div class="card-content"><h2>Стол 2</h2><p>Уютный столик на двоих</p></div><button data-table="2">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 3" /><div class="card-content"><h2>Стол 3</h2><p>У окна, на 4 персоны</p></div><button data-table="3">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 4" /><div class="card-content"><h2>Стол 4</h2><p>Рядом с барной стойкой</p></div><button data-table="4">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 5" /><div class="card-content"><h2>Стол 5</h2><p>Столик с диваном</p></div><button data-table="5">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 6" /><div class="card-content"><h2>Стол 6</h2><p>Для компании из 6 человек</p></div><button data-table="6">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 7" /><div class="card-content"><h2>Стол 7</h2><p>У окна, рядом с растениями</p></div><button data-table="7">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 8" /><div class="card-content"><h2>Стол 8</h2><p>В глубине зала</p></div><button data-table="8">Забронировать</button></div>
+    <div class="card"><img src="/images/tabel1.jpg" alt="Стол 9" /><div class="card-content"><h2>Стол 9</h2><p>Окружён мягкими креслами</p></div><button data-table="9">Забронировать</button></div>
 </div>
 
 <div id="booking-form-container">
-  <form id="booking-form">
-    <div id="closeBookingForm">&times;</div>
-    <h2>Бронирование столика <span id="selected-table"></span></h2>
-    <label for="date">Дата</label>
-    <input type="date" id="date" required />
-    <label for="time">Время</label>
-    <select id="time" required></select>
-    <label for="guests">Количество гостей</label>
-    <input type="number" id="guests" min="1" max="20" value="1" required />
-    <label for="phone">Телефон</label>
-    <input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required />
-    <button type="submit">Подтвердить бронь</button>
-    <div id="message"></div>
-  </form>
+    <form id="booking-form">
+        <div id="closeBookingForm">&times;</div>
+        <h2>Бронирование столика <span id="selected-table"></span></h2>
+        <label for="date">Дата</label>
+        <input type="date" id="date" required />
+        <label for="time">Время</label>
+        <select id="time" required></select>
+        <label for="guests">Количество гостей</label>
+        <input type="number" id="guests" min="1" max="20" value="1" required />
+        <label for="phone">Телефон</label>
+        <input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required />
+        <button type="submit">Подтвердить бронь</button>
+        <div id="message"></div>
+    </form>
 </div>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -75,6 +225,20 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         return params;
     }
 
+    // Функция для адаптации цветов
+    function adaptToTheme() {
+        const themeParams = window.Telegram.WebApp.themeParams;
+        if (themeParams) {
+            document.documentElement.style.setProperty('--tg-theme-bg-color', themeParams.bg_color || '#1f1f1f');
+            document.documentElement.style.setProperty('--tg-theme-text-color', themeParams.text_color || '#ffffff');
+            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', themeParams.secondary_bg_color || '#252525');
+            document.documentElement.style.setProperty('--tg-theme-hint-color', themeParams.hint_color || '#aaaaaa');
+            document.documentElement.style.setProperty('--tg-theme-link-color', themeParams.link_color || '#007bff');
+            document.documentElement.style.setProperty('--tg-theme-button-color', themeParams.button_color || '#007bff');
+            document.documentElement.style.setProperty('--tg-theme-button-text-color', themeParams.button_text_color || '#ffffff');
+        }
+    }
+    
     window.onload = function() {
         const params = getQueryParams();
         user_id = params.user_id;
@@ -84,7 +248,18 @@ h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center
         if (!botApiUrl) {
             botApiUrl = "https://readytoearn-4.onrender.com";
         }
+        
+        // Адаптация темы при загрузке
+        if (window.Telegram && window.Telegram.WebApp) {
+            adaptToTheme();
+        }
     };
+
+    // Слушатель для изменения темы
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.onEvent('themeChanged', adaptToTheme);
+        window.Telegram.WebApp.ready();
+    }
 
     function generateAllTimeSlots() {
         const slots = [];

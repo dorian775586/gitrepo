@@ -15,6 +15,27 @@ if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     }
 }
 
+// ✅ НОВОЕ: Функция для адаптации цветов к теме Telegram
+function adaptToTheme() {
+    const themeParams = window.Telegram.WebApp.themeParams;
+    if (themeParams) {
+        document.documentElement.style.setProperty('--tg-theme-bg-color', themeParams.bg_color || '#1f1f1f');
+        document.documentElement.style.setProperty('--tg-theme-text-color', themeParams.text_color || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', themeParams.secondary_bg_color || '#252525');
+        document.documentElement.style.setProperty('--tg-theme-hint-color', themeParams.hint_color || '#aaaaaa');
+        document.documentElement.style.setProperty('--tg-theme-link-color', themeParams.link_color || '#007bff');
+        document.documentElement.style.setProperty('--tg-theme-button-color', themeParams.button_color || '#007bff');
+        document.documentElement.style.setProperty('--tg-theme-button-text-color', themeParams.button_text_color || '#ffffff');
+    }
+}
+
+// ✅ НОВОЕ: Вызываем функцию при загрузке и при изменении темы
+if (window.Telegram && Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    adaptToTheme();
+    Telegram.WebApp.onEvent('themeChanged', adaptToTheme);
+}
+
 // Функция для отправки брони на сервер
 function sendBooking(table_id, time_slot, guests, phone) {
     // ✅ ИЗМЕНЕНО: теперь отправляем user_id и user_name
