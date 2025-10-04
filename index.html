@@ -5,20 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Бронирование столика</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         /* ========================================================== */
         /* Финальная стилизация "The Golden Spoon" */
         /* ========================================================== */
         :root {
             /* Оливково-золотая гамма */
-            --primary-color: #8C7851; /* Теплый оливково-золотой (для кнопок) */
-            --secondary-color: #E2D2B0; /* Светлый золотистый (для акцентов) */
-            --bg-dark: #2A3131; /* Очень темный фон */
-            --bg-medium: #3E4646; /* Фон для карточки карты */
+            --primary-color: #8C7851; 
+            --secondary-color: #E2D2B0; 
+            --bg-dark: #2A3131; 
+            --bg-medium: #3E4646; 
             --text-main: #FFFFFF;
-            --table-free: #5D6D7E; /* Серый/Светло-синий для свободных столов */
-            --table-selected: #8C7851; /* Выбранный стол - золотистый */
-            --table-booked: #B54646; /* Занятый стол - бордовый */
+            --table-free: #5D6D7E; 
+            --table-selected: #8C7851; 
+            --table-booked: #B54646; 
 
             /* Telegram Theme Adaptation */
             color-scheme: dark; 
@@ -78,6 +79,7 @@
             text-align: center;
         }
         
+        /* Стили Font Awesome иконок */
         .selection-icon {
             font-size: 20px;
             color: var(--secondary-color);
@@ -98,6 +100,74 @@
             margin-top: 2px;
         }
 
+        /* ----- Форма бронирования (Модальное окно/Оверлей) ----- */
+        #booking-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.75);
+            /* ИСПРАВЛЕНИЕ: Установка высокого Z-index для появления поверх всех элементов */
+            z-index: 999; 
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #booking-form {
+            background-color: var(--bg-medium);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            color: var(--text-main);
+            position: relative;
+        }
+
+        #closeBookingForm {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            color: var(--secondary-color);
+            cursor: pointer;
+        }
+        
+        #booking-form label {
+            display: block;
+            margin: 8px 0 4px;
+            color: var(--secondary-color);
+            font-size: 12px;
+        }
+
+        #booking-form input,
+        #booking-form select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: var(--text-main);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        #booking-form button[type="submit"] {
+            margin-top: 20px;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: var(--text-main);
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
         /* ----- Карта столов (главный блок) ----- */
         .table-map-container {
             flex-grow: 1;
@@ -107,14 +177,13 @@
             padding: 20px 10px 40px;
         }
 
-        /* НОВЫЙ КОНТЕЙНЕР ДЛЯ КАРТЫ И КАРТОЧКИ ДЕТАЛЕЙ */
         .map-wrapper {
             width: 100%;
-            max-width: 750px; /* Увеличиваем, чтобы вместить карту и карточку рядом */
+            max-width: 750px; 
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 20px; /* Расстояние между картой и карточкой */
+            gap: 20px; 
         }
 
         .table-map {
@@ -137,7 +206,7 @@
 
         /* КАРТОЧКА ДЕТАЛЕЙ СТОЛА */
         #table-details-card {
-            display: none; /* Скрыто по умолчанию */
+            display: none; 
             width: 100%;
             max-width: 350px;
             background-color: var(--bg-medium);
@@ -256,7 +325,7 @@
             box-shadow: 0 0 10px var(--secondary-color);
         }
 
-        /* Позиционирование столов (последняя версия) */
+        /* Позиционирование столов */
         #table-1 { top: 55px; left: 50px; width: 45px; height: 45px; } 
         #table-2 { top: 55px; left: 255px; width: 45px; height: 45px; } 
         #table-3 { top: 120px; left: 10px; width: 80px; height: 50px; } 
@@ -266,34 +335,7 @@
         #table-7 { top: 300px; left: 50px; width: 80px; height: 50px; } 
         #table-8 { top: 300px; left: 220px; width: 80px; height: 50px; } 
 
-        /* ----- Кнопка подтверждения - Без изменений ----- */
-        #confirm-btn {
-            width: 80%;
-            margin: 20px auto 10px;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: var(--text-main);
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-        }
-
-        #confirm-btn:disabled {
-            background-color: #666;
-            cursor: not-allowed;
-        }
-
-        .confirmation-text {
-            text-align: center;
-            font-size: 12px;
-            color: var(--secondary-color);
-        }
-
-        /* --- Стили для адаптивности (чтобы карточка не ломалась на мобильных) --- */
+        /* --- Стили для адаптивности --- */
         @media (max-width: 768px) {
             .map-wrapper {
                 flex-direction: column;
@@ -314,17 +356,17 @@
 
 <div class="selection-panel">
     <div class="selection-item" id="date-select-trigger">
-        <span class="selection-icon">&#x1F4C5;</span> 
+        <span class="selection-icon"><i class="fa fa-calendar"></i></span> 
         <span class="selection-label">Дата</span>
         <span class="selection-value" id="current-date-value">Сегодня, 4 окт 2025</span>
     </div>
     <div class="selection-item" id="time-select-trigger">
-        <span class="selection-icon">&#x23F0;</span> 
+        <span class="selection-icon"><i class="fa fa-clock-o"></i></span> 
         <span class="selection-label">Время</span>
         <span class="selection-value" id="current-time-value">12:30</span>
     </div>
     <div class="selection-item" id="guests-select-trigger">
-        <span class="selection-icon">&#x1F465;</span> 
+        <span class="selection-icon"><i class="fa fa-users"></i></span> 
         <span class="selection-label">Гости</span>
         <span class="selection-value" id="current-guests-value">2</span>
     </div>
@@ -382,7 +424,7 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-    // --- ДАННЫЕ О СТОЛАХ (ОБНОВЛЕННЫЕ) ---
+    // --- ДАННЫЕ О СТОЛАХ (ОСТАВЛЕНЫ ДЛЯ ФУНКЦИОНАЛА) ---
     const tableData = {
         '1': { 
             name: 'Столик №1 (У Бара)', 
@@ -434,13 +476,12 @@
         }
     };
 
-    // --- Глобальные переменные ---
+    // --- Глобальные переменные и DOM элементы ---
     let user_id = null;
     let user_name = null;
     let botApiUrl = '';
     let selectedTable = null;
     
-    // --- Элементы DOM ---
     const dateInputModal = document.getElementById("date-modal");
     const timeSelectModal = document.getElementById("time-modal");
     const guestsInputModal = document.getElementById("guests-modal");
@@ -579,7 +620,6 @@
     }
     
     function updateTableAvailability(date, time) {
-        // Здесь должен быть реальный API-запрос к вашему серверу
         
         document.querySelectorAll('.table-element').forEach(table => {
             table.classList.remove('table-booked', 'table-selected');
@@ -591,22 +631,20 @@
                 selectedTable = null;
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Выберите другой стол';
-                tableDetailsCard.style.display = 'none'; // Скрыть карточку, если стол стал занят
+                tableDetailsCard.style.display = 'none'; 
             } else {
                 tableElement.classList.add('table-selected');
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
-                // Показываем детали, если стол выбран
                 showTableDetails(selectedTable); 
             }
         } else {
             confirmBtn.disabled = true;
             confirmBtn.textContent = 'Подтвердить бронь';
-            tableDetailsCard.style.display = 'none'; // Скрыть карточку
+            tableDetailsCard.style.display = 'none'; 
         }
     }
 
-    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ПОКАЗА ДЕТАЛЕЙ СТОЛА ---
     function showTableDetails(tableId) {
         const data = tableData[tableId];
         if (data) {
@@ -637,7 +675,6 @@
             confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
             messageDiv.style.display = 'none';
 
-            // Показываем детали стола при клике
             showTableDetails(selectedTable);
         });
     });
@@ -714,7 +751,7 @@
                     selectedTable = null;
                     confirmBtn.disabled = true;
                     confirmBtn.textContent = 'Подтвердить бронь';
-                    tableDetailsCard.style.display = 'none'; // Скрыть карточку после бронирования
+                    tableDetailsCard.style.display = 'none'; 
                     
                     updateTableAvailability(dateInputModal.value, timeSelectModal.value);
                 }, 2000);
