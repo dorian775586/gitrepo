@@ -45,7 +45,7 @@
         }
 
         .header-title {
-            font-family: 'Times New Roman', serif; /* Оставляем как есть, чтобы избежать проблем со шрифтами */
+            font-family: 'Times New Roman', serif;
             font-size: 28px;
             margin: 0;
             font-weight: bold;
@@ -78,7 +78,6 @@
             text-align: center;
         }
         
-        /* НОВЫЙ СТИЛЬ ИКОНОК */
         .selection-icon {
             font-size: 20px;
             color: var(--secondary-color);
@@ -234,19 +233,26 @@
             box-shadow: 0 0 10px var(--secondary-color);
         }
 
-        /* ИСПРАВЛЕННОЕ ПОЗИЦИОНИРОВАНИЕ СТОЛОВ */
-        /* Левая часть */
-        #table-1 { top: 70px; left: 240px; } 
-        #table-2 { top: 70px; left: 145px; } 
-        #table-3 { top: 70px; left: 50px; } 
-        /* Нижняя часть (сдвинуты влево и вниз) */
-        #table-4 { top: 180px; left: 240px; } 
-        #table-5 { top: 180px; left: 145px; } 
-        #table-6 { top: 180px; left: 50px; } 
+        /* ОКОНЧАТЕЛЬНОЕ ИСПРАВЛЕННОЕ ПОЗИЦИОНИРОВАНИЕ СТОЛОВ */
         
-        /* Правая часть (сдвинуты дальше от центральных столов) */
-        #table-7 { top: 55px; right: 15px; width: 85px; height: 50px; border-radius: 4px; } 
-        #table-8 { top: 175px; right: 15px; width: 85px; height: 50px; border-radius: 4px; } 
+        /* Столы 1, 2, 3 (Верхний ряд) */
+        #table-1 { top: 60px; left: 15px; width: 60px; height: 60px; border-radius: 50%;} /* Круг */
+        #table-2 { top: 60px; left: 100px; width: 80px; height: 50px; border-radius: 6px;} /* Прямоугольник */
+        #table-3 { top: 60px; left: 220px; width: 80px; height: 50px; border-radius: 6px;} /* Прямоугольник */
+        
+        /* Столы 4, 5, 6 (Нижний ряд) */
+        #table-4 { top: 160px; left: 15px; width: 60px; height: 60px; border-radius: 50%;} /* Круг */
+        #table-5 { top: 160px; left: 100px; width: 80px; height: 50px; border-radius: 6px;} /* Прямоугольник */
+        #table-6 { top: 160px; left: 220px; width: 80px; height: 50px; border-radius: 6px;} /* Прямоугольник */
+        
+        /* Столы 7, 8 (Отдельные места, например, у окна/бара) */
+        #table-7 { top: 250px; left: 15px; width: 80px; height: 40px; border-radius: 6px;} /* Квадрат/Прямоугольник */
+        #table-8 { top: 250px; left: 220px; width: 80px; height: 40px; border-radius: 6px;} /* Квадрат/Прямоугольник */
+        
+        .table-map {
+            height: 300px; /* Увеличиваем высоту карты, чтобы вместить 3 ряда */
+        }
+
 
         /* ----- Кнопка подтверждения ----- */
         #confirm-btn {
@@ -289,29 +295,32 @@
 
 <div class="selection-panel">
     <div class="selection-item" id="date-select-trigger">
-        <span class="selection-icon">&#x1F4C5;</span> <span class="selection-label">Дата</span>
+        <span class="selection-icon">&#x1F4C5;</span> 
+        <span class="selection-label">Дата</span>
         <span class="selection-value" id="current-date-value">Сегодня, 4 окт 2025</span>
     </div>
     <div class="selection-item" id="time-select-trigger">
-        <span class="selection-icon">&#x23F0;</span> <span class="selection-label">Время</span>
+        <span class="selection-icon">&#x23F0;</span> 
+        <span class="selection-label">Время</span>
         <span class="selection-value" id="current-time-value">12:30</span>
     </div>
     <div class="selection-item" id="guests-select-trigger">
-        <span class="selection-icon">&#x1F465;</span> <span class="selection-label">Гости</span>
+        <span class="selection-icon">&#x1F465;</span> 
+        <span class="selection-label">Гости</span>
         <span class="selection-value" id="current-guests-value">2</span>
     </div>
 </div>
 
 <div class="table-map-container">
     <div class="table-map" id="table-map">
-        <div class="table-element table-square" id="table-1" data-table="1">1</div>
-        <div class="table-element table-square" id="table-2" data-table="2">2</div>
-        <div class="table-element table-round" id="table-3" data-table="3">3</div>
-        <div class="table-element table-square" id="table-4" data-table="4">4</div>
-        <div class="table-element table-round" id="table-5" data-table="5">5</div>
-        <div class="table-element table-round" id="table-6" data-table="6">6</div>
-        <div class="table-element" id="table-7" data-table="7" style="width: 85px; height: 50px; border-radius: 4px;">Стол 7</div>
-        <div class="table-element" id="table-8" data-table="8" style="width: 85px; height: 50px; border-radius: 4px;">Стол 8</div>
+        <div class="table-element" id="table-1" data-table="1">1</div>
+        <div class="table-element" id="table-2" data-table="2">2</div>
+        <div class="table-element" id="table-3" data-table="3">3</div>
+        <div class="table-element" id="table-4" data-table="4">4</div>
+        <div class="table-element" id="table-5" data-table="5">5</div>
+        <div class="table-element" id="table-6" data-table="6">6</div>
+        <div class="table-element" id="table-7" data-table="7">7</div>
+        <div class="table-element" id="table-8" data-table="8">8</div>
     </div>
     
     <button id="confirm-btn" disabled>Подтвердить бронь</button>
@@ -344,16 +353,14 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
     // ==========================================================
-    // JS Logic (ОСТАВЛЕНА БЕЗ ИЗМЕНЕНИЙ ИЗ ПРЕДЫДУЩЕГО ШАГА)
+    // JS Logic (УДАЛЕНА ЗАГЛУШКА ПРО КРАСНЫЕ СТОЛЫ)
     // ==========================================================
     
-    // --- Глобальные переменные ---
     let user_id = null;
     let user_name = null;
     let botApiUrl = '';
     let selectedTable = null;
     
-    // --- Элементы DOM ---
     const dateInputModal = document.getElementById("date-modal");
     const timeSelectModal = document.getElementById("time-modal");
     const guestsInputModal = document.getElementById("guests-modal");
@@ -367,7 +374,6 @@
     const timeValueDisplay = document.getElementById("current-time-value");
     const guestsValueDisplay = document.getElementById("current-guests-value");
 
-    // --- Инициализация при загрузке ---
     function getQueryParams() {
         const params = {};
         new URLSearchParams(window.location.search).forEach((value, key) => {
@@ -391,6 +397,7 @@
             window.Telegram.WebApp.ready();
         }
         
+        // Устанавливаем текущую дату
         const now = new Date();
         const todayStr = now.toISOString().slice(0, 10);
         
@@ -416,7 +423,6 @@
     }
 
 
-    // --- Логика временных слотов ---
     function generateAllTimeSlots() {
         const slots = [];
         let start = new Date(); start.setHours(12, 0, 0, 0); 
@@ -436,8 +442,6 @@
         const allSlots = generateAllTimeSlots();
         let bookedTimes = [];
         
-        // Эта часть кода нужна, если бы вы проверяли занятость ОДНОГО стола на сервере, 
-        // но для карты столов лучше проверять ВСЕ столы.
         if (tableId) {
              try {
                 const url = `${botApiUrl}/get_booked_times?table=${tableId}&date=${selectedDate}`;
@@ -486,27 +490,20 @@
             timeValueDisplay.textContent = "Нет мест";
         }
         
-        // Автоматически обновляем статус доступности столов, если дата/время изменились
         updateTableAvailability(selectedDate, firstAvailableSlot);
     }
     
-    // --- Логика карты столов ---
+    // --- Логика карты столов (Заглушка УДАЛЕНА) ---
     function updateTableAvailability(date, time) {
-        // Здесь должен быть API-запрос к серверу, который вернет, какие столы заняты
+        // !!! ВАЖНО: Здесь будет реальный API-запрос к вашему серверу !!!
         
-        // Пока используем заглушку
+        // Сбрасываем все столы (теперь все столы свободны)
         document.querySelectorAll('.table-element').forEach(table => {
             table.classList.remove('table-booked', 'table-selected');
-            table.classList.add('table-free');
-            
-            // Заглушка: Делаем стол 3 и 7 занятыми, если время 12:30
-            if ((table.dataset.table === '3' || table.dataset.table === '7') && time === '12:30') {
-                 table.classList.add('table-booked');
-                 table.classList.remove('table-free');
-            }
+            // Здесь должна быть логика, которая проверяет сервер
         });
         
-        // Перепроверяем, не занят ли выбранный нами стол
+        // Если стол был выбран, подсвечиваем его снова
         if (selectedTable) {
             const tableElement = document.getElementById(`table-${selectedTable}`);
             if (tableElement.classList.contains('table-booked')) {
@@ -518,6 +515,9 @@
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
             }
+        } else {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Подтвердить бронь';
         }
     }
 
@@ -543,7 +543,6 @@
         });
     });
 
-    // --- Логика открытия/закрытия модального окна ---
     confirmBtn.addEventListener('click', () => {
         if (!selectedTable) return;
         
@@ -556,7 +555,6 @@
         bookingOverlay.style.display = 'none';
     });
 
-    // --- Логика изменения даты/времени/гостей ---
     dateInputModal.addEventListener('change', (e) => {
         const newDate = new Date(e.target.value);
         dateValueDisplay.textContent = formatDateForDisplay(newDate);
@@ -573,7 +571,6 @@
     });
 
 
-    // --- Логика отправки формы ---
     bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
