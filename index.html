@@ -98,73 +98,6 @@
             margin-top: 2px;
         }
 
-        /* ----- Форма бронирования (Модальное окно/Оверлей) - Без изменений ----- */
-        #booking-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.75);
-            z-index: 100;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #booking-form {
-            background-color: var(--bg-medium);
-            border-radius: 12px;
-            padding: 20px;
-            max-width: 350px;
-            width: 90%;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-            color: var(--text-main);
-            position: relative;
-        }
-
-        #closeBookingForm {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 24px;
-            color: var(--secondary-color);
-            cursor: pointer;
-        }
-        
-        #booking-form label {
-            display: block;
-            margin: 8px 0 4px;
-            color: var(--secondary-color);
-            font-size: 12px;
-        }
-
-        #booking-form input,
-        #booking-form select {
-            width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background-color: #333;
-            color: var(--text-main);
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        
-        #booking-form button[type="submit"] {
-            margin-top: 20px;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: var(--text-main);
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            width: 100%;
-            text-transform: uppercase;
-        }
-
         /* ----- Карта столов (главный блок) ----- */
         .table-map-container {
             flex-grow: 1;
@@ -174,25 +107,75 @@
             padding: 20px 10px 40px;
         }
 
+        /* НОВЫЙ КОНТЕЙНЕР ДЛЯ КАРТЫ И КАРТОЧКИ ДЕТАЛЕЙ */
+        .map-wrapper {
+            width: 100%;
+            max-width: 750px; /* Увеличиваем, чтобы вместить карту и карточку рядом */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px; /* Расстояние между картой и карточкой */
+        }
+
         .table-map {
             width: 100%;
             max-width: 350px;
-            /* Увеличенная высота для более подробной схемы */
             height: 400px; 
             background-color: var(--bg-medium);
             border-radius: 12px;
             position: relative;
             border: 2px solid #555;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            /* Фон, имитирующий пол (паркет/ковёр) */
             background-image: linear-gradient(135deg, #444c4c 25%, transparent 25%),
                               linear-gradient(225deg, #444c4c 25%, transparent 25%),
                               linear-gradient(45deg, #444c4c 25%, #3E4646 25%),
                               linear-gradient(315deg, #444c4c 25%, #3E4646 25%);
             background-size: 20px 20px;
             background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
+            flex-shrink: 0;
         }
-        
+
+        /* КАРТОЧКА ДЕТАЛЕЙ СТОЛА */
+        #table-details-card {
+            display: none; /* Скрыто по умолчанию */
+            width: 100%;
+            max-width: 350px;
+            background-color: var(--bg-medium);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--secondary-color);
+            transition: all 0.3s ease-in-out;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        #table-details-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            object-fit: cover;
+            max-height: 200px;
+        }
+
+        #table-details-card h3 {
+            color: var(--secondary-color);
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        #table-details-card p {
+            color: var(--text-main);
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        #table-details-card strong {
+            color: var(--secondary-color);
+        }
+
         /* Стили для общих элементов на карте (Вход, Бар) */
         .map-feature {
             position: absolute;
@@ -210,7 +193,7 @@
             left: 0;
             width: 100%;
             height: 40px;
-            background-color: #4B4F52; /* Цвет темного дерева/гранита */
+            background-color: #4B4F52; 
             border-bottom: 3px solid var(--secondary-color);
             font-size: 12px;
             line-height: 30px;
@@ -273,23 +256,13 @@
             box-shadow: 0 0 10px var(--secondary-color);
         }
 
-        /* НОВОЕ ПОЗИЦИОНИРОВАНИЕ СТОЛОВ */
-        
-        /* Столы 1, 2 - У бара (на двоих, круглые) */
+        /* Позиционирование столов (последняя версия) */
         #table-1 { top: 55px; left: 50px; width: 45px; height: 45px; } 
         #table-2 { top: 55px; left: 255px; width: 45px; height: 45px; } 
-        
-        /* Столы 3, 4 - Левая стена (прямоугольные банкетки) */
         #table-3 { top: 120px; left: 10px; width: 80px; height: 50px; } 
         #table-4 { top: 200px; left: 10px; width: 80px; height: 50px; } 
-        
-        /* Стол 5 - Центр (большой, круглый) */
         #table-5 { top: 160px; left: 135px; width: 70px; height: 70px; } 
-        
-        /* Стол 6 - Правая стена (большой, квадратный) */
         #table-6 { top: 160px; right: 10px; width: 80px; height: 80px; border-radius: 6px; } 
-        
-        /* Столы 7, 8 - Ближе к входу (прямоугольные) */
         #table-7 { top: 300px; left: 50px; width: 80px; height: 50px; } 
         #table-8 { top: 300px; left: 220px; width: 80px; height: 50px; } 
 
@@ -319,6 +292,17 @@
             font-size: 12px;
             color: var(--secondary-color);
         }
+
+        /* --- Стили для адаптивности (чтобы карточка не ломалась на мобильных) --- */
+        @media (max-width: 768px) {
+            .map-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+            #table-details-card {
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -347,18 +331,26 @@
 </div>
 
 <div class="table-map-container">
-    <div class="table-map" id="table-map">
-        <div id="bar-counter" class="map-feature">Барная Стойка</div>
-        <div id="entrance" class="map-feature">Вход</div>
+    <div class="map-wrapper">
+        <div class="table-map" id="table-map">
+            <div id="bar-counter" class="map-feature">Барная Стойка</div>
+            <div id="entrance" class="map-feature">Вход</div>
 
-        <div class="table-element table-round" id="table-1" data-table="1">1</div>
-        <div class="table-element table-round" id="table-2" data-table="2">2</div>
-        <div class="table-element table-rect" id="table-3" data-table="3">3</div>
-        <div class="table-element table-rect" id="table-4" data-table="4">4</div>
-        <div class="table-element table-round" id="table-5" data-table="5">5</div>
-        <div class="table-element table-rect" id="table-6" data-table="6">6</div>
-        <div class="table-element table-rect" id="table-7" data-table="7">7</div>
-        <div class="table-element table-rect" id="table-8" data-table="8">8</div>
+            <div class="table-element table-round" id="table-1" data-table="1">1</div>
+            <div class="table-element table-round" id="table-2" data-table="2">2</div>
+            <div class="table-element table-rect" id="table-3" data-table="3">3</div>
+            <div class="table-element table-rect" id="table-4" data-table="4">4</div>
+            <div class="table-element table-round" id="table-5" data-table="5">5</div>
+            <div class="table-element table-rect" id="table-6" data-table="6">6</div>
+            <div class="table-element table-rect" id="table-7" data-table="7">7</div>
+            <div class="table-element table-rect" id="table-8" data-table="8">8</div>
+        </div>
+
+        <div id="table-details-card">
+            <img id="table-photo" src="" alt="Фото столика" />
+            <h3 id="table-title"></h3>
+            <p id="table-description"></p>
+        </div>
     </div>
     
     <button id="confirm-btn" disabled>Подтвердить бронь</button>
@@ -390,6 +382,58 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
+    // --- ДАННЫЕ О СТОЛАХ (ОБНОВЛЕННЫЕ) ---
+    const tableData = {
+        '1': { 
+            name: 'Столик №1 (У Бара)', 
+            seats: 2, 
+            desc: 'Уютный столик для двоих с видом на барную стойку. Идеально для аперитива.',
+            photo_url: 'https://picsum.photos/id/161/300/200'
+        },
+        '2': { 
+            name: 'Столик №2 (У Бара)', 
+            seats: 2, 
+            desc: 'Небольшой круглый стол вдали от основного зала. Идеально для свиданий.',
+            photo_url: 'https://picsum.photos/id/163/300/200'
+        },
+        '3': { 
+            name: 'Банкетка №3 (У Стены)', 
+            seats: 4, 
+            desc: 'Комфортный диван на четырех человек. Расположен у стены для приватности.',
+            photo_url: 'https://picsum.photos/id/165/300/200'
+        },
+        '4': { 
+            name: 'Банкетка №4 (У Стены)', 
+            seats: 4, 
+            desc: 'Удобная банкетка с мягкими сиденьями. Отличное место для семейного ужина.',
+            photo_url: 'https://picsum.photos/id/166/300/200'
+        },
+        '5': { 
+            name: 'Центральный Стол №5', 
+            seats: 6, 
+            desc: 'Большой круглый стол в центре зала. Идеален для больших компаний и торжеств.',
+            photo_url: 'https://picsum.photos/id/167/300/200'
+        },
+        '6': { 
+            name: 'Стол №6 (Квадратный)', 
+            seats: 8, 
+            desc: 'Самый большой стол в ресторане. Подходит для корпоративных встреч.',
+            photo_url: 'https://picsum.photos/id/168/300/200'
+        },
+        '7': { 
+            name: 'Стол №7 (У Входа)', 
+            seats: 4, 
+            desc: 'Прямоугольный столик, близко к входу. Хорошо для быстрого обеда.',
+            photo_url: 'https://picsum.photos/id/169/300/200'
+        },
+        '8': { 
+            name: 'Стол №8 (У Входа)', 
+            seats: 4, 
+            desc: 'Прямоугольный стол с хорошим обзором на входную группу.',
+            photo_url: 'https://picsum.photos/id/170/300/200'
+        }
+    };
+
     // --- Глобальные переменные ---
     let user_id = null;
     let user_name = null;
@@ -409,6 +453,12 @@
     const dateValueDisplay = document.getElementById("current-date-value");
     const timeValueDisplay = document.getElementById("current-time-value");
     const guestsValueDisplay = document.getElementById("current-guests-value");
+
+    const tableDetailsCard = document.getElementById("table-details-card");
+    const tablePhoto = document.getElementById("table-photo");
+    const tableTitle = document.getElementById("table-title");
+    const tableDescription = document.getElementById("table-description");
+
 
     function getQueryParams() {
         const params = {};
@@ -533,7 +583,6 @@
         
         document.querySelectorAll('.table-element').forEach(table => {
             table.classList.remove('table-booked', 'table-selected');
-            // В реальной версии здесь будет проверка через fetch, а не заглушка
         });
         
         if (selectedTable) {
@@ -542,14 +591,29 @@
                 selectedTable = null;
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Выберите другой стол';
+                tableDetailsCard.style.display = 'none'; // Скрыть карточку, если стол стал занят
             } else {
                 tableElement.classList.add('table-selected');
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
+                // Показываем детали, если стол выбран
+                showTableDetails(selectedTable); 
             }
         } else {
             confirmBtn.disabled = true;
             confirmBtn.textContent = 'Подтвердить бронь';
+            tableDetailsCard.style.display = 'none'; // Скрыть карточку
+        }
+    }
+
+    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ПОКАЗА ДЕТАЛЕЙ СТОЛА ---
+    function showTableDetails(tableId) {
+        const data = tableData[tableId];
+        if (data) {
+            tablePhoto.src = data.photo_url;
+            tableTitle.textContent = data.name;
+            tableDescription.innerHTML = `<strong>Мест:</strong> ${data.seats}<br>${data.desc}`;
+            tableDetailsCard.style.display = 'block';
         }
     }
 
@@ -572,6 +636,9 @@
             confirmBtn.disabled = false;
             confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
             messageDiv.style.display = 'none';
+
+            // Показываем детали стола при клике
+            showTableDetails(selectedTable);
         });
     });
 
@@ -580,6 +647,7 @@
         
         document.getElementById('selected-table-modal').textContent = selectedTable;
         phoneInputModal.value = ''; 
+        // guestsInputModal.value = tableData[selectedTable].seats; // Можете автоматически подставить макс. места
         bookingOverlay.style.display = 'flex';
     });
 
@@ -646,6 +714,7 @@
                     selectedTable = null;
                     confirmBtn.disabled = true;
                     confirmBtn.textContent = 'Подтвердить бронь';
+                    tableDetailsCard.style.display = 'none'; // Скрыть карточку после бронирования
                     
                     updateTableAvailability(dateInputModal.value, timeSelectModal.value);
                 }, 2000);
