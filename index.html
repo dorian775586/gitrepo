@@ -280,7 +280,10 @@
 
         let bookedTimes = [];
         try {
-            const url = `${botApiUrl}/get_booked_times?table=${selectedTable}&date=${selectedDate}`;
+            // Добавляем параметр для предотвращения кеширования
+            const cacheBuster = new Date().getTime(); 
+            const url = `${botApiUrl}/get_booked_times?table=${selectedTable}&date=${selectedDate}&cb=${cacheBuster}`;
+            
             const res = await fetch(url);
             const data = await res.json();
             if (data.status === 'ok') {
@@ -308,6 +311,17 @@
                 select.appendChild(option);
             }
         });
+        
+        // Устанавливаем в "Нет мест", если нет доступных слотов
+        if (select.options.length === 0) {
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Нет свободных слотов";
+            select.appendChild(option);
+            select.disabled = true;
+        } else {
+            select.disabled = false;
+        }
     }
 
     const bookingContainer = document.getElementById("booking-form-container");
@@ -351,6 +365,13 @@
         messageDiv.textContent = "";
         messageDiv.style.display = "none";
 
+        // Проверка, что слот действительно выбран
+        if (timeInput.disabled || timeInput.value === "") {
+            messageDiv.textContent = "❌ Нет свободных слотов для бронирования.";
+            messageDiv.style.display = "block";
+            return;
+        }
+        
         const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}:00`);
         const now = new Date();
         
@@ -370,7 +391,6 @@
             phone: phoneInput.value
         };
 
-        console.log(data);
         try {
             const res = await fetch(`${botApiUrl}/book`, {
                 method: "POST",
@@ -381,6 +401,9 @@
             if (res.ok) {
                 messageDiv.textContent = "✅ Столик забронирован";
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
+                
+                // Перезагружаем список времени, чтобы только что занятый слот исчез
+                await fillTimeSelect(selectedTable, dateInput.value); 
                 
                 setTimeout(() => {
                     bookingContainer.style.display = "none";
