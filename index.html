@@ -604,53 +604,76 @@ const tableData = {
     } 
 
     // Эта функция должна вернуть список занятых временных слотов для ДАННОГО стола (tableId)
-    async function fillTimeSelect(tableId, selectedDate) { 
-        const select = timeSelectModal; 
-        select.innerHTML = ''; 
-        select.disabled = true;  
-         
-        const allSlots = generateAllTimeSlots(); 
-        let bookedTimes = []; 
-         
-        const now = new Date(); 
-        const todayDateStr = now.toISOString().slice(0, 10); 
-        let firstAvailableSlot = null; 
+async function fillTimeSelect(tableId, selectedDate) { 
+    const select = timeSelectModal; 
+    select.innerHTML = ''; 
+    select.disabled = true;  
+    
+    const allSlots = generateAllTimeSlots(); 
+    let bookedTimes = []; 
+    
+    // ==========================================================
+    // 👇 НОВОЕ: ПОЛУЧАЕМ СПИСОК ЗАНЯТЫХ ВРЕМЕННЫХ СЛОТОВ
+    // ==========================================================
+    try {
+        // Запрос на бэкенд для получения всех забронированных слотов на выбранную дату
+        const res = await fetch(`${botApiUrl}/get_booked_times?date=${selectedDate}`);
+        const data = await res.json();
+        
+        if (data.status === 'ok' && Array.isArray(data.booked_times)) {
+            // Массив занятых слотов (например, ["12:30", "13:00"])
+            bookedTimes = data.booked_times; 
+        }
+    } catch(err) {
+        console.error('Ошибка при получении занятых слотов для даты:', err);
+    }
+    // ==========================================================
+    
+    const now = new Date(); 
+    const todayDateStr = now.toISOString().slice(0, 10); 
+    let firstAvailableSlot = null; 
 
-        allSlots.forEach(slot => { 
-            // Логика проверки на прошедшее время
-            let isPast = false; 
-            if (selectedDate === todayDateStr) { 
-                const slotTime = new Date(`${selectedDate}T${slot}:00`); 
-                // Слот должен быть не раньше, чем через 30 минут от текущего времени
-                if (slotTime.getTime() < now.getTime() + 30 * 60000) { 
-                    isPast = true; 
-                } 
+    allSlots.forEach(slot => { 
+        // 1. Проверка на прошедшее время
+        let isPast = false; 
+        if (selectedDate === todayDateStr) { 
+            const slotTime = new Date(`${selectedDate}T${slot}:00`); 
+            // Слот должен быть не раньше, чем через 30 минут от текущего времени
+            if (slotTime.getTime() < now.getTime() + 30 * 60000) { 
+                isPast = true; 
             } 
-             
-            if (!isPast) { 
-                const option = document.createElement("option"); 
-                option.value = slot; 
-                option.textContent = slot; 
-                select.appendChild(option); 
-                 
-                if (!firstAvailableSlot) { 
-                    firstAvailableSlot = slot; 
-                } 
-            } 
-        }); 
-         
-        select.disabled = false; 
-        if (select.options.length > 0) { 
-            // Устанавливаем первое доступное время как текущее выбранное
-            select.value = firstAvailableSlot; 
-            timeValueDisplay.textContent = firstAvailableSlot; 
-        } else { 
-            timeValueDisplay.textContent = "Нет мест"; 
         } 
-         
-        // Обновляем доступность столов для выбранной даты/времени
-        updateTableAvailability(selectedDate, firstAvailableSlot); 
+        
+        // 2. Проверка на занятость слота
+        const isBooked = bookedTimes.includes(slot);
+
+        // Добавляем опцию, только если время не прошло И слот не забронирован
+        if (!isPast && !isBooked) { 
+            const option = document.createElement("option"); 
+            option.value = slot; 
+            option.textContent = slot; 
+            select.appendChild(option); 
+            
+            if (!firstAvailableSlot) { 
+                firstAvailableSlot = slot; 
+            } 
+        } 
+    }); 
+    
+    select.disabled = false; 
+    if (select.options.length > 0) { 
+        // Устанавливаем первое доступное время как текущее выбранное
+        select.value = firstAvailableSlot; 
+        timeValueDisplay.textContent = firstAvailableSlot; 
+    } else { 
+        // Если слотов нет, устанавливаем специальное сообщение
+        select.value = ""; 
+        timeValueDisplay.textContent = "Нет мест"; 
     } 
+    
+    // Обновляем доступность столов для выбранной даты/времени
+    updateTableAvailability(selectedDate, select.value); // Передаем актуальное значение
+} 
      
     // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Добавляет логику запроса занятых столов с бэкенда
     async function updateTableAvailability(date, time) { 
