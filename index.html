@@ -459,7 +459,7 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-   // --- ДАННЫЕ О СТОЛАХ (Обновлены: единое романтическое фото для всех 8 столов) ---
+    // --- ДАННЫЕ О СТОЛАХ (Обновлены: единое романтическое фото для всех 8 столов) ---
 const tableData = {
     '1': { 
         name: 'Столик №1 (У Бара)', 
@@ -549,7 +549,7 @@ const tableData = {
         document.documentElement.style.setProperty('color-scheme', 'dark');
     }
 
-    window.onload = function() {
+    window.onload = async function() {
         const params = getQueryParams();
         user_id = params.user_id;
         user_name = params.user_name;
@@ -567,7 +567,11 @@ const tableData = {
         dateValueDisplay.textContent = formatDateForDisplay(now);
         guestsValueDisplay.textContent = guestsInputModal.value;
 
-        fillTimeSelect(null, todayStr); 
+        // Заполняем список времени (без выбранного стола)
+        await fillTimeSelect(null, todayStr); 
+        
+        // Обновляем карту, используя первое доступное время
+        updateMapAvailability(todayStr, timeSelectModal.value);
     };
 
     function formatDateForDisplay(date) {
@@ -596,6 +600,7 @@ const tableData = {
         return slots;
     }
 
+    // ФУНКЦИЯ ДЛЯ ЗАПОЛНЕНИЯ СПИСКА ВРЕМЕНИ (ИСПОЛЬЗУЕТСЯ /get_booked_times, если выбран стол)
     async function fillTimeSelect(tableId, selectedDate) {
         const select = timeSelectModal;
         select.innerHTML = '';
@@ -604,9 +609,12 @@ const tableData = {
         const allSlots = generateAllTimeSlots();
         let bookedTimes = [];
         
+        // Запрашиваем занятое время только если стол УЖЕ выбран
         if (tableId) {
-             try {
+            try {
+                // Если пользователь выбрал стол, запрашиваем занятое время ДЛЯ ЭТОГО стола
                 const url = `${botApiUrl}/get_booked_times?table=${tableId}&date=${selectedDate}`;
+                console.log(`Запрос занятого времени для стола ${tableId}: ${url}`);
                 const res = await fetch(url);
                 const data = await res.json();
                 if (data.status === 'ok') {
@@ -622,11 +630,13 @@ const tableData = {
         let firstAvailableSlot = null;
 
         allSlots.forEach(slot => {
+            // Проверяем, что время не занято и не прошло
             if (!bookedTimes.includes(slot)) {
                 let isPast = false;
                 if (selectedDate === todayDateStr) {
                     const slotTime = new Date(`${selectedDate}T${slot}:00`);
-                    if (slotTime < now) {
+                    // Добавляем 1 час (3600000 мс) для буфера, чтобы нельзя было забронировать "сейчас"
+                    if (slotTime < now.getTime()) { 
                         isPast = true;
                     }
                 }
@@ -652,27 +662,68 @@ const tableData = {
             timeValueDisplay.textContent = "Нет мест";
         }
         
-        updateTableAvailability(selectedDate, firstAvailableSlot);
+        // *** НОВАЯ ЛОГИКА: Обновляем карту в конце, чтобы показать занятость всех столов. ***
+        updateMapAvailability(selectedDate, select.value);
     }
     
-    function updateTableAvailability(date, time) {
+    
+    // *** НОВАЯ ГЛАВНАЯ ФУНКЦИЯ: ОБНОВЛЕНИЕ КАРТЫ СТОЛОВ ***
+    async function updateMapAvailability(selectedDate, selectedTime) {
         
-        document.querySelectorAll('.table-element').forEach(table => {
-            table.classList.remove('table-booked', 'table-selected');
-        });
+        // 1. Сбрасываем все статусы (кроме table-selected, который сбросится ниже)
+        document.querySelectorAll('.table-element').forEach(t => t.classList.remove('table-booked', 'table-selected'));
         
+        // Если нет доступного времени, просто показываем все столы как свободные (или ничего)
+        if (!selectedTime || selectedTime === "Нет мест") {
+            // Если выбранный стол был, восстанавливаем его
+            if (selectedTable) {
+                document.getElementById(`table-${selectedTable}`).classList.add('table-selected');
+            }
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Подтвердить бронь';
+            return; 
+        }
+        
+        let bookedTables = [];
+        try {
+            // 2. Запрашиваем занятые столы на выбранную дату и время
+            const url = `${botApiUrl}/get_booked_tables?date=${selectedDate}&time=${selectedTime}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.status === 'ok' && Array.isArray(data.booked_tables)) {
+                bookedTables = data.booked_tables.map(String); // Убедимся, что это строки
+            }
+        
+            // 3. Помечаем столы как занятые
+            bookedTables.forEach(tableId => {
+                const tableElement = document.getElementById(`table-${tableId}`);
+                if (tableElement) {
+                    tableElement.classList.add('table-booked');
+                    tableElement.style.cursor = 'not-allowed';
+                }
+            });
+        
+        } catch (error) {
+            console.error('Ошибка при обновлении карты столов:', error);
+        }
+        
+        // 4. Перепроверяем выбранный стол
         if (selectedTable) {
-            const tableElement = document.getElementById(`table-${selectedTable}`);
-            if (tableElement.classList.contains('table-booked')) {
+            const currentTable = document.getElementById(`table-${selectedTable}`);
+            
+            if (currentTable.classList.contains('table-booked')) {
+                // Если выбранный стол оказался занят, сбрасываем выбор
                 selectedTable = null;
+                tableDetailsCard.style.display = 'none';
                 confirmBtn.disabled = true;
-                confirmBtn.textContent = 'Выберите другой стол';
-                tableDetailsCard.style.display = 'none'; 
+                confirmBtn.textContent = 'Подтвердить бронь';
             } else {
-                tableElement.classList.add('table-selected');
+                // Если свободен, выделяем его и позволяем бронировать
+                currentTable.classList.add('table-selected');
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
-                showTableDetails(selectedTable); 
+                showTableDetails(selectedTable);
             }
         } else {
             confirmBtn.disabled = true;
@@ -680,6 +731,8 @@ const tableData = {
             tableDetailsCard.style.display = 'none'; 
         }
     }
+    // *** КОНЕЦ НОВОЙ ГЛАВНОЙ ФУНКЦИИ ***
+
 
     function showTableDetails(tableId) {
         const data = tableData[tableId];
@@ -695,8 +748,9 @@ const tableData = {
         table.addEventListener('click', (e) => {
             const clickedTable = e.currentTarget.dataset.table;
             
+            // Проверка, если стол уже занят по текущему времени
             if (e.currentTarget.classList.contains('table-booked')) {
-                messageDiv.textContent = '❌ Столик занят. Выберите другой.';
+                messageDiv.textContent = '❌ Столик занят на выбранное время. Выберите другой.';
                 messageDiv.style.display = 'block';
                 return;
             }
@@ -712,6 +766,9 @@ const tableData = {
             messageDiv.style.display = 'none';
 
             showTableDetails(selectedTable);
+            
+            // После выбора стола, обновляем список времени, чтобы показать, что ЗАНЯТО для этого стола
+            fillTimeSelect(selectedTable, dateInputModal.value);
         });
     });
 
@@ -727,15 +784,22 @@ const tableData = {
         bookingOverlay.style.display = 'none';
     });
 
-    dateInputModal.addEventListener('change', (e) => {
+    // *** ИСПРАВЛЕНО: Теперь обновляем список времени, а затем карту ***
+    dateInputModal.addEventListener('change', async (e) => {
         const newDate = new Date(e.target.value);
+        const dateStr = e.target.value;
         dateValueDisplay.textContent = formatDateForDisplay(newDate);
-        fillTimeSelect(selectedTable, e.target.value);
+        
+        await fillTimeSelect(selectedTable, dateStr); 
+        updateMapAvailability(dateStr, timeSelectModal.value);
     });
 
+    // *** ИСПРАВЛЕНО: Теперь обновляем карту при изменении времени ***
     timeSelectModal.addEventListener('change', (e) => {
-        timeValueDisplay.textContent = e.target.value;
-        updateTableAvailability(dateInputModal.value, e.target.value);
+        const timeStr = e.target.value;
+        timeValueDisplay.textContent = timeStr;
+        // При изменении времени, обновляем карту, чтобы показать, какие столы заняты в ЭТО время.
+        updateMapAvailability(dateInputModal.value, timeStr); 
     });
 
     guestsInputModal.addEventListener('change', (e) => {
@@ -758,6 +822,7 @@ const tableData = {
             return;
         }
         
+        // *** ИСПРАВЛЕНО: Включаем user_id и user_name для уведомлений ***
         const data = {
             user_id: user_id,
             user_name: user_name,
@@ -780,19 +845,28 @@ const tableData = {
                 messageDiv.textContent = "✅ Столик забронирован! Ищем подтверждение в Telegram.";
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 
+                // Обновляем карту и список времени после успешной брони, чтобы застолбить место.
                 setTimeout(() => {
                     bookingOverlay.style.display = "none";
                     document.getElementById(`table-${selectedTable}`).classList.remove('table-selected');
-                    selectedTable = null;
+                    
+                    // Сбрасываем выбранный стол, чтобы обновилось состояние кнопок
+                    selectedTable = null; 
                     confirmBtn.disabled = true;
                     confirmBtn.textContent = 'Подтвердить бронь';
                     tableDetailsCard.style.display = 'none'; 
                     
-                    updateTableAvailability(dateInputModal.value, timeSelectModal.value);
+                    // Перезагружаем карту для отражения новой брони
+                    updateMapAvailability(dateInputModal.value, timeSelectModal.value);
                 }, 2000);
 
             } else {
                 messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
+                
+                // Если ошибка 409, обновляем карту, чтобы показать, что место занято
+                if (res.status === 409) {
+                    updateMapAvailability(dateInputModal.value, timeSelectModal.value);
+                }
             }
             messageDiv.style.display = "block";
         } catch (err) {
