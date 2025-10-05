@@ -3,110 +3,383 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Бронирование столика</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
-        :root{
-            --primary-color: #8C7851;
-            --secondary-color: #E2D2B0;
-            --bg-dark: #2A3131;
-            --bg-medium: #3E4646;
+        /* ========================================================== */
+        /* Финальная стилизация "The Golden Spoon" */
+        /* ========================================================== */
+        :root {
+            /* Оливково-золотая гамма */
+            --primary-color: #8C7851; /* Теплый оливково-золотой (для кнопок) */
+            --secondary-color: #E2D2B0; /* Светлый золотистый (для акцентов) */
+            --bg-dark: #2A3131; /* Очень темный фон */
+            --bg-medium: #3E4646; /* Фон для карточки карты */
             --text-main: #FFFFFF;
-            --table-free: #5D6D7E;
-            --table-selected: #8C7851;
-            --table-booked: #B54646;
-            color-scheme: dark;
+            --table-free: #5D6D7E; /* Серый/Светло-синий для свободных столов */
+            --table-selected: #8C7851; /* Выбранный стол - золотистый */
+            --table-booked: #B54646; /* Занятый стол - бордовый */
+
+            /* Telegram Theme Adaptation */
+            color-scheme: dark; 
         }
-        *{box-sizing: border-box}
-        body{
-            margin:0; padding:0;
+
+        body {
+            margin: 0;
+            padding: 0;
             font-family: 'Times New Roman', serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
-            display:flex; flex-direction:column; min-height:100vh;
-        }
-        .header-section{ text-align:center; padding:20px 0 15px; color:var(--secondary-color) }
-        .header-title{ font-size:28px; margin:0; font-weight:bold }
-        .header-subtitle{ font-size:14px; margin-top:5px; color:var(--secondary-color) }
-
-        .selection-panel{
-            display:flex; justify-content:space-around; align-items:flex-start;
-            padding:15px 10px; border-bottom:1px solid var(--bg-medium);
-        }
-        .selection-item{ display:flex; flex-direction:column; align-items:center; width:30%; text-align:center; cursor:pointer; }
-        .selection-icon{ font-size:20px; color:var(--secondary-color); margin-bottom:5px }
-        .selection-label{ font-size:11px; color:var(--secondary-color); text-transform:uppercase }
-        .selection-value{ font-size:14px; font-weight:bold; color:var(--text-main) }
-
-        #booking-overlay{
-            position:fixed; top:0; left:0; width:100vw; height:100vh;
-            background:rgba(0,0,0,0.75); z-index:999; display:none; justify-content:center; align-items:center;
-        }
-        #booking-form{
-            background:var(--bg-medium); border-radius:12px; padding:20px; max-width:350px; width:90%;
-            box-shadow:0 0 20px rgba(0,0,0,0.7); color:var(--text-main); position:relative;
-        }
-        #closeBookingForm{ position:absolute; top:10px; right:15px; font-size:24px; color:var(--secondary-color); cursor:pointer }
-        #booking-form label{ display:block; margin:8px 0 4px; color:var(--secondary-color); font-size:12px }
-        #booking-form input, #booking-form select{
-            width:100%; padding:8px; border-radius:8px; border:1px solid #444; background:#333; color:var(--text-main);
-        }
-        #booking-form button[type="submit"]{
-            margin-top:20px; padding:12px; background:var(--primary-color); color:var(--text-main); font-weight:bold;
-            border:none; border-radius:8px; cursor:pointer; font-size:14px; width:100%; text-transform:uppercase;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        .table-map-container{ flex-grow:1; display:flex; flex-direction:column; align-items:center; padding:20px 10px 40px }
-        .map-wrapper{ width:100%; max-width:750px; display:flex; gap:20px; justify-content:center; align-items:flex-start }
-        .table-map{
-            width:100%; max-width:350px; height:400px; background:var(--bg-medium); border-radius:12px; position:relative;
-            border:2px solid #555; box-shadow:0 0 15px rgba(0,0,0,0.5); flex-shrink:0;
+        /* ----- Заголовок ----- */
+        .header-section {
+            background-color: var(--bg-dark);
+            padding: 20px 0 15px;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+
+        .header-title {
+            font-family: 'Times New Roman', serif;
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            margin-top: 5px;
+            letter-spacing: 1px;
+            color: var(--secondary-color);
+        }
+
+        /* ----- Блок выбора (Дата/Время/Гости) ----- */
+        .selection-panel {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            background-color: var(--bg-dark);
+            padding: 15px 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid var(--bg-medium);
+        }
+
+        .selection-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            width: 30%;
+            text-align: center;
+        }
+        
+        /* Стили Font Awesome иконок */
+        .selection-icon {
+            font-size: 20px;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .selection-label {
+            font-size: 11px;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+        }
+
+        .selection-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-top: 2px;
+        }
+
+        /* ----- Форма бронирования (Модальное окно/Оверлей) ----- */
+        #booking-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 999; 
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #booking-form {
+            background-color: var(--bg-medium);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            color: var(--text-main);
+            position: relative;
+        }
+
+        #closeBookingForm {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            color: var(--secondary-color);
+            cursor: pointer;
+        }
+        
+        #booking-form label {
+            display: block;
+            margin: 8px 0 4px;
+            color: var(--secondary-color);
+            font-size: 12px;
+        }
+
+        #booking-form input,
+        #booking-form select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: var(--text-main);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        #booking-form button[type="submit"] {
+            margin-top: 20px;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: var(--text-main);
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        /* ----- Карта столов (главный блок) ----- */
+        .table-map-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px 40px;
+        }
+
+        .map-wrapper {
+            width: 100%;
+            max-width: 750px; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px; 
+        }
+
+        .table-map {
+            width: 100%;
+            max-width: 350px;
+            height: 400px; 
+            background-color: var(--bg-medium);
+            border-radius: 12px;
+            position: relative;
+            border: 2px solid #555;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             background-image: linear-gradient(135deg, #444c4c 25%, transparent 25%),
                               linear-gradient(225deg, #444c4c 25%, transparent 25%),
                               linear-gradient(45deg, #444c4c 25%, #3E4646 25%),
                               linear-gradient(315deg, #444c4c 25%, #3E4646 25%);
-            background-size: 20px 20px; background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
+            flex-shrink: 0;
         }
 
-        #table-details-card{
-            display:none; width:100%; max-width:350px; background:var(--bg-medium); border-radius:12px; padding:15px;
-            box-shadow:0 0 15px rgba(0,0,0,0.5); border:2px solid var(--secondary-color); transition:all .25s;
+        /* КАРТОЧКА ДЕТАЛЕЙ СТОЛА */
+        #table-details-card {
+            display: none; 
+            width: 100%;
+            max-width: 350px;
+            background-color: var(--bg-medium);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--secondary-color);
+            transition: all 0.3s ease-in-out;
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
-        #table-details-card img{ width:100%; height:auto; border-radius:8px; margin-bottom:10px; object-fit:cover; max-height:200px }
-        #table-details-card h3{ color:var(--secondary-color); margin:0 0 5px 0; font-size:18px }
-        #table-details-card p{ color:var(--text-main); margin:0; font-size:14px }
 
-        .map-feature{ position:absolute; text-align:center; font-size:10px; color:var(--secondary-color); padding:5px; opacity:0.8; border-radius:4px }
-        #bar-counter{ top:0; left:0; width:100%; height:40px; background:#4B4F52; border-bottom:3px solid var(--secondary-color); line-height:30px; font-size:12px }
-        #entrance{ bottom:0; left:50%; transform:translateX(-50%); width:80px; height:30px; background:#555; line-height:20px; border-top:2px solid var(--secondary-color); color:var(--text-main); font-weight:bold }
-
-        .table-element{ position:absolute; display:flex; justify-content:center; align-items:center; cursor:pointer; transition: background-color .25s, border-color .25s, transform .12s; font-weight:bold; color:var(--text-main); box-sizing:border-box; font-size:12px }
-        .table-round{ border-radius:50% }
-        .table-rect{ border-radius:4px }
-        .table-element{ background:var(--table-free); border:2px solid var(--secondary-color) }
-        .table-selected{ background:var(--table-selected) !important; border-color:var(--secondary-color) !important; box-shadow:0 0 10px var(--secondary-color); transform:translateY(-3px) }
-        .table-booked{ background:var(--table-booked) !important; border-color:var(--table-booked) !important; cursor:not-allowed; opacity:0.85; transform:none }
-
-        #table-1 { top:55px; left:50px; width:45px; height:45px }
-        #table-2 { top:55px; left:255px; width:45px; height:45px }
-        #table-3 { top:120px; left:10px; width:80px; height:50px }
-        #table-4 { top:200px; left:10px; width:80px; height:50px }
-        #table-5 { top:160px; left:135px; width:70px; height:70px }
-        #table-6 { top:160px; right:10px; width:80px; height:80px; border-radius:6px }
-        #table-7 { top:300px; left:50px; width:80px; height:50px }
-        #table-8 { top:300px; left:220px; width:80px; height:50px }
-
-        #confirm-btn{
-            width:80%; margin:20px auto 10px; padding:18px; background:var(--primary-color); color:var(--text-main); font-size:18px; font-weight:bold; border:none; border-radius:10px; cursor:pointer; text-transform:uppercase; box-shadow:0 6px 15px rgba(140,120,81,0.5);
+        #table-details-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            object-fit: cover;
+            max-height: 200px;
         }
-        #confirm-btn:hover:not(:disabled){ background:#A39169; box-shadow:0 8px 20px rgba(140,120,81,0.7) }
-        #confirm-btn:disabled{ background:#666; cursor:not-allowed; box-shadow:none }
-        .confirmation-text{ text-align:center; font-size:12px; color:var(--secondary-color) }
 
-        #message{ margin-top:10px; color:red; font-size:14px; min-height:1.2em; text-align: center; }
-        #message.success { color: #4CAF50; }
+        #table-details-card h3 {
+            color: var(--secondary-color);
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
 
-        @media (max-width:768px){ .map-wrapper{ flex-direction:column; align-items:center } #table-details-card{ margin-top:20px } }
+        #table-details-card p {
+            color: var(--text-main);
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        #table-details-card strong {
+            color: var(--secondary-color);
+        }
+
+        /* Стили для общих элементов на карте (Вход, Бар) */
+        .map-feature {
+            position: absolute;
+            text-align: center;
+            font-size: 10px;
+            color: var(--secondary-color);
+            padding: 5px;
+            opacity: 0.7;
+            border-radius: 4px;
+        }
+
+        /* Барная стойка */
+        #bar-counter {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: #4B4F52; 
+            border-bottom: 3px solid var(--secondary-color);
+            font-size: 12px;
+            line-height: 30px;
+        }
+        
+        /* Вход */
+        #entrance {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 30px;
+            background-color: #555;
+            line-height: 20px;
+            border-top: 2px solid var(--secondary-color);
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        /* Стили для столов */
+        .table-element {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            font-weight: bold;
+            color: var(--text-main);
+            box-sizing: border-box;
+            font-size: 12px;
+        }
+
+        /* Стиль круглого стола */
+        .table-round {
+            border-radius: 50%;
+        }
+
+        /* Стиль прямоугольного стола (для банкеток) */
+        .table-rect {
+            border-radius: 4px;
+        }
+        
+        /* Стили состояния */
+        .table-element {
+            background-color: var(--table-free);
+            border: 2px solid var(--secondary-color);
+        }
+
+        .table-booked {
+            background-color: var(--table-booked) !important;
+            border-color: var(--table-booked) !important;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .table-selected {
+            background-color: var(--table-selected) !important;
+            border-color: var(--secondary-color) !important;
+            box-shadow: 0 0 10px var(--secondary-color);
+        }
+
+        /* Позиционирование столов */
+        #table-1 { top: 55px; left: 50px; width: 45px; height: 45px; } 
+        #table-2 { top: 55px; left: 255px; width: 45px; height: 45px; } 
+        #table-3 { top: 120px; left: 10px; width: 80px; height: 50px; } 
+        #table-4 { top: 200px; left: 10px; width: 80px; height: 50px; } 
+        #table-5 { top: 160px; left: 135px; width: 70px; height: 70px; } 
+        #table-6 { top: 160px; right: 10px; width: 80px; height: 80px; border-radius: 6px; } 
+        #table-7 { top: 300px; left: 50px; width: 80px; height: 50px; } 
+        #table-8 { top: 300px; left: 220px; width: 80px; height: 50px; } 
+
+        /* ----- Кнопка подтверждения (ВОССТАНОВЛЕННАЯ, БОЛЬШАЯ) ----- */
+        #confirm-btn {
+            width: 80%;
+            margin: 20px auto 10px;
+            /* Увеличенный padding и font-size */
+            padding: 18px; 
+            background-color: var(--primary-color);
+            color: var(--text-main);
+            font-size: 18px; /* Сделали крупнее */
+            font-weight: bold;
+            border: none;
+            border-radius: 10px; /* Более округлая */
+            cursor: pointer;
+            text-transform: uppercase;
+            /* Более выраженная тень */
+            box-shadow: 0 6px 15px rgba(140, 120, 81, 0.5); 
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        #confirm-btn:hover:not(:disabled) {
+             background-color: #A39169;
+             box-shadow: 0 8px 20px rgba(140, 120, 81, 0.7); 
+        }
+
+        #confirm-btn:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .confirmation-text {
+            text-align: center;
+            font-size: 12px;
+            color: var(--secondary-color);
+        }
+
+        /* --- Стили для адаптивности --- */
+        @media (max-width: 768px) {
+            .map-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+            #table-details-card {
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -118,17 +391,17 @@
 
 <div class="selection-panel">
     <div class="selection-item" id="date-select-trigger">
-        <span class="selection-icon"><i class="fa fa-calendar"></i></span>
+        <span class="selection-icon"><i class="fa fa-calendar"></i></span> 
         <span class="selection-label">Дата</span>
         <span class="selection-value" id="current-date-value">Сегодня, 4 окт 2025</span>
     </div>
     <div class="selection-item" id="time-select-trigger">
-        <span class="selection-icon"><i class="fa fa-clock-o"></i></span>
+        <span class="selection-icon"><i class="fa fa-clock-o"></i></span> 
         <span class="selection-label">Время</span>
         <span class="selection-value" id="current-time-value">12:30</span>
     </div>
     <div class="selection-item" id="guests-select-trigger">
-        <span class="selection-icon"><i class="fa fa-users"></i></span>
+        <span class="selection-icon"><i class="fa fa-users"></i></span> 
         <span class="selection-label">Гости</span>
         <span class="selection-value" id="current-guests-value">2</span>
     </div>
@@ -156,28 +429,29 @@
             <p id="table-description"></p>
         </div>
     </div>
-
+    
     <button id="confirm-btn" disabled>Подтвердить бронь</button>
     <div class="confirmation-text">Вы получите подтверждение через Telegram</div>
 </div>
+
 
 <div id="booking-overlay">
     <form id="booking-form">
         <div id="closeBookingForm">&times;</div>
         <h2>Детали бронирования</h2>
-
+        
         <label for="date-modal">Выберите дату</label>
         <input type="date" id="date-modal" required />
-
+        
         <label for="time-modal">Выберите время</label>
         <select id="time-modal" required></select>
-
+        
         <label for="guests-modal">Количество гостей</label>
         <input type="number" id="guests-modal" min="1" max="20" value="2" required />
-
+        
         <label for="phone-modal">Телефон</label>
         <input type="tel" id="phone-modal" placeholder="+7 (XXX) XXX-XX-XX" required />
-
+        
         <button type="submit">Забронировать столик <span id="selected-table-modal"></span></button>
         <div id="message"></div>
     </form>
@@ -185,393 +459,347 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-/* ===========================
-    ДАННЫЕ О СТОЛАХ (ЗАМЕНИТЕ ССЫЛКИ НА ВАШИ РЕАЛЬНЫЕ)
-    =========================== */
-const tableData = {
-    '1': { name: 'Столик №1 (У Бара)', seats:2, desc:'Уютный столик для двоих с видом на бар.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '2': { name: 'Столик №2 (У Бара)', seats:2, desc:'Небольшой круглый стол. Идеально для свиданий.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '3': { name: 'Банкетка №3 (У Стены)', seats:4, desc:'Комфортный диван на четырех человек.', photo_url: 'https://images.unsplash.com/photo-1578474846503-a8231904e5be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '4': { name: 'Банкетка №4 (У Стены)', seats:4, desc:'Удобная банкетка для семейного ужина.', photo_url: 'https://images.unsplash.com/photo-1578474846503-a8231904e5be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '5': { name: 'Центральный Стол №5', seats:6, desc:'Большой круглый стол в центре зала.', photo_url: 'https://images.unsplash.com/photo-1563854746816-6218d6a362f7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '6': { name: 'Стол №6 (Квадратный)', seats:8, desc:'Самый большой стол в ресторане.', photo_url: 'https://images.unsplash.com/photo-1563854746816-6218d6a362f7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '7': { name: 'Стол №7 (У Входа)', seats:4, desc:'Прямоугольный столик, близко к входу.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
-    '8': { name: 'Стол №8 (У Входа)', seats:4, desc:'Прямоугольный стол с обзором на вход.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' }
-};
-
-/* ===========================
-    Глобальные переменные и DOM
-    =========================== */
-let user_id = null;
-let user_name = null;
-// Поиск bot_url, если не найден, используем заглушку (обязательно должна быть ссылка на ваш сервер)
-const botApiUrl = new URLSearchParams(window.location.search).get('bot_url') || "https://readytoearn-4.onrender.com"; 
-let selectedTable = null;
-
-const dateInputModal = document.getElementById("date-modal");
-const timeSelectModal = document.getElementById("time-modal");
-const guestsInputModal = document.getElementById("guests-modal");
-const phoneInputModal = document.getElementById("phone-modal");
-const confirmBtn = document.getElementById("confirm-btn");
-const bookingOverlay = document.getElementById("booking-overlay");
-const bookingForm = document.getElementById("booking-form");
-const messageDiv = document.getElementById("message");
-
-const dateValueDisplay = document.getElementById("current-date-value");
-const timeValueDisplay = document.getElementById("current-time-value");
-const guestsValueDisplay = document.getElementById("current-guests-value");
-
-const tableDetailsCard = document.getElementById("table-details-card");
-const tablePhoto = document.getElementById("table-photo");
-const tableTitle = document.getElementById("table-title");
-const tableDescription = document.getElementById("table-description");
-
-
-/* ===========================
-    Утилиты
-    =========================== */
-function getQueryParams() {
-    const params = {};
-    new URLSearchParams(window.location.search).forEach((v,k)=> params[k]=v);
-    return params;
-}
-function adaptToTheme() { document.documentElement.style.setProperty('color-scheme','dark'); }
-
-function formatDateForDisplay(date) {
-    const d = new Date(date);
-    const options = { weekday: 'short', day: 'numeric', month: 'short' };
-    
-    // Обнуляем время для сравнения
-    const today = new Date(); today.setHours(0,0,0,0);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
-    const d_day = new Date(d.setHours(0,0,0,0));
-
-    if (d_day.getTime() === today.getTime()) return "Сегодня, " + d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    if (d_day.getTime() === tomorrow.getTime()) return "Завтра, " + d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    return d.toLocaleDateString('ru-RU', options);
-}
-
-function generateAllTimeSlots() {
-    const slots = [];
-    let start = new Date(); start.setHours(12,0,0,0);
-    const end = new Date(); end.setHours(23,0,0,0); // Последняя бронь в 22:30
-    while (start < end) { 
-        slots.push(start.toTimeString().slice(0,5)); 
-        start = new Date(start.getTime() + 30*60000); 
-    }
-    return slots;
-}
-
-
-/* ===========================
-    Загрузка и обработка страницы
-    =========================== */
-window.onload = async function(){
-    const params = getQueryParams();
-    user_id = params.user_id;
-    user_name = params.user_name;
-    if (window.Telegram && window.Telegram.WebApp) { adaptToTheme(); window.Telegram.WebApp.ready(); }
-
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0,10);
-    dateInputModal.value = todayStr;
-    dateValueDisplay.textContent = formatDateForDisplay(now);
-    guestsValueDisplay.textContent = guestsInputModal.value;
-
-    // Инициализация. Сначала заполняем слоты (без учета стола), затем обновляем доступность
-    await fillTimeSelect(null, todayStr);
-};
-
-
-/* ===========================
-    Работа с доступностью: BOOKED TABLES + TIMES
-    =========================== */
-
-/**
- * Обновляет визуальную доступность столов (помечает занятые)
- * @param {string} date - Выбранная дата (YYYY-MM-DD).
- * @param {string} time - Выбранное время (HH:MM).
- */
-async function updateTableAvailability(date, time) {
-    
-    // Сбрасываем все статусы перед проверкой
-    document.querySelectorAll('.table-element').forEach(t => {
-        t.classList.remove('table-selected');
-        t.classList.remove('table-booked');
-    });
-
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Подтвердить бронь';
-    tableDetailsCard.style.display = 'none';
-    
-    if (!date || !time) {
-        // Если нет даты/времени, все столы недоступны (условно, чтобы нельзя было забронировать)
-        document.querySelectorAll('.table-element').forEach(t => t.classList.add('table-booked'));
-        return;
-    }
-
-    try {
-        const resp = await fetch(`${botApiUrl}/get_booked_tables?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`);
-        const json = await resp.json();
-        
-        if (json && json.status === 'ok' && Array.isArray(json.booked_tables)) {
-            // Помечаем занятые столы
-            json.booked_tables.forEach(id => {
-                const el = document.getElementById(`table-${id}`);
-                if (el) el.classList.add('table-booked');
-            });
+    // --- ДАННЫЕ О СТОЛАХ (ВОССТАНОВЛЕНЫ РАБОЧИЕ ЗАГЛУШКИ) ---
+    const tableData = {
+        '1': { 
+            name: 'Столик №1 (У Бара)', 
+            seats: 2, 
+            desc: 'Уютный столик для двоих с видом на барную стойку. Идеально для аперитива.',
+            photo_url: 'https://picsum.photos/id/161/300/200'
+        },
+        '2': { 
+            name: 'Столик №2 (У Бара)', 
+            seats: 2, 
+            desc: 'Небольшой круглый стол вдали от основного зала. Идеально для свиданий.',
+            photo_url: 'https://picsum.photos/id/163/300/200'
+        },
+        '3': { 
+            name: 'Банкетка №3 (У Стены)', 
+            seats: 4, 
+            desc: 'Комфортный диван на четырех человек. Расположен у стены для приватности.',
+            photo_url: 'https://picsum.photos/id/165/300/200'
+        },
+        '4': { 
+            name: 'Банкетка №4 (У Стены)', 
+            seats: 4, 
+            desc: 'Удобная банкетка с мягкими сиденьями. Отличное место для семейного ужина.',
+            photo_url: 'https://picsum.photos/id/166/300/200'
+        },
+        '5': { 
+            name: 'Центральный Стол №5', 
+            seats: 6, 
+            desc: 'Большой круглый стол в центре зала. Идеален для больших компаний и торжеств.',
+            photo_url: 'https://picsum.photos/id/167/300/200'
+        },
+        '6': { 
+            name: 'Стол №6 (Квадратный)', 
+            seats: 8, 
+            desc: 'Самый большой стол в ресторане. Подходит для корпоративных встреч.',
+            photo_url: 'https://picsum.photos/id/168/300/200'
+        },
+        '7': { 
+            name: 'Стол №7 (У Входа)', 
+            seats: 4, 
+            desc: 'Прямоугольный столик, близко к входу. Хорошо для быстрого обеда.',
+            photo_url: 'https://picsum.photos/id/169/300/200'
+        },
+        '8': { 
+            name: 'Стол №8 (У Входа)', 
+            seats: 4, 
+            desc: 'Прямоугольный стол с хорошим обзором на входную группу.',
+            photo_url: 'https://picsum.photos/id/170/300/200'
         }
-    } catch (err) {
-        console.error('Ошибка при получении занятых столов:', err);
-    }
-
-    // Восстанавливаем выбранный стол, если он не занят
-    if (selectedTable) {
-        const tableElement = document.getElementById(`table-${selectedTable}`);
-        if (tableElement && !tableElement.classList.contains('table-booked')) {
-            tableElement.classList.add('table-selected');
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
-            showTableDetails(selectedTable); 
-        } else {
-            // Если выбранный стол оказался занят, сбрасываем выбор
-            selectedTable = null;
-            tableDetailsCard.style.display = 'none';
-        }
-    }
-}
-
-/**
- * Заполняет селект таймслотов и запускает обновление доступности столов.
- */
-async function fillTimeSelect(tableId, selectedDate) {
-    const select = timeSelectModal;
-    const previousTime = select.value; 
-    select.innerHTML = '';
-    select.disabled = true;
-
-    const allSlots = generateAllTimeSlots();
-    let bookedTimes = [];
-
-    if (tableId) {
-        try {
-            const url = `${botApiUrl}/get_booked_times?table=${encodeURIComponent(tableId)}&date=${encodeURIComponent(selectedDate)}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data && data.status === 'ok' && Array.isArray(data.booked_times)) {
-                bookedTimes = data.booked_times; // [ '12:00', '12:30', ... ]
-            }
-        } catch (err) {
-            console.error('Ошибка при получении занятых времен:', err);
-        }
-    }
-
-    const now = new Date();
-    const todayDateStr = now.toISOString().slice(0,10);
-    let firstAvailableSlot = null;
-
-    allSlots.forEach(slot => {
-        if (bookedTimes.includes(slot)) return; // Пропускаем занятый слот
-
-        let isPast = false;
-        if (selectedDate === todayDateStr) {
-            const slotTime = new Date(`${selectedDate}T${slot}:00`);
-            // Слот считается прошедшим, если он начался (или должен был начаться)
-            if (slotTime.getTime() < now.getTime()) isPast = true;
-        }
-        if (isPast) return;
-
-        const option = document.createElement('option');
-        option.value = slot;
-        option.textContent = slot;
-        select.appendChild(option);
-        if (!firstAvailableSlot) firstAvailableSlot = slot;
-    });
-
-    select.disabled = false;
-    let newSelectedTime = firstAvailableSlot || ""; 
-
-    // Попытка сохранить предыдущее выбранное время
-    if (select.querySelector(`option[value="${previousTime}"]`)) {
-        newSelectedTime = previousTime;
-    }
-    
-    select.value = newSelectedTime;
-
-    timeValueDisplay.textContent = newSelectedTime || "Нет мест";
-
-    // Асинхронно обновляем доступность столов, но не ждем завершения (для предотвращения тормозов UI)
-    updateTableAvailability(selectedDate, newSelectedTime).then(() => {
-        // Убеждаемся, что при отсутствии времени, кнопка точно не активна
-        if (!newSelectedTime) {
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Нет свободного времени';
-        }
-    });
-}
-
-
-/* ===========================
-    UI: детали стола и обработчики
-    =========================== */
-function showTableDetails(tableId) {
-    const data = tableData[tableId];
-    if (!data) return;
-    tablePhoto.src = data.photo_url; // ИСПРАВЛЕНИЕ: Мгновенное обновление фото
-    tableTitle.textContent = data.name;
-    tableDescription.innerHTML = `<strong>Мест:</strong> ${data.seats}<br>${data.desc}`;
-    tableDetailsCard.style.display = 'block';
-}
-
-// клик по столу
-document.querySelectorAll('.table-element').forEach(table => {
-    table.addEventListener('click', (e) => { // Убрал 'async'
-        const clickedTable = e.currentTarget.dataset.table;
-        
-        messageDiv.textContent = ''; 
-        messageDiv.style.display = 'none';
-
-        if (e.currentTarget.classList.contains('table-booked')) {
-            messageDiv.textContent = '❌ Столик занят. Выберите другой.';
-            messageDiv.style.display = 'block';
-            return;
-        }
-        
-        // СИНХРОННОЕ обновление UI-выбора
-        if (selectedTable) {
-            const prev = document.getElementById(`table-${selectedTable}`);
-            if (prev) prev.classList.remove('table-selected');
-        }
-        selectedTable = clickedTable;
-        e.currentTarget.classList.add('table-selected');
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
-        showTableDetails(selectedTable); // Мгновенный показ деталей
-
-        // АСИНХРОННЫЙ вызов, который не блокирует UI
-        fillTimeSelect(selectedTable, dateInputModal.value);
-    });
-});
-
-confirmBtn.addEventListener('click', () => {
-    if (!selectedTable || confirmBtn.disabled) return;
-    document.getElementById('selected-table-modal').textContent = selectedTable;
-    phoneInputModal.value = '';
-    messageDiv.textContent = ''; 
-    messageDiv.style.display = 'none';
-    bookingOverlay.style.display = 'flex';
-});
-
-document.getElementById("closeBookingForm").addEventListener('click', () => { bookingOverlay.style.display = 'none'; });
-
-dateInputModal.addEventListener('change', (e) => { // Убрал 'async'
-    const newDate = new Date(e.target.value);
-    dateValueDisplay.textContent = formatDateForDisplay(newDate);
-    fillTimeSelect(selectedTable, e.target.value); // Асинхронный вызов
-});
-
-timeSelectModal.addEventListener('change', (e) => { // Убрал 'async'
-    timeValueDisplay.textContent = e.target.value;
-    updateTableAvailability(dateInputModal.value, e.target.value); // Асинхронный вызов
-});
-
-guestsInputModal.addEventListener('change', (e) => {
-    guestsValueDisplay.textContent = e.target.value;
-});
-
-
-/* ===========================
-    Отправка брони (submit) - ИСПРАВЛЕНО
-    =========================== */
-bookingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    messageDiv.textContent = ""; messageDiv.classList.remove('success');
-
-    const selectedDateTime = new Date(`${dateInputModal.value}T${timeSelectModal.value}:00`);
-    const now = new Date();
-    
-    if (selectedDateTime < now) {
-        messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
-        messageDiv.style.display = "block";
-        return;
-    }
-
-    const payload = {
-        user_id: user_id,
-        user_name: user_name,
-        table: selectedTable,
-        date: dateInputModal.value,
-        time: timeSelectModal.value,
-        guests: guestsInputModal.value,
-        phone: phoneInputModal.value
     };
+
+    // --- Глобальные переменные и DOM элементы ---
+    let user_id = null;
+    let user_name = null;
+    let botApiUrl = '';
+    let selectedTable = null;
     
-    const submitBtn = bookingForm.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
+    const dateInputModal = document.getElementById("date-modal");
+    const timeSelectModal = document.getElementById("time-modal");
+    const guestsInputModal = document.getElementById("guests-modal");
+    const phoneInputModal = document.getElementById("phone-modal");
+    const confirmBtn = document.getElementById("confirm-btn");
+    const bookingOverlay = document.getElementById("booking-overlay");
+    const bookingForm = document.getElementById("booking-form");
+    const messageDiv = document.getElementById("message");
+    
+    const dateValueDisplay = document.getElementById("current-date-value");
+    const timeValueDisplay = document.getElementById("current-time-value");
+    const guestsValueDisplay = document.getElementById("current-guests-value");
 
-    try {
-        const res = await fetch(`${botApiUrl}/book`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+    const tableDetailsCard = document.getElementById("table-details-card");
+    const tablePhoto = document.getElementById("table-photo");
+    const tableTitle = document.getElementById("table-title");
+    const tableDescription = document.getElementById("table-description");
+
+
+    function getQueryParams() {
+        const params = {};
+        new URLSearchParams(window.location.search).forEach((value, key) => {
+            params[key] = value;
         });
-        const result = await res.json();
+        return params;
+    }
 
-        if (res.ok && result && result.status === 'ok') {
-            // УСПЕХ: Показать сообщение пользователю в оверлее
-            messageDiv.textContent = "✅ Столик забронирован! Ищите подтверждение в Telegram.";
-            messageDiv.classList.add('success');
-            messageDiv.style.display = "block";
+    function adaptToTheme() {
+        document.documentElement.style.setProperty('color-scheme', 'dark');
+    }
 
-            // 1. Отправка данных боту (для уведомления пользователя и админа)
-            if (window.Telegram && window.Telegram.WebApp) {
-                try { 
-                    window.Telegram.WebApp.sendData(JSON.stringify(payload)); 
-                } catch (err) { 
-                    console.warn('Telegram sendData error', err); 
+    window.onload = function() {
+        const params = getQueryParams();
+        user_id = params.user_id;
+        user_name = params.user_name;
+        botApiUrl = params.bot_url || "https://readytoearn-4.onrender.com"; 
+
+        if (window.Telegram && window.Telegram.WebApp) {
+            adaptToTheme();
+            window.Telegram.WebApp.ready();
+        }
+        
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+        
+        dateInputModal.value = todayStr;
+        dateValueDisplay.textContent = formatDateForDisplay(now);
+        guestsValueDisplay.textContent = guestsInputModal.value;
+
+        fillTimeSelect(null, todayStr); 
+    };
+
+    function formatDateForDisplay(date) {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return "Сегодня, " + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        } else if (date.toDateString() === tomorrow.toDateString()) {
+            return "Завтра, " + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        } else {
+            return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+        }
+    }
+
+
+    function generateAllTimeSlots() {
+        const slots = [];
+        let start = new Date(); start.setHours(12, 0, 0, 0); 
+        const end = new Date(); end.setHours(23, 0, 0, 0); 
+        while (start <= end) {
+            slots.push(start.toTimeString().slice(0, 5));
+            start = new Date(start.getTime() + 30 * 60000);
+        }
+        return slots;
+    }
+
+    async function fillTimeSelect(tableId, selectedDate) {
+        const select = timeSelectModal;
+        select.innerHTML = '';
+        select.disabled = true; 
+        
+        const allSlots = generateAllTimeSlots();
+        let bookedTimes = [];
+        
+        if (tableId) {
+             try {
+                const url = `${botApiUrl}/get_booked_times?table=${tableId}&date=${selectedDate}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    bookedTimes = data.booked_times;
+                }
+            } catch (error) {
+                console.error('Ошибка при получении занятых времен:', error);
+            }
+        }
+        
+        const now = new Date();
+        const todayDateStr = now.toISOString().slice(0, 10);
+        let firstAvailableSlot = null;
+
+        allSlots.forEach(slot => {
+            if (!bookedTimes.includes(slot)) {
+                let isPast = false;
+                if (selectedDate === todayDateStr) {
+                    const slotTime = new Date(`${selectedDate}T${slot}:00`);
+                    if (slotTime < now) {
+                        isPast = true;
+                    }
                 }
                 
-                // 2. ЗАКРЫТИЕ WEBAPP (ИСПРАВЛЕНИЕ: Гарантирует, что бот сможет ответить пользователю)
-                setTimeout(() => {
-                    window.Telegram.WebApp.close(); 
-                }, 1000); // 1 секунда на прочтение сообщения
-                
-                // Важно: не делаем больше ничего после вызова close(), т.к. страница скоро закроется.
+                if (!isPast) {
+                    const option = document.createElement("option");
+                    option.value = slot;
+                    option.textContent = slot;
+                    select.appendChild(option);
+                    
+                    if (!firstAvailableSlot) {
+                        firstAvailableSlot = slot;
+                    }
+                }
+            }
+        });
+        
+        select.disabled = false;
+        if (select.options.length > 0) {
+            select.value = firstAvailableSlot;
+            timeValueDisplay.textContent = firstAvailableSlot;
+        } else {
+            timeValueDisplay.textContent = "Нет мест";
+        }
+        
+        updateTableAvailability(selectedDate, firstAvailableSlot);
+    }
+    
+    function updateTableAvailability(date, time) {
+        
+        document.querySelectorAll('.table-element').forEach(table => {
+            table.classList.remove('table-booked', 'table-selected');
+        });
+        
+        if (selectedTable) {
+            const tableElement = document.getElementById(`table-${selectedTable}`);
+            if (tableElement.classList.contains('table-booked')) {
+                selectedTable = null;
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Выберите другой стол';
+                tableDetailsCard.style.display = 'none'; 
+            } else {
+                tableElement.classList.add('table-selected');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
+                showTableDetails(selectedTable); 
+            }
+        } else {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Подтвердить бронь';
+            tableDetailsCard.style.display = 'none'; 
+        }
+    }
+
+    function showTableDetails(tableId) {
+        const data = tableData[tableId];
+        if (data) {
+            tablePhoto.src = data.photo_url;
+            tableTitle.textContent = data.name;
+            tableDescription.innerHTML = `<strong>Мест:</strong> ${data.seats}<br>${data.desc}`;
+            tableDetailsCard.style.display = 'block';
+        }
+    }
+
+    document.querySelectorAll('.table-element').forEach(table => {
+        table.addEventListener('click', (e) => {
+            const clickedTable = e.currentTarget.dataset.table;
+            
+            if (e.currentTarget.classList.contains('table-booked')) {
+                messageDiv.textContent = '❌ Столик занят. Выберите другой.';
+                messageDiv.style.display = 'block';
                 return;
             }
             
-            // Если мы не в Telegram WebApp (для тестирования)
-            // Визуальное обновление UI (помечаем как занято)
-            const bookedEl = document.getElementById(`table-${selectedTable}`);
-            if (bookedEl) {
-                bookedEl.classList.remove('table-selected');
-                bookedEl.classList.add('table-booked'); 
+            if (selectedTable) {
+                document.getElementById(`table-${selectedTable}`).classList.remove('table-selected');
             }
-            // Обновляем таймслоты и карту
-            fillTimeSelect(selectedTable, dateInputModal.value);
             
-            // Сброс UI-состояния и закрытие оверлея
-            setTimeout(() => {
-                bookingOverlay.style.display = "none";
-                selectedTable = null;
-                confirmBtn.disabled = true;
-                confirmBtn.textContent = 'Подтвердить бронь';
-                tableDetailsCard.style.display = 'none';
-            }, 1000); 
+            selectedTable = clickedTable;
+            e.currentTarget.classList.add('table-selected');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
+            messageDiv.style.display = 'none';
 
-        } else {
-            // ОШИБКА
-            messageDiv.textContent = `❌ Ошибка: ${result && result.message ? result.message : 'Не удалось забронировать'}`;
+            showTableDetails(selectedTable);
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (!selectedTable) return;
+        
+        document.getElementById('selected-table-modal').textContent = selectedTable;
+        phoneInputModal.value = ''; 
+        bookingOverlay.style.display = 'flex';
+    });
+
+    document.getElementById("closeBookingForm").addEventListener('click', () => {
+        bookingOverlay.style.display = 'none';
+    });
+
+    dateInputModal.addEventListener('change', (e) => {
+        const newDate = new Date(e.target.value);
+        dateValueDisplay.textContent = formatDateForDisplay(newDate);
+        fillTimeSelect(selectedTable, e.target.value);
+    });
+
+    timeSelectModal.addEventListener('change', (e) => {
+        timeValueDisplay.textContent = e.target.value;
+        updateTableAvailability(dateInputModal.value, e.target.value);
+    });
+
+    guestsInputModal.addEventListener('change', (e) => {
+        guestsValueDisplay.textContent = e.target.value;
+    });
+
+
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        messageDiv.textContent = "";
+        messageDiv.style.display = "none";
+        
+        const selectedDateTime = new Date(`${dateInputModal.value}T${timeSelectModal.value}:00`);
+        const now = new Date();
+        
+        if (selectedDateTime < now) {
+            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
             messageDiv.style.display = "block";
-            submitBtn.disabled = false;
+            return;
         }
-    } catch (err) {
-        console.error('Fetch error:', err);
-        messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
-        messageDiv.style.display = "block";
-        submitBtn.disabled = false;
-    }
-});
+        
+        const data = {
+            user_id: user_id,
+            user_name: user_name,
+            table: selectedTable,
+            date: dateInputModal.value,
+            time: timeSelectModal.value,
+            guests: guestsInputModal.value,
+            phone: phoneInputModal.value
+        };
+
+        try {
+            const res = await fetch(`${botApiUrl}/book`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (res.ok) {
+                messageDiv.textContent = "✅ Столик забронирован! Ищем подтверждение в Telegram.";
+                window.Telegram.WebApp.sendData(JSON.stringify(data));
+                
+                setTimeout(() => {
+                    bookingOverlay.style.display = "none";
+                    document.getElementById(`table-${selectedTable}`).classList.remove('table-selected');
+                    selectedTable = null;
+                    confirmBtn.disabled = true;
+                    confirmBtn.textContent = 'Подтвердить бронь';
+                    tableDetailsCard.style.display = 'none'; 
+                    
+                    updateTableAvailability(dateInputModal.value, timeSelectModal.value);
+                }, 2000);
+
+            } else {
+                messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
+            }
+            messageDiv.style.display = "block";
+        } catch (err) {
+            console.error('Fetch error:', err);
+            messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
+            messageDiv.style.display = "block";
+        }
+    });
 </script>
 </body>
 </html>
