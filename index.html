@@ -33,7 +33,7 @@
             display:flex; justify-content:space-around; align-items:flex-start;
             padding:15px 10px; border-bottom:1px solid var(--bg-medium);
         }
-        .selection-item{ display:flex; flex-direction:column; align-items:center; width:30%; text-align:center }
+        .selection-item{ display:flex; flex-direction:column; align-items:center; width:30%; text-align:center; cursor:pointer; }
         .selection-icon{ font-size:20px; color:var(--secondary-color); margin-bottom:5px }
         .selection-label{ font-size:11px; color:var(--secondary-color); text-transform:uppercase }
         .selection-value{ font-size:14px; font-weight:bold; color:var(--text-main) }
@@ -103,7 +103,9 @@
         #confirm-btn:disabled{ background:#666; cursor:not-allowed; box-shadow:none }
         .confirmation-text{ text-align:center; font-size:12px; color:var(--secondary-color) }
 
-        #message{ margin-top:10px; color:var(--text-main); font-size:14px; min-height:1.2em }
+        #message{ margin-top:10px; color:red; font-size:14px; min-height:1.2em; text-align: center; }
+        #message.success { color: #4CAF50; }
+
         @media (max-width:768px){ .map-wrapper{ flex-direction:column; align-items:center } #table-details-card{ margin-top:20px } }
     </style>
 </head>
@@ -184,25 +186,26 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 /* ===========================
-   ДАННЫЕ О СТОЛАХ
-   =========================== */
+    ДАННЫЕ О СТОЛАХ (ЗАМЕНИТЕ ССЫЛКИ НА ВАШИ РЕАЛЬНЫЕ)
+    =========================== */
 const tableData = {
-    '1': { name: 'Столик №1 (У Бара)', seats:2, desc:'Уютный столик для двоих с видом на бар.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '2': { name: 'Столик №2 (У Бара)', seats:2, desc:'Небольшой круглый стол. Идеально для свиданий.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '3': { name: 'Банкетка №3 (У Стены)', seats:4, desc:'Комфортный диван на четырех человек.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '4': { name: 'Банкетка №4 (У Стены)', seats:4, desc:'Удобная банкетка для семейного ужина.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '5': { name: 'Центральный Стол №5', seats:6, desc:'Большой круглый стол в центре зала.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '6': { name: 'Стол №6 (Квадратный)', seats:8, desc:'Самый большой стол в ресторане.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '7': { name: 'Стол №7 (У Входа)', seats:4, desc:'Прямоугольный столик, близко к входу.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' },
-    '8': { name: 'Стол №8 (У Входа)', seats:4, desc:'Прямоугольный стол с обзором на вход.', photo_url: 'https://media.istockphoto.com/id/649672132/ru/%D1%84%D0%BE%D1%82%D0%BE/...' }
+    '1': { name: 'Столик №1 (У Бара)', seats:2, desc:'Уютный столик для двоих с видом на бар.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '2': { name: 'Столик №2 (У Бара)', seats:2, desc:'Небольшой круглый стол. Идеально для свиданий.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '3': { name: 'Банкетка №3 (У Стены)', seats:4, desc:'Комфортный диван на четырех человек.', photo_url: 'https://images.unsplash.com/photo-1578474846503-a8231904e5be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '4': { name: 'Банкетка №4 (У Стены)', seats:4, desc:'Удобная банкетка для семейного ужина.', photo_url: 'https://images.unsplash.com/photo-1578474846503-a8231904e5be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '5': { name: 'Центральный Стол №5', seats:6, desc:'Большой круглый стол в центре зала.', photo_url: 'https://images.unsplash.com/photo-1563854746816-6218d6a362f7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '6': { name: 'Стол №6 (Квадратный)', seats:8, desc:'Самый большой стол в ресторане.', photo_url: 'https://images.unsplash.com/photo-1563854746816-6218d6a362f7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '7': { name: 'Стол №7 (У Входа)', seats:4, desc:'Прямоугольный столик, близко к входу.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' },
+    '8': { name: 'Стол №8 (У Входа)', seats:4, desc:'Прямоугольный стол с обзором на вход.', photo_url: 'https://images.unsplash.com/photo-1549488344-ec2476579d86?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80' }
 };
 
 /* ===========================
-   Глобальные переменные и DOM
-   =========================== */
+    Глобальные переменные и DOM
+    =========================== */
 let user_id = null;
 let user_name = null;
-const botApiUrl = new URLSearchParams(window.location.search).get('bot_url') || "https://readytoearn-4.onrender.com";
+// Поиск bot_url, если не найден, используем заглушку (обязательно должна быть ссылка на ваш сервер)
+const botApiUrl = new URLSearchParams(window.location.search).get('bot_url') || "https://readytoearn-4.onrender.com"; 
 let selectedTable = null;
 
 const dateInputModal = document.getElementById("date-modal");
@@ -223,9 +226,10 @@ const tablePhoto = document.getElementById("table-photo");
 const tableTitle = document.getElementById("table-title");
 const tableDescription = document.getElementById("table-description");
 
+
 /* ===========================
-   Утилиты
-   =========================== */
+    Утилиты
+    =========================== */
 function getQueryParams() {
     const params = {};
     new URLSearchParams(window.location.search).forEach((v,k)=> params[k]=v);
@@ -234,23 +238,34 @@ function getQueryParams() {
 function adaptToTheme() { document.documentElement.style.setProperty('color-scheme','dark'); }
 
 function formatDateForDisplay(date) {
-    const today = new Date(); const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
-    if (date.toDateString() === today.toDateString()) return "Сегодня, " + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    if (date.toDateString() === tomorrow.toDateString()) return "Завтра, " + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+    const d = new Date(date);
+    const options = { weekday: 'short', day: 'numeric', month: 'short' };
+    
+    // Обнуляем время для сравнения
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+    const d_day = new Date(d.setHours(0,0,0,0));
+
+    if (d_day.getTime() === today.getTime()) return "Сегодня, " + d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    if (d_day.getTime() === tomorrow.getTime()) return "Завтра, " + d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    return d.toLocaleDateString('ru-RU', options);
 }
 
 function generateAllTimeSlots() {
     const slots = [];
     let start = new Date(); start.setHours(12,0,0,0);
-    const end = new Date(); end.setHours(23,0,0,0);
-    while (start <= end) { slots.push(start.toTimeString().slice(0,5)); start = new Date(start.getTime() + 30*60000); }
+    const end = new Date(); end.setHours(23,0,0,0); // Последняя бронь в 22:30
+    while (start < end) { 
+        slots.push(start.toTimeString().slice(0,5)); 
+        start = new Date(start.getTime() + 30*60000); 
+    }
     return slots;
 }
 
+
 /* ===========================
-   Загрузка и обработка страницы
-   =========================== */
+    Загрузка и обработка страницы
+    =========================== */
 window.onload = async function(){
     const params = getQueryParams();
     user_id = params.user_id;
@@ -263,81 +278,75 @@ window.onload = async function(){
     dateValueDisplay.textContent = formatDateForDisplay(now);
     guestsValueDisplay.textContent = guestsInputModal.value;
 
-    // В начале пометим уже занятые столы (для текущего времени, если есть) и заполним слоты без выбранного стола
-    await updateTableAvailability(dateInputModal.value, timeSelectModal.value || null);
+    // Инициализация. Сначала заполняем слоты (без учета стола), затем обновляем доступность
     await fillTimeSelect(null, todayStr);
 };
 
+
 /* ===========================
-   Работа с доступностью: BOOKED TABLES + TIMES
-   - Backend endpoints used:
-   * GET /get_booked_times?table={id}&date={YYYY-MM-DD} -> {status:'ok', booked_times: ['12:00', ...]}
-   * GET /get_booked_tables?date={YYYY-MM-DD}&time={HH:MM} -> {status:'ok', booked_tables: [1,2,...]}
-   =========================== */
+    Работа с доступностью: BOOKED TABLES + TIMES
+    =========================== */
 
 /**
  * Обновляет визуальную доступность столов (помечает занятые)
- * - Не удаляем класс table-booked здесь, только обновляем на основе ответа сервера.
+ * @param {string} date - Выбранная дата (YYYY-MM-DD).
+ * @param {string} time - Выбранное время (HH:MM).
  */
 async function updateTableAvailability(date, time) {
-    // Сбрасываем только выделение (selected), но не помеченные занятыми столы
-    document.querySelectorAll('.table-element').forEach(t => t.classList.remove('table-selected'));
+    
+    // Сбрасываем все статусы перед проверкой
+    document.querySelectorAll('.table-element').forEach(t => {
+        t.classList.remove('table-selected');
+        t.classList.remove('table-booked');
+    });
 
-    // Если передана дата+время — получаем список занятых столов и помечаем их
-    if (date && time) {
-        try {
-            const resp = await fetch(`${botApiUrl}/get_booked_tables?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`);
-            const json = await resp.json();
-            if (json && json.status === 'ok' && Array.isArray(json.booked_tables)) {
-                // Сначала снимем класс table-booked со всех, потом добавим для занятых
-                document.querySelectorAll('.table-element').forEach(t => t.classList.remove('table-booked'));
-                json.booked_tables.forEach(id => {
-                    const el = document.getElementById(`table-${id}`);
-                    if (el) el.classList.add('table-booked');
-                });
-            } else {
-                // если неожиданный ответ — не ломаем UX, просто снимаем пометки
-                document.querySelectorAll('.table-element').forEach(t => t.classList.remove('table-booked'));
-            }
-        } catch (err) {
-            console.error('Ошибка при получении занятых столов:', err);
-            // В случае ошибки не трогаем текущие пометки (чтобы не внезапно сделать всё свободным)
-        }
-    } else {
-        // Без времени — не можем корректно узнать занятость; снимаем только выделения, оставляя пометки
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Подтвердить бронь';
+    tableDetailsCard.style.display = 'none';
+    
+    if (!date || !time) {
+        // Если нет даты/времени, все столы недоступны (условно, чтобы нельзя было забронировать)
+        document.querySelectorAll('.table-element').forEach(t => t.classList.add('table-booked'));
+        return;
     }
 
-    // Если выбран стол — проверяем, не стал ли он занятым
+    try {
+        const resp = await fetch(`${botApiUrl}/get_booked_tables?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`);
+        const json = await resp.json();
+        
+        if (json && json.status === 'ok' && Array.isArray(json.booked_tables)) {
+            // Помечаем занятые столы
+            json.booked_tables.forEach(id => {
+                const el = document.getElementById(`table-${id}`);
+                if (el) el.classList.add('table-booked');
+            });
+        }
+    } catch (err) {
+        console.error('Ошибка при получении занятых столов:', err);
+    }
+
+    // Восстанавливаем выбранный стол, если он не занят
     if (selectedTable) {
         const tableElement = document.getElementById(`table-${selectedTable}`);
-        if (tableElement && tableElement.classList.contains('table-booked')) {
-            // выбранный стол оказался занятым — снимаем выбор
-            selectedTable = null;
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Выберите другой стол';
-            tableDetailsCard.style.display = 'none';
-        } else if (tableElement) {
+        if (tableElement && !tableElement.classList.contains('table-booked')) {
             tableElement.classList.add('table-selected');
             confirmBtn.disabled = false;
             confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
-            showTableDetails(selectedTable);
+            showTableDetails(selectedTable); 
         } else {
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Подтвердить бронь';
+            // Если выбранный стол оказался занят, сбрасываем выбор
+            selectedTable = null;
+            tableDetailsCard.style.display = 'none';
         }
-    } else {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Подтвердить бронь';
     }
 }
 
 /**
- * Заполняет селект таймслотов.
- * если tableId передан — исключаем забронированные слоты для этого стола.
- * если tableId == null — показываем слоты (без учёта конкретного стола).
+ * Заполняет селект таймслотов и запускает обновление доступности столов.
  */
 async function fillTimeSelect(tableId, selectedDate) {
     const select = timeSelectModal;
+    const previousTime = select.value; 
     select.innerHTML = '';
     select.disabled = true;
 
@@ -350,7 +359,7 @@ async function fillTimeSelect(tableId, selectedDate) {
             const res = await fetch(url);
             const data = await res.json();
             if (data && data.status === 'ok' && Array.isArray(data.booked_times)) {
-                bookedTimes = data.booked_times;
+                bookedTimes = data.booked_times; // [ '12:00', '12:30', ... ]
             }
         } catch (err) {
             console.error('Ошибка при получении занятых времен:', err);
@@ -362,14 +371,13 @@ async function fillTimeSelect(tableId, selectedDate) {
     let firstAvailableSlot = null;
 
     allSlots.forEach(slot => {
-        // если слот забронирован для выбранного стола — пропускаем
-        if (bookedTimes.includes(slot)) return;
+        if (bookedTimes.includes(slot)) return; // Пропускаем занятый слот
 
-        // если выбранная дата — сегодня, не показываем прошедшие слоты
         let isPast = false;
         if (selectedDate === todayDateStr) {
             const slotTime = new Date(`${selectedDate}T${slot}:00`);
-            if (slotTime < now) isPast = true;
+            // Слот считается прошедшим, если он начался (или должен был начаться)
+            if (slotTime.getTime() < now.getTime()) isPast = true;
         }
         if (isPast) return;
 
@@ -381,24 +389,35 @@ async function fillTimeSelect(tableId, selectedDate) {
     });
 
     select.disabled = false;
-    if (select.options.length > 0) {
-        select.value = firstAvailableSlot;
-        timeValueDisplay.textContent = firstAvailableSlot;
-    } else {
-        timeValueDisplay.textContent = "Нет мест";
-    }
+    let newSelectedTime = firstAvailableSlot || ""; 
 
-    // Обновляем пометки столов по выбранной дате/времени
-    await updateTableAvailability(selectedDate, select.value || null);
+    // Попытка сохранить предыдущее выбранное время
+    if (select.querySelector(`option[value="${previousTime}"]`)) {
+        newSelectedTime = previousTime;
+    }
+    
+    select.value = newSelectedTime;
+
+    timeValueDisplay.textContent = newSelectedTime || "Нет мест";
+
+    // Асинхронно обновляем доступность столов, но не ждем завершения (для предотвращения тормозов UI)
+    updateTableAvailability(selectedDate, newSelectedTime).then(() => {
+        // Убеждаемся, что при отсутствии времени, кнопка точно не активна
+        if (!newSelectedTime) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Нет свободного времени';
+        }
+    });
 }
 
+
 /* ===========================
-   UI: детали стола и обработчики
-   =========================== */
+    UI: детали стола и обработчики
+    =========================== */
 function showTableDetails(tableId) {
     const data = tableData[tableId];
     if (!data) return;
-    tablePhoto.src = data.photo_url;
+    tablePhoto.src = data.photo_url; // ИСПРАВЛЕНИЕ: Мгновенное обновление фото
     tableTitle.textContent = data.name;
     tableDescription.innerHTML = `<strong>Мест:</strong> ${data.seats}<br>${data.desc}`;
     tableDetailsCard.style.display = 'block';
@@ -406,15 +425,19 @@ function showTableDetails(tableId) {
 
 // клик по столу
 document.querySelectorAll('.table-element').forEach(table => {
-    table.addEventListener('click', async (e) => {
+    table.addEventListener('click', (e) => { // Убрал 'async'
         const clickedTable = e.currentTarget.dataset.table;
-        // если стол помечен как занятый — показать сообщение и выйти
+        
+        messageDiv.textContent = ''; 
+        messageDiv.style.display = 'none';
+
         if (e.currentTarget.classList.contains('table-booked')) {
             messageDiv.textContent = '❌ Столик занят. Выберите другой.';
             messageDiv.style.display = 'block';
             return;
         }
-        // снимем предыдущий выбор
+        
+        // СИНХРОННОЕ обновление UI-выбора
         if (selectedTable) {
             const prev = document.getElementById(`table-${selectedTable}`);
             if (prev) prev.classList.remove('table-selected');
@@ -423,54 +446,50 @@ document.querySelectorAll('.table-element').forEach(table => {
         e.currentTarget.classList.add('table-selected');
         confirmBtn.disabled = false;
         confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
-        messageDiv.style.display = 'none';
+        showTableDetails(selectedTable); // Мгновенный показ деталей
 
-        // Обновим таймслоты для выбранного стола и текущей даты
-        await fillTimeSelect(selectedTable, dateInputModal.value);
-        showTableDetails(selectedTable);
+        // АСИНХРОННЫЙ вызов, который не блокирует UI
+        fillTimeSelect(selectedTable, dateInputModal.value);
     });
 });
 
 confirmBtn.addEventListener('click', () => {
-    if (!selectedTable) return;
+    if (!selectedTable || confirmBtn.disabled) return;
     document.getElementById('selected-table-modal').textContent = selectedTable;
     phoneInputModal.value = '';
+    messageDiv.textContent = ''; 
+    messageDiv.style.display = 'none';
     bookingOverlay.style.display = 'flex';
 });
+
 document.getElementById("closeBookingForm").addEventListener('click', () => { bookingOverlay.style.display = 'none'; });
 
-dateInputModal.addEventListener('change', async (e) => {
+dateInputModal.addEventListener('change', (e) => { // Убрал 'async'
     const newDate = new Date(e.target.value);
     dateValueDisplay.textContent = formatDateForDisplay(newDate);
-    // При смене даты обновляем таймслоты (для выбранного стола, если есть)
-    await fillTimeSelect(selectedTable, e.target.value);
+    fillTimeSelect(selectedTable, e.target.value); // Асинхронный вызов
 });
 
-timeSelectModal.addEventListener('change', async (e) => {
+timeSelectModal.addEventListener('change', (e) => { // Убрал 'async'
     timeValueDisplay.textContent = e.target.value;
-    // при смене времени обновляем статус столов (кто занялся на эту дату/время)
-    await updateTableAvailability(dateInputModal.value, e.target.value);
+    updateTableAvailability(dateInputModal.value, e.target.value); // Асинхронный вызов
 });
 
 guestsInputModal.addEventListener('change', (e) => {
     guestsValueDisplay.textContent = e.target.value;
 });
 
+
 /* ===========================
-   Отправка брони (submit)
-   =========================== */
+    Отправка брони (submit) - ИСПРАВЛЕНО
+    =========================== */
 bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    messageDiv.textContent = ""; messageDiv.style.display = "none";
-
-    if (!selectedTable) {
-        messageDiv.textContent = "❌ Выберите стол перед подтверждением";
-        messageDiv.style.display = "block";
-        return;
-    }
+    messageDiv.textContent = ""; messageDiv.classList.remove('success');
 
     const selectedDateTime = new Date(`${dateInputModal.value}T${timeSelectModal.value}:00`);
     const now = new Date();
+    
     if (selectedDateTime < now) {
         messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
         messageDiv.style.display = "block";
@@ -486,6 +505,9 @@ bookingForm.addEventListener('submit', async (e) => {
         guests: guestsInputModal.value,
         phone: phoneInputModal.value
     };
+    
+    const submitBtn = bookingForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
 
     try {
         const res = await fetch(`${botApiUrl}/book`, {
@@ -496,44 +518,58 @@ bookingForm.addEventListener('submit', async (e) => {
         const result = await res.json();
 
         if (res.ok && result && result.status === 'ok') {
-            // Успешно: показать сообщение, пометить стол как занятый, обновить таймслоты и отправить данные в TG
-            messageDiv.textContent = "✅ Столик забронирован! Ищем подтверждение в Telegram.";
+            // УСПЕХ: Показать сообщение пользователю в оверлее
+            messageDiv.textContent = "✅ Столик забронирован! Ищите подтверждение в Telegram.";
+            messageDiv.classList.add('success');
             messageDiv.style.display = "block";
 
-            // помечаем таблицу как занято
+            // 1. Отправка данных боту (для уведомления пользователя и админа)
+            if (window.Telegram && window.Telegram.WebApp) {
+                try { 
+                    window.Telegram.WebApp.sendData(JSON.stringify(payload)); 
+                } catch (err) { 
+                    console.warn('Telegram sendData error', err); 
+                }
+                
+                // 2. ЗАКРЫТИЕ WEBAPP (ИСПРАВЛЕНИЕ: Гарантирует, что бот сможет ответить пользователю)
+                setTimeout(() => {
+                    window.Telegram.WebApp.close(); 
+                }, 1000); // 1 секунда на прочтение сообщения
+                
+                // Важно: не делаем больше ничего после вызова close(), т.к. страница скоро закроется.
+                return;
+            }
+            
+            // Если мы не в Telegram WebApp (для тестирования)
+            // Визуальное обновление UI (помечаем как занято)
             const bookedEl = document.getElementById(`table-${selectedTable}`);
             if (bookedEl) {
                 bookedEl.classList.remove('table-selected');
-                bookedEl.classList.add('table-booked');
+                bookedEl.classList.add('table-booked'); 
             }
-
-            // обновляем селект таймслотов для текущей даты (чтобы слот пропал)
-            await fillTimeSelect(selectedTable, dateInputModal.value);
-
-            // отправляем данные в Telegram WebApp (если доступно)
-            if (window.Telegram && window.Telegram.WebApp) {
-                try { window.Telegram.WebApp.sendData(JSON.stringify(payload)); } catch (err) { console.warn('Telegram sendData error', err); }
-            }
-
-            // скрываем оверлей и сбрасываем выбор через небольшую паузу
-            setTimeout(async () => {
+            // Обновляем таймслоты и карту
+            fillTimeSelect(selectedTable, dateInputModal.value);
+            
+            // Сброс UI-состояния и закрытие оверлея
+            setTimeout(() => {
                 bookingOverlay.style.display = "none";
                 selectedTable = null;
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Подтвердить бронь';
                 tableDetailsCard.style.display = 'none';
+            }, 1000); 
 
-                // Обновим пометки столов для выбранной даты/времени (в т.ч. если backend зарегистрировал бронь)
-                await updateTableAvailability(dateInputModal.value, timeSelectModal.value);
-            }, 900);
         } else {
+            // ОШИБКА
             messageDiv.textContent = `❌ Ошибка: ${result && result.message ? result.message : 'Не удалось забронировать'}`;
             messageDiv.style.display = "block";
+            submitBtn.disabled = false;
         }
     } catch (err) {
         console.error('Fetch error:', err);
         messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
         messageDiv.style.display = "block";
+        submitBtn.disabled = false;
     }
 });
 </script>
