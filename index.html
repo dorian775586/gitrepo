@@ -533,7 +533,7 @@ const tableData = {
     // --- Глобальные переменные и DOM элементы ---
     let user_id = null;
     let user_name = null;
-    let botApiUrl = ''; // Убедитесь, что эта переменная правильно заполняется из параметров URL
+    let botApiUrl = ''; 
     let selectedTable = null;
     
     const dateInputModal = document.getElementById("date-modal");
@@ -566,12 +566,12 @@ const tableData = {
     function adaptToTheme() {
         document.documentElement.style.setProperty('color-scheme', 'dark');
     }
-
+    
+    // Инициализация при загрузке
     window.onload = function() {
         const params = getQueryParams();
         user_id = params.user_id;
         user_name = params.user_name;
-        // !!! ВАЖНО: Убедитесь, что bot_url правильно передается из вашего бота
         botApiUrl = params.bot_url || "https://readytoearn-4.onrender.com"; 
 
         if (window.Telegram && window.Telegram.WebApp) {
@@ -586,7 +586,7 @@ const tableData = {
         dateValueDisplay.textContent = formatDateForDisplay(now);
         guestsValueDisplay.textContent = guestsInputModal.value;
 
-        // При первой загрузке заполняем время, но не делаем запрос на занятость (потому что стол не выбран)
+        // При первой загрузке заполняем время
         fillTimeSelect(null, todayStr); 
     };
 
@@ -595,7 +595,6 @@ const tableData = {
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
 
-        // Чтобы избежать проблем с часовыми поясами, сравниваем только даты
         const d = new Date(date);
         const t = new Date(today);
         d.setHours(0,0,0,0);
@@ -606,7 +605,7 @@ const tableData = {
         } else if (d.getTime() === tomorrow.getTime()) {
             return "Завтра, " + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
         } else {
-            return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+            return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
         }
     }
 
@@ -622,12 +621,13 @@ const tableData = {
     }
 
     /**
-     * Заполняет <select> времени, исключая занятые слоты для конкретного стола.
-     * @param {string | null} tableId - ID выбранного стола (или null, если стол не выбран).
+     * Заполняет <select> времени, исключая занятые слоты и прошедшее время.
+     * @param {string | null} tableId - ID выбранного стола (или null).
      * @param {string} selectedDate - Выбранная дата в формате YYYY-MM-DD.
      */
     async function fillTimeSelect(tableId, selectedDate) {
         const select = timeSelectModal;
+        const previousTime = timeValueDisplay.textContent; // Сохраняем текущее время
         select.innerHTML = '';
         select.disabled = true; 
         
@@ -641,7 +641,7 @@ const tableData = {
                 const res = await fetch(url);
                 const data = await res.json();
                 if (data.status === 'ok') {
-                    bookedTimes = data.booked_times.map(t => t.slice(0, 5)); // Обрезка до HH:MM
+                    bookedTimes = data.booked_times.map(t => t.slice(0, 5)); 
                 }
             } catch (error) {
                 console.error('Ошибка при получении занятых времен:', error);
@@ -651,15 +651,16 @@ const tableData = {
         const now = new Date();
         const todayDateStr = now.toISOString().slice(0, 10);
         let firstAvailableSlot = null;
-        let defaultTime = timeValueDisplay.textContent; // Запоминаем текущее отображаемое время
 
         allSlots.forEach(slot => {
             if (!bookedTimes.includes(slot)) {
                 let isPast = false;
                 if (selectedDate === todayDateStr) {
                     const slotTime = new Date(`${selectedDate}T${slot}:00`);
-                    // Считаем слот "прошлым", если он был более 30 минут назад
-                    if (slotTime < new Date(now.getTime() - 30 * 60000)) { 
+                    
+                    // УСИЛЕННАЯ ПРОВЕРКА НА ПРОШЕДШЕЕ ВРЕМЯ: Слот считается прошедшим,
+                    // если он начался более 30 минут назад, чтобы дать время для бронирования
+                    if (slotTime.getTime() < now.getTime() - 30 * 60000) { 
                         isPast = true;
                     }
                 }
@@ -680,21 +681,17 @@ const tableData = {
         select.disabled = false;
         
         // Восстанавливаем ранее выбранное время, если оно еще доступно
-        if (select.querySelector(`option[value="${defaultTime}"]`)) {
-            select.value = defaultTime;
+        if (select.querySelector(`option[value="${previousTime}"]`)) {
+            select.value = previousTime;
         } else if (firstAvailableSlot) {
             select.value = firstAvailableSlot;
         } else {
-            // Если слотов нет
             select.value = "";
         }
         
         // Обновляем отображение и доступность столов
-        if (select.options.length > 0) {
-            timeValueDisplay.textContent = select.value;
-        } else {
-            timeValueDisplay.textContent = "Нет мест";
-        }
+        const newTimeDisplay = select.value || "Нет мест";
+        timeValueDisplay.textContent = newTimeDisplay;
 
         updateTableAvailability(selectedDate, select.value);
     }
@@ -792,7 +789,7 @@ const tableData = {
             confirmBtn.disabled = false;
             confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
             
-            // !!! ВАЖНОЕ ИЗМЕНЕНИЕ: Обновляем доступное время для выбранного стола
+            // Обновляем доступное время для выбранного стола
             fillTimeSelect(selectedTable, dateInputModal.value);
 
             showTableDetails(selectedTable);
@@ -805,7 +802,7 @@ const tableData = {
         
         document.getElementById('selected-table-modal').textContent = selectedTable;
         phoneInputModal.value = ''; 
-        messageDiv.textContent = ''; // Очистка предыдущего сообщения
+        messageDiv.textContent = ''; 
         messageDiv.classList.remove('success', 'error');
         bookingOverlay.style.display = 'flex';
     });
@@ -819,14 +816,12 @@ const tableData = {
     dateInputModal.addEventListener('change', (e) => {
         const newDate = new Date(e.target.value);
         dateValueDisplay.textContent = formatDateForDisplay(newDate);
-        // !!! Вызываем fillTimeSelect для обновления доступного времени для выбранного стола
         fillTimeSelect(selectedTable, e.target.value);
     });
 
     // Смена времени
     timeSelectModal.addEventListener('change', (e) => {
         timeValueDisplay.textContent = e.target.value;
-        // !!! Вызываем updateTableAvailability для обновления занятости столов для выбранного времени
         updateTableAvailability(dateInputModal.value, e.target.value);
     });
 
@@ -846,8 +841,9 @@ const tableData = {
         const selectedDateTime = new Date(`${dateInputModal.value}T${timeSelectModal.value}:00`);
         const now = new Date();
         
-        if (selectedDateTime < now) {
-            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
+        // Повторная проверка, что время не прошло с момента выбора
+        if (selectedDateTime.getTime() < now.getTime() - 30 * 60000) {
+            messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время. Выберите более позднее время.";
             messageDiv.classList.add('error');
             messageDiv.style.display = "block";
             return;
@@ -863,7 +859,6 @@ const tableData = {
             phone: phoneInputModal.value
         };
         
-        // Отключаем кнопку на время запроса
         const submitBtn = bookingForm.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
 
@@ -881,7 +876,6 @@ const tableData = {
                 messageDiv.classList.add('success');
                 messageDiv.style.display = "block";
                 
-                // Отправка данных в Telegram WebApp
                 if (window.Telegram && window.Telegram.WebApp) {
                     window.Telegram.WebApp.sendData(JSON.stringify(data));
                 }
@@ -889,18 +883,27 @@ const tableData = {
                 // Закрытие модального окна и сброс состояния через 2 секунды
                 setTimeout(() => {
                     bookingOverlay.style.display = "none";
-                    document.getElementById(`table-${selectedTable}`).classList.remove('table-selected');
+                    
+                    // Сброс состояния карты
+                    if (selectedTable) {
+                        const bookedTableElement = document.getElementById(`table-${selectedTable}`);
+                        if (bookedTableElement) {
+                             bookedTableElement.classList.remove('table-selected');
+                             bookedTableElement.classList.add('table-booked'); // Сразу помечаем как занятый
+                        }
+                    }
+                    
                     selectedTable = null;
                     confirmBtn.disabled = true;
                     confirmBtn.textContent = 'Подтвердить бронь';
                     tableDetailsCard.style.display = 'none'; 
                     
-                    // Обновляем доступность столов и времени
-                    fillTimeSelect(null, dateInputModal.value); // Обновляем время, не выбирая стол
+                    // Перезаполняем время (для сброса) и обновляем доступность столов
+                    fillTimeSelect(null, dateInputModal.value);
                 }, 2000);
 
             } else {
-                // ОШИБКА (например, стол уже занят)
+                // ОШИБКА
                 messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
                 messageDiv.classList.add('error');
             }
