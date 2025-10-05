@@ -525,8 +525,9 @@
     let botApiUrl = '';
     let selectedTable = null;
     
-    // ГЛОБАЛЬНЫЙ ОБЪЕКТ ДЛЯ ХРАНЕНИЯ ЗАНЯТЫХ СТОЛОВ: { '2025-10-05': ['1', '3'], ... }
-    let bookedTables = {}; 
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ГЛОБАЛЬНЫЙ ОБЪЕКТ ДЛЯ ХРАНЕНИЯ ЗАНЯТЫХ СЛОТОВ
+    // { '2025-10-05': { '1': ['12:30', '13:00'], '2': ['12:30'] } }
+    let bookedSlots = {}; 
     
     const dateInputModal = document.getElementById("date-modal");
     const timeSelectModal = document.getElementById("time-modal");
@@ -577,9 +578,10 @@
         dateValueDisplay.textContent = formatDateForDisplay(now);
         guestsValueDisplay.textContent = guestsInputModal.value;
 
-        // При загрузке страницы: получаем доступное время для всех столов и обновляем доступность
+        // При загрузке страницы: получаем доступное время для всех столов
         fillTimeSelect(null, todayStr); 
-        updateTableAvailability(todayStr, timeSelectModal.value);
+        // При загрузке нам нужна информация о занятости столов
+        getAvailableTables(todayStr, timeSelectModal.value);
     };
 
     function formatDateForDisplay(date) {
@@ -596,7 +598,6 @@
         }
     }
 
-
     function generateAllTimeSlots() {
         const slots = [];
         let start = new Date(); start.setHours(12, 0, 0, 0); 
@@ -608,6 +609,24 @@
         return slots;
     }
 
+    // Вспомогательная функция для загрузки информации о занятых столах для КАРТЫ
+    async function getAvailableTables(selectedDate, selectedTime) {
+         try {
+             // Запрос к серверу, чтобы узнать, какие столы заняты в ЭТО ВРЕМЯ
+             const url = `${botApiUrl}/get_booked_tables?date=${selectedDate}&time=${selectedTime}`;
+             const res = await fetch(url);
+             const data = await res.json();
+             if (data.status === 'ok') {
+                 // Временно храним список занятых столов для этой комбинации (Дата+Время)
+                 updateTableAvailability(selectedDate, selectedTime, data.booked_tables_ids || []);
+             }
+         } catch (error) {
+             console.error('Ошибка при получении занятых столов:', error);
+             updateTableAvailability(selectedDate, selectedTime, []); // Считаем, что все свободны при ошибке
+         }
+    }
+
+
     async function fillTimeSelect(tableId, selectedDate) {
         const select = timeSelectModal;
         select.innerHTML = '';
@@ -617,38 +636,38 @@
         let bookedTimes = [];
         
         if (tableId) {
+            // --- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: ПРОВЕРЯЕМ ЛОКАЛЬНОЕ СОСТОЯНИЕ ПЕРВЫМ ---
+            if (bookedSlots[selectedDate] && bookedSlots[selectedDate][tableId]) {
+                 bookedTimes.push(...bookedSlots[selectedDate][tableId]);
+            }
+            
              try {
                  // Запрос на сервер для получения занятых времён для КОНКРЕТНОГО СТОЛА
                  const url = `${botApiUrl}/get_booked_times?table=${tableId}&date=${selectedDate}`;
                  const res = await fetch(url);
                  const data = await res.json();
                  if (data.status === 'ok') {
-                     bookedTimes = data.booked_times;
+                     // Добавляем результаты сервера, исключая дубликаты
+                     data.booked_times.forEach(time => {
+                         if (!bookedTimes.includes(time)) {
+                             bookedTimes.push(time);
+                         }
+                     });
                  }
              } catch (error) {
                  console.error('Ошибка при получении занятых времен:', error);
              }
-        } else {
-             // Имитация загрузки всех занятых столов, если стол не выбран
-             try {
-                 const url = `${botApiUrl}/get_booked_tables_by_date?date=${selectedDate}`;
-                 const res = await fetch(url);
-                 const data = await res.json();
-                 if (data.status === 'ok') {
-                     // Обновляем глобальный объект занятых столов
-                     bookedTables[selectedDate] = data.booked_tables_ids || [];
-                 }
-             } catch (error) {
-                 console.error('Ошибка при получении занятых столов:', error);
-             }
-        }
+        } 
+        
+        // ... (логика фильтрации времени остается прежней)
         
         const now = new Date();
         const todayDateStr = now.toISOString().slice(0, 10);
         let firstAvailableSlot = null;
 
         allSlots.forEach(slot => {
-            if (!bookedTimes.includes(slot)) {
+            // ФИЛЬТРАЦИЯ: используем объединенный список bookedTimes (локальный + серверный)
+            if (!bookedTimes.includes(slot)) { 
                 let isPast = false;
                 if (selectedDate === todayDateStr) {
                     const slotTime = new Date(`${selectedDate}T${slot}:00`);
@@ -679,31 +698,28 @@
         }
     }
     
-    // *** ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ СИНХРОНИЗАЦИИ СОСТОЯНИЯ СТОЛОВ ***
-    function updateTableAvailability(date, time) {
+    // Новая функция, которая принимает актуальный список занятых столов
+    function updateTableAvailability(date, time, bookedTableIds) {
         
         // 1. Сбрасываем все классы у всех столов
         document.querySelectorAll('.table-element').forEach(table => {
             table.classList.remove('table-booked', 'table-selected');
         });
 
-        // 2. Получаем забронированные столы для выбранной даты из локального хранилища
-        let bookedForDate = bookedTables[date] || [];
-
-        // 3. Отмечаем занятые столы
-        bookedForDate.forEach(tableId => {
+        // 2. Отмечаем занятые столы
+        bookedTableIds.forEach(tableId => {
             const tableElement = document.getElementById(`table-${tableId}`);
             if (tableElement) {
                 tableElement.classList.add('table-booked');
             }
         });
 
-        // 4. Логика выбора стола
+        // 3. Логика выбора стола
         if (selectedTable) {
             const tableElement = document.getElementById(`table-${selectedTable}`);
             
             // Если выбранный стол в списке занятых, сбрасываем выбор
-            if (bookedForDate.includes(selectedTable)) {
+            if (bookedTableIds.includes(selectedTable)) {
                 selectedTable = null;
             } 
             
@@ -758,8 +774,8 @@
             // Загружаем доступное время для выбранного стола
             await fillTimeSelect(selectedTable, dateInputModal.value);
             
-            // Обновляем доступность столов, чтобы убедиться, что всё синхронно
-            updateTableAvailability(dateInputModal.value, timeSelectModal.value);
+            // Обновляем карту столов (перезапрашиваем занятость по новой комбинации Дата+Время)
+            getAvailableTables(dateInputModal.value, timeSelectModal.value);
         });
     });
 
@@ -775,24 +791,23 @@
         bookingOverlay.style.display = 'none';
     });
 
-    // *** ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ДАТЫ ***
+    // ОБРАБОТЧИК ДАТЫ
     dateInputModal.addEventListener('change', async (e) => {
         const newDate = e.target.value;
         const newDateObj = new Date(newDate);
         dateValueDisplay.textContent = formatDateForDisplay(newDateObj);
         
-        // 1. Обновляем список времени (и локальный bookedTables)
-        await fillTimeSelect(selectedTable, newDate);
+        // 1. Обновляем список времени (инициализируем без выбранного стола)
+        await fillTimeSelect(null, newDate);
 
-        // 2. Обновляем карту столов
-        updateTableAvailability(newDate, timeSelectModal.value);
+        // 2. Обновляем карту столов (перезапрашиваем занятость по новой комбинации Дата+Время)
+        getAvailableTables(newDate, timeSelectModal.value);
     });
 
     timeSelectModal.addEventListener('change', (e) => {
         timeValueDisplay.textContent = e.target.value;
-        // Здесь не нужно вызывать updateTableAvailability, 
-        // так как занятые столы зависят от даты, а не от времени.
-        // При изменении времени, fillTimeSelect уже отфильтровал слоты.
+        // Обновляем карту столов, так как занятость столов зависит от времени
+        getAvailableTables(dateInputModal.value, e.target.value);
     });
 
     guestsInputModal.addEventListener('change', (e) => {
@@ -800,7 +815,7 @@
     });
 
 
-    // *** ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ФОРМЫ ***
+    // ОБРАБОТЧИК ФОРМЫ (ФИНАЛЬНОЕ БРОНИРОВАНИЕ)
     bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -817,13 +832,14 @@
         }
         
         const bookingDate = dateInputModal.value;
+        const bookingTime = timeSelectModal.value;
         
         const data = {
             user_id: user_id,
             user_name: user_name,
             table: selectedTable,
             date: bookingDate,
-            time: timeSelectModal.value,
+            time: bookingTime,
             guests: guestsInputModal.value,
             phone: phoneInputModal.value
         };
@@ -841,18 +857,22 @@
                 messageDiv.style.display = "block";
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 
-                // *** КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: ОБНОВЛЕНИЕ ЛОКАЛЬНОГО СОСТОЯНИЯ ***
-                // 1. Добавляем стол в локальный список занятых столов
-                if (!bookedTables[bookingDate]) {
-                    bookedTables[bookingDate] = [];
+                // *** КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: ОБНОВЛЕНИЕ ЛОКАЛЬНОГО СОСТОЯНИЯ СЛОТОВ ***
+                
+                // 1. Добавляем СЛОТ в локальный список занятых слотов
+                if (!bookedSlots[bookingDate]) bookedSlots[bookingDate] = {};
+                if (!bookedSlots[bookingDate][selectedTable]) bookedSlots[bookingDate][selectedTable] = [];
+                
+                // Добавляем забронированное время (если его еще нет)
+                if (!bookedSlots[bookingDate][selectedTable].includes(bookingTime)) {
+                    bookedSlots[bookingDate][selectedTable].push(bookingTime);
                 }
-                bookedTables[bookingDate].push(selectedTable);
                 
                 // 2. Обновляем SELECT с тайм-слотами (чтобы текущий слот исчез)
-                await fillTimeSelect(selectedTable, bookingDate);
+                await fillTimeSelect(selectedTable, bookingDate); 
                 
                 // 3. Обновляем карту столов (чтобы стол стал красным)
-                updateTableAvailability(bookingDate, timeSelectModal.value);
+                getAvailableTables(bookingDate, bookingTime);
                 
                 setTimeout(() => {
                     bookingOverlay.style.display = "none";
@@ -862,7 +882,6 @@
                     confirmBtn.disabled = true;
                     confirmBtn.textContent = 'Подтвердить бронь';
                     tableDetailsCard.style.display = 'none'; 
-                    // Telegram.WebApp.close(); // Если нужно закрыть WebApp
                 }, 2000);
 
             } else {
