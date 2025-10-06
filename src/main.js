@@ -134,9 +134,7 @@ async function fillTimeSelect(tableId, dateStr) {
         if (data.status === "ok" && data.free_times && data.free_times.length > 0) {
             let availableTimes = data.free_times;
             
-            // ===============================================
-            // НОВАЯ ЛОГИКА: ФИЛЬТРАЦИЯ ПРОШЕДШЕГО ВРЕМЕНИ СЕГОДНЯ
-            // ===============================================
+            // ЛОГИКА: ФИЛЬТРАЦИЯ ПРОШЕДШЕГО ВРЕМЕНИ СЕГОДНЯ
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
 
@@ -152,7 +150,6 @@ async function fillTimeSelect(tableId, dateStr) {
                     return now.getTime() < slotDateTime.getTime(); 
                 });
             }
-            // ===============================================
 
             if (availableTimes.length > 0) {
                 availableTimes.forEach(time => {
@@ -280,6 +277,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const bookingOverlay = document.getElementById('booking-overlay');
     const bookingForm = document.getElementById("booking-form");
     const timeSelect = document.getElementById("timeSelect");
+    
+    // Новые элементы заголовка
+    const timeValueDisplay = document.getElementById("current-time-value");
+    const tableValueDisplay = document.getElementById("current-table-value");
+
+    // 0. Инициализация времени (НОВАЯ ЛОГИКА)
+    if (timeValueDisplay) {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeValueDisplay.textContent = `${hours}:${minutes}`;
+    }
+
 
     // 1. Инициализация даты и отображение
     if (dateInput) {
@@ -305,6 +315,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (tableId) {
                 event.currentTarget.classList.add('table-selected');
                 updateTableAvailability(tableId); // Запускаем проверку доступности
+
+                // НОВАЯ ЛОГИКА: Обновление статуса стола в заголовке
+                if (tableValueDisplay) {
+                    tableValueDisplay.textContent = `Стол ${tableId}`;
+                }
             }
         });
     });
