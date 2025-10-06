@@ -2,6 +2,8 @@
 // КОНФИГУРАЦИЯ И ДАННЫЕ ПОЛЬЗОВАТЕЙ
 // ===================================
 const API_BASE_URL = "https://readytoearn-4.onrender.com"; // Ваш URL
+const DEFAULT_TABLE_IMAGE = "https://santarest.by/222.JPG"; // URL для фото столика
+
 let user_id = null;
 let user_name = "Неизвестный";
 let selectedTableId = null; // Глобальное состояние для выбранного стола
@@ -25,7 +27,7 @@ if (dateInput) {
 }
 
 // ===================================
-// УТИЛИТА ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ (ИСПРАВЛЕНИЕ ОШИБКИ 6.0)
+// УТИЛИТА ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ
 // ===================================
 
 /**
@@ -34,9 +36,11 @@ if (dateInput) {
  * @param {string} message - Сообщение для отображения.
  */
 function safeShowAlert(message) {
+    // Проверяем, поддерживает ли версия API метод showAlert (который доступен с v6.1)
     if (window.Telegram && Telegram.WebApp.isVersionAtLeast('6.1')) {
         Telegram.WebApp.showAlert(message);
     } else {
+        // Запасной вариант для старых версий (v6.0 и ниже)
         alert(message);
     }
 }
@@ -93,15 +97,24 @@ function showTableDetails(tableId, isBooked = false) {
     const confirmBtn = document.getElementById('confirm-btn');
     const tableTitle = document.getElementById('table-title');
     const tableDescription = document.getElementById('table-description');
+    const tableImage = document.getElementById('table-image'); // Элемент для фото
 
     const info = TABLE_DETAILS[tableId] || { title: `Стол ${tableId}`, desc: 'Информация временно недоступна.' };
 
     tableTitle.textContent = info.title;
     tableDescription.textContent = info.desc;
+    
+    // Установка фото столика
+    if (tableImage) {
+        tableImage.src = DEFAULT_TABLE_IMAGE; 
+        tableImage.alt = info.title;
+    }
+    
     tableDetailsCard.style.display = 'block';
 
     selectedTableId = tableId;
 
+    // Обновление состояния кнопки
     if (isBooked) {
         confirmBtn.disabled = true;
         confirmBtn.textContent = `Стол ${tableId} занят на это время`;
@@ -177,12 +190,20 @@ async function fillTimeSelect(tableId, dateStr) {
 async function updateTableAvailability(tableId) {
     const dateInput = document.getElementById("dateInput");
     const dateStr = dateInput ? dateInput.value : null;
+    const confirmBtn = document.getElementById('confirm-btn');
+
+    // Оптимизация: Сразу показываем, что идет проверка
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Проверка доступности...';
+        // Стиль можно изменить на серый, если нужно:
+        // confirmBtn.style.backgroundColor = 'var(--tg-theme-hint-color)';
+    }
 
     if (tableId && dateStr) {
         const hasFreeSlots = await fillTimeSelect(tableId, dateStr);
-        showTableDetails(tableId, !hasFreeSlots); // Показываем детали, отмечая, занят ли стол
+        showTableDetails(tableId, !hasFreeSlots); // Показываем детали и обновляем кнопку
     } else if (tableId) {
-        // Если дата не выбрана, но стол выбран (чего не должно быть, т.к. дата устанавливается по умолчанию)
         showTableDetails(tableId, false);
     }
 }
