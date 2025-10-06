@@ -1,9 +1,16 @@
 // Проверка, что JS подключен
-document.getElementById('app').textContent = 'WebApp готов к бронированию!';
+const appElement = document.getElementById('app');
+if (appElement) {
+    appElement.textContent = 'WebApp готов к бронированию!';
+}
 
-// ✅ НОВОЕ: Получаем данные пользователя из Telegram Web App
+// ===================================
+// КОНФИГУРАЦИЯ И ДАННЫЕ ПОЛЬЗОВАТЕЙ
+// ===================================
+const API_BASE_URL = "https://readytoearn-4.onrender.com"; // Ваш URL
 let user_id = null;
 let user_name = "Неизвестный";
+
 if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     const user = Telegram.WebApp.initDataUnsafe.user;
     if (user) {
@@ -15,7 +22,18 @@ if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     }
 }
 
-// ✅ НОВОЕ: Функция для адаптации цветов к теме Telegram
+// Устанавливаем минимальную дату сегодня
+const dateInput = document.getElementById("dateInput");
+if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today; // Устанавливаем сегодняшнюю дату по умолчанию
+}
+
+
+// ===================================
+// ТЕМА И UI
+// ===================================
 function adaptToTheme() {
     const themeParams = window.Telegram.WebApp.themeParams;
     if (themeParams) {
@@ -29,16 +47,104 @@ function adaptToTheme() {
     }
 }
 
-// ✅ НОВОЕ: Вызываем функцию при загрузке и при изменении темы
 if (window.Telegram && Telegram.WebApp) {
     Telegram.WebApp.ready();
     adaptToTheme();
     Telegram.WebApp.onEvent('themeChanged', adaptToTheme);
 }
 
+
+// ===================================
+// ФУНКЦИИ БРОНИРОВАНИЯ И ДОСТУПНОСТИ
+// ===================================
+
+/**
+ * Функция, которая вызывалась в ошибке, теперь определена.
+ */
+function showTableDetails(tableId) {
+    console.log(`Выбран стол: ${tableId}`);
+}
+
+
+/**
+ * Запрашивает свободные слоты у бэкенда и заполняет <select id="timeSelect">.
+ * @param {string} tableId - ID выбранного стола.
+ * @param {string} dateStr - Дата в формате YYYY-MM-DD.
+ */
+async function fillTimeSelect(tableId, dateStr) {
+    const timeSelect = document.getElementById("timeSelect");
+    if (!timeSelect) return;
+
+    timeSelect.innerHTML = '<option value="">Загрузка...</option>'; // Очищаем и показываем загрузку
+
+    if (!tableId || !dateStr) {
+        timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
+        return;
+    }
+
+    try {
+        const url = `${API_BASE_URL}/get_booked_times?table=${tableId}&date=${dateStr}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        timeSelect.innerHTML = ''; // Очищаем
+        
+        if (data.status === "ok" && data.free_times && data.free_times.length > 0) {
+            data.free_times.forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                timeSelect.appendChild(option);
+            });
+            // Выбираем первый слот, если они есть
+            if (timeSelect.options.length > 0) {
+                timeSelect.options[0].selected = true; 
+            }
+        } else {
+            timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
+        }
+
+        // Вызываем showTableDetails, чтобы устранить ошибку (если она вызывалась в другом месте)
+        showTableDetails(tableId); 
+
+    } catch (err) {
+        console.error("Ошибка при получении времени:", err);
+        timeSelect.innerHTML = '<option value="">Ошибка загрузки времени</option>';
+    }
+}
+
+/**
+ * Главный обработчик, вызываемый при изменении даты или стола.
+ */
+function updateTableAvailability() {
+    const tableSelect = document.getElementById("tableSelect");
+    const dateInput = document.getElementById("dateInput");
+
+    if (!tableSelect || !dateInput) return;
+
+    const tableId = tableSelect.value;
+    const dateStr = dateInput.value;
+
+    if (tableId && dateStr) {
+        fillTimeSelect(tableId, dateStr);
+    } else {
+        const timeSelect = document.getElementById("timeSelect");
+        if (timeSelect) {
+            timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
+        }
+    }
+    
+    // Вызываем showTableDetails, чтобы устранить ошибку ReferenceError
+    showTableDetails(tableId); 
+}
+
+
+// ===================================
+// ОТПРАВКА БРОНИ
+// ===================================
+
 // Функция для отправки брони на сервер
-function sendBooking(table_id, time_slot, guests, phone) {
-    // ✅ ИЗМЕНЕНО: теперь отправляем user_id и user_name
+function sendBooking(table_id, time_slot, guests, phone, date_str) {
     const data = {
         table: table_id,
         time: time_slot,
@@ -46,40 +152,77 @@ function sendBooking(table_id, time_slot, guests, phone) {
         phone: phone,
         user_id: user_id,
         user_name: user_name,
-        date: new Date().toISOString().split('T')[0] // Добавляем текущую дату для простоты
+        date: date_str
     };
 
-    fetch("https://readytoearn-4.onrender.com/book", { // <- замените на реальный URL
+    fetch(`${API_BASE_URL}/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "ok") {
-            alert("✅ Бронь успешно создана!");
-        } else {
-            alert("❌ Ошибка бронирования: " + data.message);
+    .then(res => {
+        if (!res.ok) {
+            // Если статус 409 или другая ошибка, парсим JSON и передаем дальше
+            return res.json().then(errorData => { throw new Error(errorData.message || "Ошибка бронирования"); });
         }
+        return res.json();
+    })
+    .then(data => {
+        // Успешный ответ
+        Telegram.WebApp.showAlert("✅ Бронь успешно создана!");
+        // Закрываем WebApp после успешного бронирования
+        Telegram.WebApp.close(); 
     })
     .catch(err => {
-        console.error("Ошибка сети:", err);
-        alert("⚠️ Ошибка сети. Попробуйте позже.");
+        // Обработка всех ошибок, включая 409 Conflict
+        console.error("Ошибка бронирования/сети:", err);
+        const message = err.message.includes("Ошибка бронирования") ? 
+                        err.message.replace("Ошибка бронирования: ", "") : 
+                        "⚠️ Ошибка сети. Попробуйте позже.";
+        Telegram.WebApp.showAlert(`❌ ${message}`);
     });
 }
 
-// Обработчик клика по кнопке "Забронировать"
-document.getElementById("bookBtn").addEventListener("click", () => {
-    const table_id = document.getElementById("tableSelect").value;
-    const time_slot = document.getElementById("timeSelect").value;
-    const guests = document.getElementById("guestsInput").value;
-    const phone = document.getElementById("phoneInput").value;
+// ===================================
+// ОБРАБОТЧИКИ СОБЫТИЙ
+// ===================================
 
-    // Простейшая проверка заполнения
-    if (!table_id || !time_slot || !guests || !phone) {
-        alert("⚠️ Пожалуйста, заполните все поля!");
-        return;
+document.addEventListener("DOMContentLoaded", () => {
+    const tableSelect = document.getElementById("tableSelect");
+    const dateInput = document.getElementById("dateInput");
+    const bookBtn = document.getElementById("bookBtn");
+
+    if (tableSelect) {
+        tableSelect.addEventListener("change", updateTableAvailability);
     }
 
-    sendBooking(table_id, time_slot, guests, phone);
+    if (dateInput) {
+        dateInput.addEventListener("change", updateTableAvailability);
+        // Запускаем первоначальную проверку доступности
+        updateTableAvailability(); 
+    }
+
+    if (bookBtn) {
+        bookBtn.addEventListener("click", () => {
+            const timeSelect = document.getElementById("timeSelect");
+            const guestsInput = document.getElementById("guestsInput");
+            const phoneInput = document.getElementById("phoneInput");
+            
+            const table_id = tableSelect ? tableSelect.value : null;
+            const time_slot = timeSelect ? timeSelect.value : null;
+            const guests = guestsInput ? guestsInput.value : null;
+            const phone = phoneInput ? phoneInput.value : null;
+            const date_str = dateInput ? dateInput.value : null;
+
+            // Простейшая проверка заполнения
+            if (!table_id || !time_slot || !guests || !phone || !date_str) {
+                Telegram.WebApp.showAlert("⚠️ Пожалуйста, заполните все поля!");
+                return;
+            }
+
+            sendBooking(table_id, time_slot, guests, phone, date_str);
+        });
+    } else {
+        console.error("Кнопка 'bookBtn' не найдена. Проверьте index.html.");
+    }
 });
