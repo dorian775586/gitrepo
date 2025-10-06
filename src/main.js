@@ -88,7 +88,7 @@ function showTableDetails(tableId, isBooked = false) {
     tableTitle.textContent = info.title;
     tableDescription.textContent = info.desc;
     
-    // Установка фото столика (дублируем, чтобы обновить, если нужно)
+    // Установка фото столика
     if (tablePhoto) {
         tablePhoto.src = DEFAULT_TABLE_IMAGE; 
         tablePhoto.alt = info.title;
@@ -132,18 +132,46 @@ async function fillTimeSelect(tableId, dateStr) {
         timeSelect.innerHTML = '';
 
         if (data.status === "ok" && data.free_times && data.free_times.length > 0) {
-            data.free_times.forEach(time => {
-                const option = document.createElement('option');
-                option.value = time;
-                option.textContent = time;
-                timeSelect.appendChild(option);
-            });
+            let availableTimes = data.free_times;
             
-            const firstSlot = timeSelect.options[0].value;
-            timeSelect.options[0].selected = true; 
-            currentTimeValue.textContent = firstSlot;
-            
-            return true;
+            // ===============================================
+            // НОВАЯ ЛОГИКА: ФИЛЬТРАЦИЯ ПРОШЕДШЕГО ВРЕМЕНИ СЕГОДНЯ
+            // ===============================================
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            if (dateStr === todayStr) {
+                availableTimes = data.free_times.filter(time => {
+                    const [hour, minute] = time.split(':').map(Number);
+                    
+                    // Создаем объект Date для слота на сегодня, используя текущий день
+                    const slotDateTime = new Date(now);
+                    slotDateTime.setHours(hour, minute, 0, 0);
+
+                    // Слот считается доступным, если его время строго больше текущего
+                    return now.getTime() < slotDateTime.getTime(); 
+                });
+            }
+            // ===============================================
+
+            if (availableTimes.length > 0) {
+                availableTimes.forEach(time => {
+                    const option = document.createElement('option');
+                    option.value = time;
+                    option.textContent = time;
+                    timeSelect.appendChild(option);
+                });
+                
+                const firstSlot = availableTimes[0]; // Берем первый доступный слот
+                timeSelect.options[0].selected = true; 
+                currentTimeValue.textContent = firstSlot;
+                
+                return true;
+            } else {
+                timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
+                currentTimeValue.textContent = 'Занято';
+                return false;
+            }
         } else {
             timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
             currentTimeValue.textContent = 'Занято';
@@ -295,7 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             document.getElementById('selected-table-modal').textContent = `(Стол ${selectedTableId})`;
-            document.getElementById('timeSelect').value = document.getElementById('current-time-value').textContent;
+            // Важно: нужно убедиться, что current-time-value соответствует первому доступному слоту после фильтрации
+            document.getElementById('timeSelect').value = document.getElementById('current-time-value').textContent; 
             document.getElementById('dateInput').value = dateInput.value;
             
             bookingOverlay.style.display = 'flex';
