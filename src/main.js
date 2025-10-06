@@ -24,6 +24,23 @@ if (dateInput) {
     dateInput.min = today;
 }
 
+// ===================================
+// УТИЛИТА ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ (ИСПРАВЛЕНИЕ ОШИБКИ 6.0)
+// ===================================
+
+/**
+ * Безопасно отображает alert, используя нативный метод WebApp (v6.1+) 
+ * или стандартный alert() как запасной вариант (fallback).
+ * @param {string} message - Сообщение для отображения.
+ */
+function safeShowAlert(message) {
+    if (window.Telegram && Telegram.WebApp.isVersionAtLeast('6.1')) {
+        Telegram.WebApp.showAlert(message);
+    } else {
+        alert(message);
+    }
+}
+
 
 // ===================================
 // ТЕМА И UI
@@ -211,7 +228,7 @@ function sendBooking(table_id, time_slot, guests, phone, date_str) {
     })
     .then(data => {
         // Успешный ответ
-        Telegram.WebApp.showAlert("✅ Бронь успешно создана! Вы получите подтверждение в чате.");
+        safeShowAlert("✅ Бронь успешно создана! Вы получите подтверждение в чате.");
         // Обновляем доступность стола
         updateTableAvailability(selectedTableId);
         // Закрываем WebApp после успешного бронирования
@@ -223,7 +240,7 @@ function sendBooking(table_id, time_slot, guests, phone, date_str) {
         const message = err.message.includes("409:") ? 
                         err.message.replace("409: ", "") : 
                         "⚠️ Ошибка сети. Попробуйте позже.";
-        Telegram.WebApp.showAlert(`❌ ${message}`);
+        safeShowAlert(`❌ ${message}`);
         // Закрываем модальное окно после неудачной попытки
         document.getElementById('booking-overlay').style.display = 'none';
         
@@ -279,13 +296,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirmBtn) {
         confirmBtn.addEventListener("click", () => {
             if (!selectedTableId) {
-                Telegram.WebApp.showAlert("⚠️ Пожалуйста, выберите столик на карте!");
+                safeShowAlert("⚠️ Пожалуйста, выберите столик на карте!");
                 return;
             }
             
             // Проверяем, есть ли слоты
             if (!timeSelect || timeSelect.value === '' || timeSelect.value.includes('Нет свободных')) {
-                Telegram.WebApp.showAlert("⚠️ На выбранную дату нет свободных слотов для этого стола.");
+                safeShowAlert("⚠️ На выбранную дату нет свободных слотов для этого стола.");
                 return;
             }
             
@@ -315,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const date_str = dateInput ? dateInput.value : null;
 
             if (!table_id || !time_slot || !guests || !phone || !date_str) {
-                Telegram.WebApp.showAlert("⚠️ Пожалуйста, заполните все поля формы!");
+                safeShowAlert("⚠️ Пожалуйста, заполните все поля формы!");
                 return;
             }
 
