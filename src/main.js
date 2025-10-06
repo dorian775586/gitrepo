@@ -1,9 +1,3 @@
-// Проверка, что JS подключен (убираем лишнюю проверку, т.к. DOMContentLoaded важнее)
-// const appElement = document.getElementById('app');
-// if (appElement) {
-//     appElement.textContent = 'WebApp готов к бронированию!';
-// }
-
 // ===================================
 // КОНФИГУРАЦИЯ И ДАННЫЕ ПОЛЬЗОВАТЕЙ
 // ===================================
@@ -28,7 +22,6 @@ const dateInput = document.getElementById("dateInput");
 if (dateInput) {
     const today = new Date().toISOString().split('T')[0];
     dateInput.min = today;
-    // dateInput.value устанавливается в DOMContentLoaded
 }
 
 
@@ -219,7 +212,7 @@ function sendBooking(table_id, time_slot, guests, phone, date_str) {
     .then(data => {
         // Успешный ответ
         Telegram.WebApp.showAlert("✅ Бронь успешно создана! Вы получите подтверждение в чате.");
-        // Обновляем доступность стола (чтобы он был помечен как занятый, если пользователь захочет перебронировать)
+        // Обновляем доступность стола
         updateTableAvailability(selectedTableId);
         // Закрываем WebApp после успешного бронирования
         Telegram.WebApp.close(); 
