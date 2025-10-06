@@ -588,95 +588,92 @@ function generateAllTimeSlots() {
 
 async function fillTimeSelect(tableId, selectedDate){
     const select = timeSelectModal;
-    select.innerHTML='';
-    select.disabled=true;
+    select.innerHTML = '';
+    select.disabled = true;
 
     const allSlots = generateAllTimeSlots();
     let bookedTimes = [];
 
-    if(tableId){
-        try{
+    // Получаем занятые времена для выбранного стола
+    if (tableId) {
+        try {
             const url = `${botApiUrl}/get_booked_times?table=${tableId}&date=${selectedDate}`;
             const res = await fetch(url);
             const data = await res.json();
-            if(data.status==='ok' && Array.isArray(data.booked_times)){
+            if (data.status === 'ok' && Array.isArray(data.booked_times)) {
                 bookedTimes = data.booked_times;
-            } else {
-                bookedTimes = [];
             }
-        } catch(err){
+        } catch(err) {
             console.error('Ошибка при получении занятых времен:', err);
-            bookedTimes = [];
         }
     }
 
     const now = new Date();
     const todayStr = now.toISOString().slice(0,10);
+
     let firstAvailableSlot = null;
 
-    allSlots.forEach(slot=>{
-        let isPast=false;
-        if(selectedDate===todayStr){
-            const slotTime=new Date(`${selectedDate}T${slot}:00`);
-            if(slotTime.getTime() < now.getTime() + 5*60000) isPast=true;
+    // Создаем только свободные тайм-слоты
+    allSlots.forEach(slot => {
+        let isPast = false;
+        if (selectedDate === todayStr) {
+            const slotTime = new Date(`${selectedDate}T${slot}:00`);
+            if (slotTime.getTime() < now.getTime() + 5*60000) isPast = true;
         }
-        if(!bookedTimes.includes(slot) && !isPast){
-            const option=document.createElement("option");
-            option.value=slot; option.textContent=slot;
+        if (!bookedTimes.includes(slot) && !isPast) {
+            const option = document.createElement("option");
+            option.value = slot; 
+            option.textContent = slot;
             select.appendChild(option);
-            if(!firstAvailableSlot) firstAvailableSlot=slot;
+            if (!firstAvailableSlot) firstAvailableSlot = slot;
         }
     });
 
-    select.disabled=false;
-    if(select.options.length>0){
-        select.value=firstAvailableSlot;
-        timeValueDisplay.textContent=firstAvailableSlot;
+    select.disabled = false;
+
+    if (select.options.length > 0) {
+        select.value = firstAvailableSlot;
+        timeValueDisplay.textContent = firstAvailableSlot;
+        confirmBtn.disabled = !tableId;
+        confirmBtn.textContent = tableId ? `Забронировать стол ${tableId}` : 'Подтвердить бронь';
     } else {
-        timeValueDisplay.textContent="Нет мест";
+        // Если свободных слотов нет
+        timeValueDisplay.textContent = "Нет мест";
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Нет доступного времени';
+        if (tableId) {
+            selectedTable = null;
+            tableDetailsCard.style.display = 'none';
+        }
     }
 
     updateTableAvailability(selectedDate, select.value);
 }
 
-function updateTableAvailability(date,time){
-    document.querySelectorAll('.table-element').forEach(t=>t.classList.remove('table-selected'));
-    const allBooked = time==="Нет мест";
-    document.querySelectorAll('.table-element').forEach(t=>{
-        t.classList.remove('table-booked');
-        if(allBooked) t.classList.add('table-booked');
+function updateTableAvailability(date, time){
+    document.querySelectorAll('.table-element').forEach(t => t.classList.remove('table-selected', 'table-booked'));
+
+    const allBooked = (time === "Нет мест");
+    document.querySelectorAll('.table-element').forEach(t => {
+        if (allBooked) t.classList.add('table-booked');
     });
 
-    if(selectedTable){
+    if (selectedTable) {
         const el = document.getElementById(`table-${selectedTable}`);
-        if(el && el.classList.contains('table-booked')){
-            selectedTable=null;
-            confirmBtn.disabled=true;
-            confirmBtn.textContent='Выберите другой стол';
-            tableDetailsCard.style.display='none';
-        } else {
-            if(el) el.classList.add('table-selected');
-            confirmBtn.disabled=false;
-            confirmBtn.textContent=`Забронировать стол ${selectedTable}`;
+        if (el && el.classList.contains('table-booked')) {
+            selectedTable = null;
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Выберите другой стол';
+            tableDetailsCard.style.display = 'none';
+        } else if (el) {
+            el.classList.add('table-selected');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = `Забронировать стол ${selectedTable}`;
             showTableDetails(selectedTable);
         }
-    } else {
-        confirmBtn.disabled=true;
-        confirmBtn.textContent='Подтвердить бронь';
-        tableDetailsCard.style.display='none';
     }
 }
 
-function showTableDetails(tableId){
-    const data=tableData[tableId];
-    if(data){
-        tablePhoto.src=data.photo_url;
-        tablePhoto.onerror=function(){ this.onerror=null; this.src=`https://placehold.co/400x200/3E4646/E2D2B0?text=Фото+стола+№${tableId}`; };
-        tableTitle.textContent=data.name;
-        tableDescription.innerHTML=`<strong>Мест:</strong> ${data.seats}<br>${data.desc}`;
-        tableDetailsCard.style.display='block';
-    }
-}
 
 // --- Обработчики ---
 document.querySelectorAll('.table-element').forEach(table=>{
@@ -726,13 +723,13 @@ bookingForm.addEventListener('submit', async e => {
     }
 
     const selectedDateTime = new Date(`${dateInputModal.value}T${timeSelectModal.value}:00`);
-    if (selectedDateTime.getTime() < new Date().getTime() - 60000) {
+    if (selectedDateTime.getTime() < Date.now() - 60000) {
         messageDiv.textContent = "❌ Нельзя забронировать на прошедшее время";
         messageDiv.style.display = "block";
         return;
     }
 
-    // Берем кнопку внутри формы напрямую
+    // Безопасно находим кнопку отправки
     const submitButton = bookingForm.querySelector('button[type="submit"]');
     if (submitButton) {
         submitButton.disabled = true;
@@ -755,6 +752,7 @@ bookingForm.addEventListener('submit', async e => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         });
+
         const result = await res.json();
 
         if (res.ok) {
@@ -774,19 +772,20 @@ bookingForm.addEventListener('submit', async e => {
                 tableDetailsCard.style.display = 'none';
                 fillTimeSelect(null, dateInputModal.value);
             }, 2000);
+
         } else {
+            // Если фронтэнд не должен получать 409, можно вывести просто ошибку сервера
             messageDiv.textContent = `❌ Ошибка: ${result.message || 'Не удалось забронировать'}`;
             messageDiv.style.display = "block";
         }
+
     } catch (err) {
         console.error('Fetch error:', err);
         messageDiv.textContent = "❌ Ошибка сети. Проверьте подключение.";
         messageDiv.style.display = "block";
     } finally {
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = `Забронировать столик ${selectedTable || ''}`;
-        }
+        if (submitButton) submitButton.disabled = false;
+        if (submitButton) submitButton.textContent = `Забронировать столик ${selectedTable}`;
     }
 });
 </script>
