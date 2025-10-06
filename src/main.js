@@ -1,8 +1,8 @@
-// Проверка, что JS подключен
-const appElement = document.getElementById('app');
-if (appElement) {
-    appElement.textContent = 'WebApp готов к бронированию!';
-}
+// Проверка, что JS подключен (убираем лишнюю проверку, т.к. DOMContentLoaded важнее)
+// const appElement = document.getElementById('app');
+// if (appElement) {
+//     appElement.textContent = 'WebApp готов к бронированию!';
+// }
 
 // ===================================
 // КОНФИГУРАЦИЯ И ДАННЫЕ ПОЛЬЗОВАТЕЙ
@@ -10,6 +10,7 @@ if (appElement) {
 const API_BASE_URL = "https://readytoearn-4.onrender.com"; // Ваш URL
 let user_id = null;
 let user_name = "Неизвестный";
+let selectedTableId = null; // Глобальное состояние для выбранного стола
 
 if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     const user = Telegram.WebApp.initDataUnsafe.user;
@@ -27,7 +28,7 @@ const dateInput = document.getElementById("dateInput");
 if (dateInput) {
     const today = new Date().toISOString().split('T')[0];
     dateInput.min = today;
-    dateInput.value = today; // Устанавливаем сегодняшнюю дату по умолчанию
+    // dateInput.value устанавливается в DOMContentLoaded
 }
 
 
@@ -59,10 +60,47 @@ if (window.Telegram && Telegram.WebApp) {
 // ===================================
 
 /**
- * Функция, которая вызывалась в ошибке, теперь определена.
+ * Статические данные по столам
  */
-function showTableDetails(tableId) {
-    console.log(`Выбран стол: ${tableId}`);
+const TABLE_DETAILS = {
+    '1': { title: 'Стол 1 (2-4 чел.)', desc: 'Уютный круглый стол у окна. Отлично для свидания.' },
+    '2': { title: 'Стол 2 (2-4 чел.)', desc: 'Уютный круглый стол у окна. Отлично для свидания.' },
+    '3': { title: 'Стол 3 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
+    '4': { title: 'Стол 4 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
+    '5': { title: 'Стол 5 (4-6 чел.)', desc: 'Центральный круглый стол в зале. Вид на барную стойку.' },
+    '6': { title: 'Стол 6 (6-8 чел.)', desc: 'Банкетный стол, лучшее место для большой компании.' },
+    '7': { title: 'Стол 7 (2-4 чел.)', desc: 'Прямоугольный стол в тихом углу.' },
+    '8': { title: 'Стол 8 (2-4 чел.)', desc: 'Прямоугольный стол, ближе к выходу.' },
+};
+
+/**
+ * Заполняет карточку деталей стола и сохраняет выбранный ID.
+ * @param {string} tableId - ID выбранного стола.
+ * @param {boolean} isBooked - Флаг, указывающий, занят ли стол на выбранное время.
+ */
+function showTableDetails(tableId, isBooked = false) {
+    const tableDetailsCard = document.getElementById('table-details-card');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const tableTitle = document.getElementById('table-title');
+    const tableDescription = document.getElementById('table-description');
+
+    const info = TABLE_DETAILS[tableId] || { title: `Стол ${tableId}`, desc: 'Информация временно недоступна.' };
+
+    tableTitle.textContent = info.title;
+    tableDescription.textContent = info.desc;
+    tableDetailsCard.style.display = 'block';
+
+    selectedTableId = tableId;
+
+    if (isBooked) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = `Стол ${tableId} занят на это время`;
+        confirmBtn.style.backgroundColor = 'var(--table-booked)';
+    } else {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = `Забронировать стол ${tableId}`;
+        confirmBtn.style.backgroundColor = 'var(--primary-color)';
+    }
 }
 
 
@@ -70,16 +108,20 @@ function showTableDetails(tableId) {
  * Запрашивает свободные слоты у бэкенда и заполняет <select id="timeSelect">.
  * @param {string} tableId - ID выбранного стола.
  * @param {string} dateStr - Дата в формате YYYY-MM-DD.
+ * @returns {Promise<boolean>} True, если есть свободные слоты.
  */
 async function fillTimeSelect(tableId, dateStr) {
     const timeSelect = document.getElementById("timeSelect");
-    if (!timeSelect) return;
+    const currentTimeValue = document.getElementById("current-time-value");
+    
+    if (!timeSelect) return false;
 
-    timeSelect.innerHTML = '<option value="">Загрузка...</option>'; // Очищаем и показываем загрузку
+    timeSelect.innerHTML = '<option value="">Загрузка...</option>';
 
     if (!tableId || !dateStr) {
         timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
-        return;
+        currentTimeValue.textContent = '...';
+        return false;
     }
 
     try {
@@ -87,8 +129,8 @@ async function fillTimeSelect(tableId, dateStr) {
         const res = await fetch(url);
         const data = await res.json();
         
-        timeSelect.innerHTML = ''; // Очищаем
-        
+        timeSelect.innerHTML = '';
+
         if (data.status === "ok" && data.free_times && data.free_times.length > 0) {
             data.free_times.forEach(time => {
                 const option = document.createElement('option');
@@ -96,46 +138,43 @@ async function fillTimeSelect(tableId, dateStr) {
                 option.textContent = time;
                 timeSelect.appendChild(option);
             });
-            // Выбираем первый слот, если они есть
-            if (timeSelect.options.length > 0) {
-                timeSelect.options[0].selected = true; 
-            }
+            
+            // Устанавливаем и показываем первый доступный слот
+            const firstSlot = timeSelect.options[0].value;
+            timeSelect.options[0].selected = true; 
+            currentTimeValue.textContent = firstSlot;
+            
+            return true;
         } else {
             timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
+            currentTimeValue.textContent = 'Занято';
+            return false;
         }
-
-        // Вызываем showTableDetails, чтобы устранить ошибку (если она вызывалась в другом месте)
-        showTableDetails(tableId); 
 
     } catch (err) {
         console.error("Ошибка при получении времени:", err);
         timeSelect.innerHTML = '<option value="">Ошибка загрузки времени</option>';
+        currentTimeValue.textContent = 'Ошибка';
+        return false;
     }
 }
 
 /**
- * Главный обработчик, вызываемый при изменении даты или стола.
+ * Главный обработчик, вызываемый при выборе стола или изменении даты.
+ * Обновляет доступность времени.
+ * @param {string} tableId - ID выбранного стола.
  */
-function updateTableAvailability() {
-    const tableSelect = document.getElementById("tableSelect");
+async function updateTableAvailability(tableId) {
     const dateInput = document.getElementById("dateInput");
-
-    if (!tableSelect || !dateInput) return;
-
-    const tableId = tableSelect.value;
-    const dateStr = dateInput.value;
+    const dateStr = dateInput ? dateInput.value : null;
 
     if (tableId && dateStr) {
-        fillTimeSelect(tableId, dateStr);
-    } else {
-        const timeSelect = document.getElementById("timeSelect");
-        if (timeSelect) {
-            timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
-        }
+        const hasFreeSlots = await fillTimeSelect(tableId, dateStr);
+        showTableDetails(tableId, !hasFreeSlots); // Показываем детали, отмечая, занят ли стол
+    } else if (tableId) {
+        // Если дата не выбрана, но стол выбран (чего не должно быть, т.к. дата устанавливается по умолчанию)
+        showTableDetails(tableId, false);
     }
-    
-    // Вызываем showTableDetails, чтобы устранить ошибку ReferenceError
-    showTableDetails(tableId); 
 }
 
 
@@ -143,7 +182,9 @@ function updateTableAvailability() {
 // ОТПРАВКА БРОНИ
 // ===================================
 
-// Функция для отправки брони на сервер
+/**
+ * Функция для отправки брони на сервер
+ */
 function sendBooking(table_id, time_slot, guests, phone, date_str) {
     const data = {
         table: table_id,
@@ -162,24 +203,39 @@ function sendBooking(table_id, time_slot, guests, phone, date_str) {
     })
     .then(res => {
         if (!res.ok) {
-            // Если статус 409 или другая ошибка, парсим JSON и передаем дальше
-            return res.json().then(errorData => { throw new Error(errorData.message || "Ошибка бронирования"); });
+            // Если статус 409 (Conflict) или другая ошибка, парсим JSON
+            return res.json().then(errorData => { 
+                const statusCode = res.status;
+                const message = errorData.message || "Ошибка бронирования";
+                // Специальная обработка для 409 Conflict
+                if (statusCode === 409) {
+                    throw new Error(`409: ${message}`);
+                }
+                throw new Error(message); 
+            });
         }
         return res.json();
     })
     .then(data => {
         // Успешный ответ
-        Telegram.WebApp.showAlert("✅ Бронь успешно создана!");
+        Telegram.WebApp.showAlert("✅ Бронь успешно создана! Вы получите подтверждение в чате.");
+        // Обновляем доступность стола (чтобы он был помечен как занятый, если пользователь захочет перебронировать)
+        updateTableAvailability(selectedTableId);
         // Закрываем WebApp после успешного бронирования
         Telegram.WebApp.close(); 
     })
     .catch(err => {
-        // Обработка всех ошибок, включая 409 Conflict
+        // Обработка всех ошибок
         console.error("Ошибка бронирования/сети:", err);
-        const message = err.message.includes("Ошибка бронирования") ? 
-                        err.message.replace("Ошибка бронирования: ", "") : 
+        const message = err.message.includes("409:") ? 
+                        err.message.replace("409: ", "") : 
                         "⚠️ Ошибка сети. Попробуйте позже.";
         Telegram.WebApp.showAlert(`❌ ${message}`);
+        // Закрываем модальное окно после неудачной попытки
+        document.getElementById('booking-overlay').style.display = 'none';
+        
+        // Повторно проверяем доступность, чтобы обновить UI карты
+        updateTableAvailability(selectedTableId);
     });
 }
 
@@ -188,41 +244,103 @@ function sendBooking(table_id, time_slot, guests, phone, date_str) {
 // ===================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    const tableSelect = document.getElementById("tableSelect");
     const dateInput = document.getElementById("dateInput");
-    const bookBtn = document.getElementById("bookBtn");
+    const confirmBtn = document.getElementById("confirm-btn");
+    const tableElements = document.querySelectorAll('.table-element');
+    const bookingOverlay = document.getElementById('booking-overlay');
+    const bookingForm = document.getElementById("booking-form");
+    const timeSelect = document.getElementById("timeSelect");
 
-    if (tableSelect) {
-        tableSelect.addEventListener("change", updateTableAvailability);
-    }
-
+    // 1. Инициализация даты и отображение
     if (dateInput) {
-        dateInput.addEventListener("change", updateTableAvailability);
-        // Запускаем первоначальную проверку доступности
-        updateTableAvailability(); 
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        document.getElementById("current-date-value").textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        
+        // При изменении даты, обновляем доступность для текущего выбранного стола
+        dateInput.addEventListener("change", (e) => {
+            document.getElementById("current-date-value").textContent = new Date(e.target.value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+            if (selectedTableId) {
+                updateTableAvailability(selectedTableId);
+            }
+        });
     }
 
-    if (bookBtn) {
-        bookBtn.addEventListener("click", () => {
-            const timeSelect = document.getElementById("timeSelect");
+    // 2. Обработчик кликов по столам
+    tableElements.forEach(table => {
+        table.addEventListener('click', (event) => {
+            const tableId = event.currentTarget.getAttribute('data-table');
+            
+            // Сбрасываем класс "table-selected" со всех столов
+            tableElements.forEach(el => el.classList.remove('table-selected'));
+            
+            // Устанавливаем класс "table-selected" на выбранный стол
+            if (tableId) {
+                event.currentTarget.classList.add('table-selected');
+                updateTableAvailability(tableId); // Запускаем проверку доступности
+            }
+        });
+    });
+
+    // 3. Обработчик кнопки подтверждения (открывает модальное окно)
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", () => {
+            if (!selectedTableId) {
+                Telegram.WebApp.showAlert("⚠️ Пожалуйста, выберите столик на карте!");
+                return;
+            }
+            
+            // Проверяем, есть ли слоты
+            if (!timeSelect || timeSelect.value === '' || timeSelect.value.includes('Нет свободных')) {
+                Telegram.WebApp.showAlert("⚠️ На выбранную дату нет свободных слотов для этого стола.");
+                return;
+            }
+            
+            // Устанавливаем выбранный стол в модальном окне
+            document.getElementById('selected-table-modal').textContent = `(Стол ${selectedTableId})`;
+            // Устанавливаем текущее время и дату в поля модального окна
+            document.getElementById('timeSelect').value = document.getElementById('current-time-value').textContent;
+            document.getElementById('dateInput').value = dateInput.value;
+            
+            // Показываем модальное окно
+            bookingOverlay.style.display = 'flex';
+        });
+    }
+
+    // 4. Обработчик отправки формы бронирования (внутри модального окна)
+    if (bookingForm) {
+        bookingForm.addEventListener("submit", (e) => {
+            e.preventDefault(); 
+            
             const guestsInput = document.getElementById("guestsInput");
             const phoneInput = document.getElementById("phoneInput");
             
-            const table_id = tableSelect ? tableSelect.value : null;
+            const table_id = selectedTableId; // Берем из глобального состояния
             const time_slot = timeSelect ? timeSelect.value : null;
             const guests = guestsInput ? guestsInput.value : null;
             const phone = phoneInput ? phoneInput.value : null;
             const date_str = dateInput ? dateInput.value : null;
 
-            // Простейшая проверка заполнения
             if (!table_id || !time_slot || !guests || !phone || !date_str) {
-                Telegram.WebApp.showAlert("⚠️ Пожалуйста, заполните все поля!");
+                Telegram.WebApp.showAlert("⚠️ Пожалуйста, заполните все поля формы!");
                 return;
             }
 
+            // Отправка брони
             sendBooking(table_id, time_slot, guests, phone, date_str);
         });
-    } else {
-        console.error("Кнопка 'bookBtn' не найдена. Проверьте index.html.");
+    }
+    
+    // 5. Обработчик закрытия модального окна
+    const closeBtn = document.getElementById('closeBookingForm');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            bookingOverlay.style.display = 'none';
+        });
+    }
+    
+    // Изначально кнопку делаем неактивной
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
     }
 });
