@@ -65,19 +65,28 @@ if (window.Telegram && Telegram.WebApp) {
 
 /** Статические данные по столам */
 const TABLE_DETAILS = {
-    // ВАШИ СТОЛЫ, АДАПТИРОВАННЫЕ ПОД ВАШ HTML
-    '1': { title: 'Стол 1 (8 чел.)', desc: 'Просторный стол для большой компании у окна.' },
-    '2': { title: 'Стол 2 (8 чел.)', desc: 'Просторный стол для большой компании у окна.' },
+    // ТЕРРАСА (Столы 1-10)
+    '1': { title: 'Стол 1 (8 чел.)', desc: 'Просторный стол для большой компании у окна террасы.' },
+    '2': { title: 'Стол 2 (8 чел.)', desc: 'Просторный стол для большой компании у окна террасы.' },
     '3': { title: 'Стол 3 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
     '4': { title: 'Стол 4 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
     '5': { title: 'Стол 5 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
     '6': { title: 'Стол 6 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
     '7': { title: 'Стол 7 (4 чел.)', desc: 'Прямоугольный стол в тихом углу.' },
     '8': { title: 'Стол 8 (4 чел.)', desc: 'Прямоугольный стол, ближе к выходу.' },
-    // ДОБАВЛЕНИЕ СТОЛОВ 9 И 10, КОТОРЫЕ ЕСТЬ В ВАШЕМ HTML:
     '9': { title: 'Стол 9 (4 чел.)', desc: 'Прямоугольный стол в тихом углу.' },
     '10': { title: 'Стол 10 (4 чел.)', desc: 'Прямоугольный стол, ближе к выходу.' },
-    // ДОБАВЬТЕ СЮДА СТОЛЫ 11, 12 И Т.Д., КОГДА ДОБАВИТЕ ИХ В HTML
+    // ОСНОВНОЙ ЗАЛ (Столы 11-20)
+    '11': { title: 'Стол 11 (2-4 чел.)', desc: 'Уютный круглый стол в основном зале.' },
+    '12': { title: 'Стол 12 (2-4 чел.)', desc: 'Уютный круглый стол в основном зале.' },
+    '13': { title: 'Стол 13 (6 чел.)', desc: 'Большой прямоугольный стол в центре зала.' },
+    '14': { title: 'Стол 14 (4 чел.)', desc: 'Круглый стол у колонны.' },
+    '15': { title: 'Стол 15 (4 чел.)', desc: 'Круглый стол у колонны.' },
+    '16': { title: 'Стол 16 (4 чел.)', desc: 'Прямоугольный стол у стены.' },
+    '17': { title: 'Стол 17 (4 чел.)', desc: 'Прямоугольный стол в середине зала.' },
+    '18': { title: 'Стол 18 (4 чел.)', desc: 'Прямоугольный стол у стены.' },
+    '19': { title: 'Стол 19 (6 чел.)', desc: 'Большой круглый стол в дальней части зала.' },
+    '20': { title: 'Стол 20 (6 чел.)', desc: 'Большой круглый стол, идеален для компании.' },
 };
 
 /** Заполняет карточку деталей стола и сохраняет выбранный ID. */
@@ -210,6 +219,49 @@ async function updateTableAvailability(tableId) {
 }
 
 // ===================================
+// ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ЗОН (ДОБАВЛЕНО)
+// ===================================
+
+/** Переключает видимую карту столов и активную кнопку */
+function switchArea(area) {
+    const terraceMap = document.getElementById('terrace-map');
+    const hallMap = document.getElementById('main-hall-map');
+    const toggleTerrace = document.getElementById('toggle-terrace');
+    const toggleHall = document.getElementById('toggle-hall');
+    
+    // Снимаем выделение со всех столов
+    document.querySelectorAll('.table-element').forEach(el => el.classList.remove('table-selected'));
+    
+    // Сбрасываем выбранный стол и карточку деталей
+    selectedTableId = null;
+    document.getElementById('table-details-card').style.display = 'none';
+    
+    const confirmBtn = document.getElementById('confirm-btn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Подтвердить бронь'; // Сбрасываем текст
+        confirmBtn.style.backgroundColor = 'var(--primary-color)';
+    }
+
+    document.getElementById('current-table-value').textContent = 'Не выбран';
+    document.getElementById('current-time-value').textContent = '...';
+    
+    // Переключаем активную карту и кнопку
+    if (area === 'terrace') {
+        terraceMap.classList.add('active');
+        hallMap.classList.remove('active');
+        toggleTerrace.classList.add('active');
+        toggleHall.classList.remove('active');
+    } else if (area === 'hall') {
+        terraceMap.classList.remove('active');
+        hallMap.classList.add('active');
+        toggleTerrace.classList.remove('active');
+        toggleHall.classList.add('active');
+    }
+}
+
+
+// ===================================
 // ОТПРАВКА БРОНИ
 // ===================================
 
@@ -278,16 +330,20 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
 document.addEventListener("DOMContentLoaded", () => {
     const dateInput = document.getElementById("dateInput");
     const confirmBtn = document.getElementById("confirm-btn");
+    // ВАЖНО: Выбираем ВСЕ столы (и с террасы, и из зала)
     const tableElements = document.querySelectorAll('.table-element');
     const bookingOverlay = document.getElementById('booking-overlay');
     const bookingForm = document.getElementById("booking-form");
     const timeSelect = document.getElementById("timeSelect");
     
-    // Новые элементы заголовка
     const timeValueDisplay = document.getElementById("current-time-value");
     const tableValueDisplay = document.getElementById("current-table-value");
+    
+    // Новые элементы для переключения зон
+    const toggleTerrace = document.getElementById('toggle-terrace');
+    const toggleHall = document.getElementById('toggle-hall');
 
-    // 0. Инициализация времени (НОВАЯ ЛОГИКА)
+    // 0. Инициализация времени 
     if (timeValueDisplay) {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
@@ -309,19 +365,33 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+    
+    // 1.1. Обработчики переключателя зон
+    if (toggleTerrace) {
+        toggleTerrace.addEventListener('click', () => {
+            switchArea('terrace');
+        });
+    }
+    if (toggleHall) {
+        toggleHall.addEventListener('click', () => {
+            switchArea('hall');
+        });
+    }
 
-    // 2. Обработчик кликов по столам
+
+    // 2. Обработчик кликов по столам (общий для обеих карт)
     tableElements.forEach(table => {
         table.addEventListener('click', (event) => {
             const tableId = event.currentTarget.getAttribute('data-table');
             
-            tableElements.forEach(el => el.classList.remove('table-selected'));
+            // Сбрасываем выделение со ВСЕХ столов на ОБЕИХ картах
+            document.querySelectorAll('.table-element').forEach(el => el.classList.remove('table-selected'));
             
             if (tableId) {
                 event.currentTarget.classList.add('table-selected');
                 updateTableAvailability(tableId); // Запускаем проверку доступности
 
-                // НОВАЯ ЛОГИКА: Обновление статуса стола в заголовке
+                // Обновление статуса стола в заголовке
                 if (tableValueDisplay) {
                     tableValueDisplay.textContent = `Стол ${tableId}`;
                 }
@@ -343,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             document.getElementById('selected-table-modal').textContent = `(Стол ${selectedTableId})`;
-            // Важно: нужно убедиться, что current-time-value соответствует первому доступному слоту после фильтрации
+            // Установка времени и даты в модальное окно
             document.getElementById('timeSelect').value = document.getElementById('current-time-value').textContent; 
             document.getElementById('dateInput').value = dateInput.value;
             
@@ -393,4 +463,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirmBtn) {
         confirmBtn.disabled = true;
     }
+
+    // ИНИЦИАЛИЗАЦИЯ: Убеждаемся, что Терраса активна при загрузке
+    // Этот вызов должен быть в конце DOMContentLoaded, чтобы все элементы уже существовали
+    switchArea('terrace'); 
 });
