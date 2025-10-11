@@ -24,6 +24,8 @@ const dateInput = document.getElementById("dateInput");
 if (dateInput) {
     const today = new Date().toISOString().split('T')[0];
     dateInput.min = today;
+    // !!! НОВОЕ: Устанавливаем текущую дату как значение по умолчанию для input
+    dateInput.value = today; 
 }
 
 // ===================================
@@ -65,14 +67,20 @@ if (window.Telegram && Telegram.WebApp) {
 
 /** Статические данные по столам */
 const TABLE_DETAILS = {
-    '1': { title: 'Стол 1 (2-4 чел.)', desc: 'Уютный круглый стол у окна. Отлично для свидания.' },
-    '2': { title: 'Стол 2 (2-4 чел.)', desc: 'Уютный круглый стол у окна. Отлично для свидания.' },
+    '1': { title: 'Стол 1 (8 чел.)', desc: 'Уютный прямоугольный стол у окна для большой компании.' },
+    '2': { title: 'Стол 2 (8 чел.)', desc: 'Уютный прямоугольный стол у окна для большой компании.' },
     '3': { title: 'Стол 3 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
     '4': { title: 'Стол 4 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
-    '5': { title: 'Стол 5 (4-6 чел.)', desc: 'Центральный круглый стол в зале. Вид на барную стойку.' },
-    '6': { title: 'Стол 6 (6-8 чел.)', desc: 'Банкетный стол, лучшее место для большой компании.' },
-    '7': { title: 'Стол 7 (2-4 чел.)', desc: 'Прямоугольный стол в тихом углу.' },
-    '8': { title: 'Стол 8 (2-4 чел.)', desc: 'Прямоугольный стол, ближе к выходу.' },
+    '5': { title: 'Стол 5 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
+    '6': { title: 'Стол 6 (4 чел.)', desc: 'Прямоугольный стол у стены, подходит для семьи.' },
+    '7': { title: 'Стол 7 (4 чел.)', desc: 'Прямоугольный стол в тихом углу.' },
+    '8': { title: 'Стол 8 (4 чел.)', desc: 'Прямоугольный стол, ближе к выходу.' },
+    '9': { title: 'Стол 9 (4 чел.)', desc: 'Прямоугольный стол в тихом углу.' },
+    '10': { title: 'Стол 10 (4 чел.)', desc: 'Прямоугольный стол, ближе к выходу.' },
+    // !!! НОВЫЕ СТОЛЫ, КОТОРЫЕ ВЫ ДОБАВИТЕ В HTML
+    '11': { title: 'Стол 11 (2-4 чел.)', desc: 'Новый стол, расположенный в центральной части зала.' },
+    '12': { title: 'Стол 12 (4-6 чел.)', desc: 'Новый, просторный стол для небольшой компании.' },
+    // Добавьте больше столов здесь, если они есть в HTML
 };
 
 /** Заполняет карточку деталей стола и сохраняет выбранный ID. */
@@ -200,7 +208,9 @@ async function updateTableAvailability(tableId) {
         const hasFreeSlots = await fillTimeSelect(tableId, dateStr);
         showTableDetails(tableId, !hasFreeSlots); // Показываем детали и обновляем кнопку
     } else if (tableId) {
-        showTableDetails(tableId, false);
+        // Если дата еще не выбрана (например, при первой загрузке), но стол уже выбран
+        // Просто показываем детали стола, кнопка будет неактивной из-за отсутствия слотов
+        showTableDetails(tableId, true); // Считаем, что нет свободных слотов, пока не выбрана дата
     }
 }
 
@@ -258,8 +268,8 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
         
         console.error("Ошибка бронирования/сети:", err);
         const message = err.message.includes("409:") ? 
-                        err.message.replace("409: ", "") : 
-                        "⚠️ Ошибка сети. Попробуйте позже.";
+                            err.message.replace("409: ", "") : 
+                            "⚠️ Ошибка сети. Попробуйте позже.";
         safeShowAlert(`❌ ${message}`);
         document.getElementById('booking-overlay').style.display = 'none';
         updateTableAvailability(selectedTableId);
@@ -271,9 +281,10 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
 // ===================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    const dateInput = document.getElementById("dateInput");
+    // !!! ИЗМЕНЕНИЕ: удалена дублирующая строка dateInput = ...; 
+    const dateInput = document.getElementById("dateInput"); 
     const confirmBtn = document.getElementById("confirm-btn");
-    const tableElements = document.querySelectorAll('.table-element');
+    const tableElements = document.querySelectorAll('.table-element'); // !!! ВАЖНО: Выбираем ВСЕ столы
     const bookingOverlay = document.getElementById('booking-overlay');
     const bookingForm = document.getElementById("booking-form");
     const timeSelect = document.getElementById("timeSelect");
@@ -293,9 +304,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 1. Инициализация даты и отображение
     if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-        document.getElementById("current-date-value").textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        // !!! ИЗМЕНЕНИЕ: dateInput.value уже установлен в начале файла, здесь просто обновляем текст
+        document.getElementById("current-date-value").textContent = new Date(dateInput.value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
         
         dateInput.addEventListener("change", (e) => {
             document.getElementById("current-date-value").textContent = new Date(e.target.value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
@@ -339,7 +349,9 @@ document.addEventListener("DOMContentLoaded", () => {
             
             document.getElementById('selected-table-modal').textContent = `(Стол ${selectedTableId})`;
             // Важно: нужно убедиться, что current-time-value соответствует первому доступному слоту после фильтрации
-            document.getElementById('timeSelect').value = document.getElementById('current-time-value').textContent; 
+            // !!! ИЗМЕНЕНИЕ: Убедитесь, что timeSelect имеет значение, иначе это может привести к ошибке.
+            // Присваиваем value из timeSelect, так как он уже содержит первый доступный слот
+            document.getElementById('timeSelect').value = timeSelect.value; 
             document.getElementById('dateInput').value = dateInput.value;
             
             bookingOverlay.style.display = 'flex';
@@ -386,6 +398,19 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Изначально кнопку делаем неактивной
     if (confirmBtn) {
+        confirmBtn.disabled = true;
+    }
+
+    // !!! НОВОЕ: При загрузке страницы, если дата уже установлена,
+    // но стол еще не выбран, подтверждающая кнопка должна быть disabled.
+    // Если есть selectedTableId (например, из сохраненного состояния),
+    // то нужно вызвать updateTableAvailability.
+    if (selectedTableId) {
+        updateTableAvailability(selectedTableId);
+    } else if (dateInput && dateInput.value) {
+        // Если дата есть, но стол не выбран, кнопка остается disabled.
+        confirmBtn.textContent = 'Выберите стол для бронирования';
+        confirmBtn.style.backgroundColor = '#666';
         confirmBtn.disabled = true;
     }
 });
