@@ -57,6 +57,43 @@
             letter-spacing: 1px;
             color: var(--secondary-color);
         }
+        
+        /* НОВЫЙ СТИЛЬ: ПЕРЕКЛЮЧАТЕЛЬ ЗОН */
+        .area-selector {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            background-color: var(--bg-dark);
+        }
+
+        .toggle-button {
+            background-color: var(--bg-medium);
+            color: var(--secondary-color);
+            border: 1px solid var(--primary-color);
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .toggle-button:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+            border-right: none;
+        }
+
+        .toggle-button:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            border-left: none;
+        }
+
+        .toggle-button.active {
+            background-color: var(--primary-color);
+            color: var(--text-main);
+        }
+
 
         /* ----- Блок выбора (Дата/Время/Стол) ----- */
         .selection-panel {
@@ -174,36 +211,54 @@
             align-items: center;
             padding: 20px 10px 40px;
         }
-
+        
+        /* ОБЩИЙ КОНТЕЙНЕР ДЛЯ ОБОИХ КАРТ */
+        #map-container {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            height: 400px;
+            background-color: var(--bg-dark);
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+        
         .map-wrapper {
             width: 100%;
             max-width: 750px; 
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align items to top, to account for fountain */
+            align-items: flex-start;
             gap: 20px; 
         }
 
         .table-map {
             width: 100%;
-            max-width: 350px;
-            height: 400px; 
+            height: 100%; 
             background-color: var(--bg-medium);
             border-radius: 12px;
-            position: relative;
+            position: absolute; /* Делаем обе карты абсолютными внутри #map-container */
+            top: 0;
+            left: 0;
             border: 2px solid #555;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            /* Узор для обеих карт */
             background-image: linear-gradient(135deg, #444c4c 25%, transparent 25%),
                               linear-gradient(225deg, #444c4c 25%, transparent 25%),
                               linear-gradient(45deg, #444c4c 25%, #3E4646 25%),
                               linear-gradient(315deg, #444c4c 25%, #3E4646 25%);
             background-size: 20px 20px;
             background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
-            flex-shrink: 0;
             overflow: hidden; 
+            transition: opacity 0.3s ease;
         }
-
-        /* КАРТОЧКА ДЕТАЛЕЙ СТОЛА */
+        
+        /* Скрываем неактивную карту */
+        .table-map:not(.active) {
+            display: none;
+        }
+        
+        /* КАРТОЧКА ДЕТАЛЕЙ СТОЛА (Остается справа) */
         #table-details-card {
             display: none; 
             width: 100%;
@@ -244,7 +299,7 @@
             color: var(--secondary-color);
         }
 
-        /* Стили для общих элементов на карте (Вход) */
+        /* Стили для общих элементов на карте (Вход, Бар) */
         .map-feature {
             position: absolute;
             text-align: center;
@@ -255,19 +310,47 @@
             border-radius: 4px;
         }
 
-        /* Вход */
-        #entrance {
+        /* Вход для Террасы */
+        #terrace-entrance { 
             bottom: 5px; 
-            left: 50%; /* Центрируем по нижней кромке */
+            left: 50%;
             transform: translateX(-50%); 
             width: 80px;
-            height: 25px; /* Немного уменьшил высоту для компактности */
+            height: 25px;
             background-color: #555;
             line-height: 15px;
             border-top: 2px solid var(--secondary-color);
             color: var(--text-main);
             font-weight: bold;
         }
+        
+        /* Вход для Основного зала */
+        #hall-entrance {
+            bottom: 5px; 
+            left: 50%;
+            transform: translateX(-50%); 
+            width: 80px;
+            height: 25px;
+            background-color: #555;
+            line-height: 15px;
+            border-top: 2px solid var(--secondary-color);
+            color: var(--text-main);
+            font-weight: bold;
+        }
+        
+        /* Барная стойка для Основного зала */
+        #bar-counter {
+            top: 5px;
+            left: 10px;
+            width: 90%;
+            height: 30px;
+            background-color: #4A4A4A;
+            line-height: 20px;
+            border-radius: 5px;
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
 
         /* Стили для фонтана (справа от карты, по центру) */
         .fountain-container {
@@ -279,11 +362,11 @@
             text-align: center;
             color: var(--secondary-color);
             font-size: 12px;
-            align-self: center; /* Выравнивание по центру относительно flex-контейнера map-wrapper */
+            align-self: center;
         }
 
-        .fountain-icon i { /* !!! ИЗМЕНЕНИЕ: Добавил 'i' для стилизации Font Awesome иконки */
-            font-size: 60px; /* Большой размер для иконки */
+        .fountain-icon i { 
+            font-size: 60px;
             color: var(--secondary-color); 
             text-shadow: 0 0 10px rgba(226, 210, 176, 0.5); 
         }
@@ -340,26 +423,35 @@
             box-shadow: 0 0 10px var(--secondary-color);
         }
 
-        /* ПОЗИЦИОНИРОВАНИЕ ВСЕХ 10 СТОЛОВ согласно исходной схеме */
-        /* СТОЛЫ НА 8 ПЕРСОН */
-        #table-1 { top: 50px; left: 20px; width: 130px; height: 50px; } 
-        #table-2 { top: 50px; right: 20px; width: 130px; height: 50px; } 
+        /* ПОЗИЦИОНИРОВАНИЕ СТОЛОВ ТЕРРАСЫ (1-10) */
+        #terrace-map #table-1 { top: 50px; left: 20px; width: 130px; height: 50px; } 
+        #terrace-map #table-2 { top: 50px; right: 20px; width: 130px; height: 50px; } 
+        #terrace-map #table-3 { top: 120px; left: 20px; width: 80px; height: 50px; } 
+        #terrace-map #table-4 { top: 180px; left: 20px; width: 80px; height: 50px; } 
+        #terrace-map #table-5 { top: 240px; left: 20px; width: 80px; height: 50px; } 
+        #terrace-map #table-6 { top: 300px; left: 20px; width: 80px; height: 50px; } 
+        #terrace-map #table-7 { top: 120px; right: 20px; width: 80px; height: 50px; } 
+        #terrace-map #table-8 { top: 180px; right: 20px; width: 80px; height: 50px; }
+        #terrace-map #table-9 { top: 240px; right: 20px; width: 80px; height: 50px; }
+        #terrace-map #table-10 { top: 300px; right: 20px; width: 80px; height: 50px; }
         
-        /* ЛЕВЫЙ РЯД (4 стола на 4 персоны) */
-        #table-3 { top: 120px; left: 20px; width: 80px; height: 50px; } 
-        #table-4 { top: 180px; left: 20px; width: 80px; height: 50px; } 
-        #table-5 { top: 240px; left: 20px; width: 80px; height: 50px; } 
-        #table-6 { top: 300px; left: 20px; width: 80px; height: 50px; } 
+        /* ПОЗИЦИОНИРОВАНИЕ СТОЛОВ ОСНОВНОГО ЗАЛА (11-20) - СЛУЧАЙНЫЕ ДЛЯ ВИЗУАЛА */
+        /* Используем разные формы (круглые) для разнообразия */
+        .table-round { border-radius: 50%; width: 50px; height: 50px; }
         
-        /* ПРАВЫЙ РЯД (4 стола на 4 персоны) */
-        #table-7 { top: 120px; right: 20px; width: 80px; height: 50px; } 
-        #table-8 { top: 180px; right: 20px; width: 80px; height: 50px; }
-        #table-9 { top: 240px; right: 20px; width: 80px; height: 50px; }
-        #table-10 { top: 300px; right: 20px; width: 80px; height: 50px; }
-
-        /* Изменение стиля Entrance для лучшего соответствия схеме */
-        #entrance { bottom: 5px; left: 50%; transform: translateX(-50%); height: 25px; line-height: 15px; }
-
+        #main-hall-map #table-11 { top: 70px; left: 20px; } /* Круглый */
+        #main-hall-map #table-12 { top: 70px; right: 20px; } /* Круглый */
+        #main-hall-map #table-13 { top: 70px; left: 50%; transform: translateX(-50%); width: 100px; height: 50px; } /* Прямоугольник центр */
+        
+        #main-hall-map #table-14 { top: 150px; left: 40px; width: 60px; height: 60px; border-radius: 50%; } /* Круглый */
+        #main-hall-map #table-15 { top: 150px; right: 40px; width: 60px; height: 60px; border-radius: 50%; } /* Круглый */
+        
+        #main-hall-map #table-16 { top: 250px; left: 20px; width: 90px; height: 50px; } /* Прямоугольник */
+        #main-hall-map #table-17 { top: 250px; left: 130px; width: 90px; height: 50px; } /* Прямоугольник */
+        #main-hall-map #table-18 { top: 250px; right: 20px; width: 90px; height: 50px; } /* Прямоугольник */
+        
+        #main-hall-map #table-19 { bottom: 80px; left: 70px; width: 70px; height: 70px; border-radius: 50%; } /* Круглый */
+        #main-hall-map #table-20 { bottom: 80px; right: 70px; width: 70px; height: 70px; border-radius: 50%; } /* Круглый */
 
         /* ----- Кнопка подтверждения (ВОССТАНОВЛЕННАЯ, БОЛЬШАЯ) ----- */
         #confirm-btn {
@@ -415,7 +507,7 @@
 
 <div class="header-section">
     <div class="header-title">Забронировать Столик</div>
-    <div class="header-subtitle">Мама Хуана"</div>
+    <div class="header-subtitle">Мама Хуана</div>
 </div>
 
 <div class="selection-panel">
@@ -436,26 +528,52 @@
     </div>
 </div>
 
+<div class="area-selector">
+    <button class="toggle-button active" data-area="terrace" id="toggle-terrace">Застекленная терраса</button>
+    <button class="toggle-button" data-area="hall" id="toggle-hall">Основной зал</button>
+</div>
+
 <div class="table-map-container">
     <div class="map-wrapper">
-        <div class="table-map" id="table-map">
-            <div id="entrance" class="map-feature">Вход</div>
-
-            <div class="table-element" id="table-1" data-table="1">1<span class="table-capacity">8 персон</span></div>
-            <div class="table-element" id="table-2" data-table="2">2<span class="table-capacity">8 персон</span></div>
-            
-            <div class="table-element" id="table-3" data-table="3">3<span class="table-capacity">4 персоны</span></div>
-            <div class="table-element" id="table-4" data-table="4">4<span class="table-capacity">4 персоны</span></div>
-            <div class="table-element" id="table-5" data-table="5">5<span class="table-capacity">4 персоны</span></div>
-            <div class="table-element" id="table-6" data-table="6">6<span class="table-capacity">4 персоны</span></div>
-            
-            <div class="table-element" id="table-7" data-table="7">7<span class="table-capacity">4 персоны</span></div>
-            <div class="table-element" id="table-8" data-table="8">8<span class="table-capacity">4 персоны</span></div>
-            <div class="table-element" id="table-9" data-table="9">9<span class="table-capacity">4 персоны</span></div>
-            <div class="table-element" id="table-10" data-table="10">10<span class="table-capacity">4 персоны</span></div>
-        </div>
         
-        <div class="fountain-container">
+        <div id="map-container">
+            <div class="table-map active" id="terrace-map">
+                <div id="terrace-entrance" class="map-feature">ВХОД / ВЫХОД</div>
+
+                <div class="table-element" id="table-1" data-table="1">1<span class="table-capacity">8 персон</span></div>
+                <div class="table-element" id="table-2" data-table="2">2<span class="table-capacity">8 персон</span></div>
+                
+                <div class="table-element" id="table-3" data-table="3">3<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-4" data-table="4">4<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-5" data-table="5">5<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-6" data-table="6">6<span class="table-capacity">4 персоны</span></div>
+                
+                <div class="table-element" id="table-7" data-table="7">7<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-8" data-table="8">8<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-9" data-table="9">9<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-10" data-table="10">10<span class="table-capacity">4 персоны</span></div>
+            </div>
+            
+            <div class="table-map" id="main-hall-map">
+                <div id="bar-counter" class="map-feature">БАРНАЯ СТОЙКА</div>
+                <div id="hall-entrance" class="map-feature">ВХОД СНИЗУ</div>
+                
+                <div class="table-element table-round" id="table-11" data-table="11">11<span class="table-capacity">2-4</span></div>
+                <div class="table-element table-round" id="table-12" data-table="12">12<span class="table-capacity">2-4</span></div>
+                <div class="table-element" id="table-13" data-table="13">13<span class="table-capacity">6 персон</span></div>
+                
+                <div class="table-element table-round" id="table-14" data-table="14">14<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element table-round" id="table-15" data-table="15">15<span class="table-capacity">4 персоны</span></div>
+                
+                <div class="table-element" id="table-16" data-table="16">16<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-17" data-table="17">17<span class="table-capacity">4 персоны</span></div>
+                <div class="table-element" id="table-18" data-table="18">18<span class="table-capacity">4 персоны</span></div>
+                
+                <div class="table-element table-round" id="table-19" data-table="19">19<span class="table-capacity">6 персон</span></div>
+                <div class="table-element table-round" id="table-20" data-table="20">20<span class="table-capacity">6 персон</span></div>
+            </div>
+            
+        </div> <div class="fountain-container">
             <span class="fountain-icon"><i class="fa fa-fountain"></i></span> 
             <span class="fountain-label">Фонтан</span>
         </div>
