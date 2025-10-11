@@ -58,10 +58,9 @@
             color: var(--secondary-color);
         }
 
-        /* ----- Блок выбора (Дата/Время/Стол/ЗАЛ) ----- */
+        /* ----- Блок выбора (Дата/Время/Стол) ----- */
         .selection-panel {
             display: flex;
-            flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
             justify-content: space-around;
             align-items: flex-start;
             background-color: var(--bg-dark);
@@ -75,11 +74,11 @@
             flex-direction: column;
             align-items: center;
             padding: 5px;
-            width: 20%; /* Уменьшаем ширину для 4-х элементов */
+            width: 30%;
             text-align: center;
-            min-width: 70px; /* Минимальная ширина, чтобы не сжимались */
         }
         
+        /* Стили Font Awesome иконок */
         .selection-icon {
             font-size: 20px;
             color: var(--secondary-color);
@@ -99,31 +98,6 @@
             color: var(--text-main);
             margin-top: 2px;
         }
-        
-        /* Стили для нового селекта зала */
-        .hall-select-item {
-            width: 90%; 
-            margin: 10px 0 0;
-        }
-        
-        #hall-select {
-            width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background-color: #333;
-            color: var(--text-main);
-            font-size: 14px;
-            box-sizing: border-box;
-            -webkit-appearance: none; /* Убирает стандартный вид в Chrome/Safari */
-            -moz-appearance: none; /* Убирает стандартный вид в Firefox */
-            appearance: none; /* Убирает стандартный вид */
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23E2D2B0%22%20d%3D%22M287%20197.35L146.2%2056.65%205.4%20197.35z%22%2F%3E%3C/svg%3E');
-            background-repeat: no-repeat;
-            background-position: right 8px top 50%;
-            background-size: 10px auto;
-        }
-
 
         /* ----- Форма бронирования (Модальное окно/Оверлей) ----- */
         #booking-overlay {
@@ -227,12 +201,6 @@
             background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
             flex-shrink: 0;
         }
-        
-        /* Скрываем Террасу по умолчанию, пока JS не определит активный зал */
-        #map-terrace {
-            display: none;
-        }
-
 
         /* КАРТОЧКА ДЕТАЛЕЙ СТОЛА */
         #table-details-card {
@@ -286,7 +254,7 @@
             border-radius: 4px;
         }
 
-        /* Барная стойка (для Основного зала) */
+        /* Барная стойка */
         #bar-counter {
             top: 0;
             left: 0;
@@ -298,20 +266,8 @@
             line-height: 30px;
         }
         
-        /* Стены/Ограждение (для Террасы) */
-        #terrace-wall {
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 40px;
-            background-color: #708090; 
-            border-bottom: 3px solid #E2D2B0;
-            font-size: 12px;
-            line-height: 30px;
-        }
-        
         /* Вход */
-        .entrance {
+        #entrance {
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
@@ -367,22 +323,15 @@
             box-shadow: 0 0 10px var(--secondary-color);
         }
 
-        /* Позиционирование столов (Основной зал - столы 1-6) */
-        #map-main-hall #table-1 { top: 55px; left: 50px; width: 45px; height: 45px; } 
-        #map-main-hall #table-2 { top: 55px; left: 255px; width: 45px; height: 45px; } 
-        #map-main-hall #table-3 { top: 120px; left: 10px; width: 80px; height: 50px; } 
-        #map-main-hall #table-4 { top: 200px; left: 10px; width: 80px; height: 50px; } 
-        #map-main-hall #table-5 { top: 160px; left: 135px; width: 70px; height: 70px; } 
-        #map-main-hall #table-6 { top: 160px; right: 10px; width: 80px; height: 80px; border-radius: 6px; } 
-        #map-main-hall #table-7 { top: 300px; left: 50px; width: 80px; height: 50px; } /* Перенесены, чтобы не ломать стили */
-        #map-main-hall #table-8 { top: 300px; left: 220px; width: 80px; height: 50px; } /* Перенесены, чтобы не ломать стили */
-
-        /* Позиционирование столов (Терраса - столы 7-10) */
-        #map-terrace #table-7 { top: 70px; left: 10px; width: 80px; height: 50px; } 
-        #map-terrace #table-8 { top: 70px; right: 10px; width: 80px; height: 50px; } 
-        #map-terrace #table-9 { top: 180px; left: 50px; width: 55px; height: 55px; } /* Новый стол */
-        #map-terrace #table-10 { top: 180px; right: 50px; width: 55px; height: 55px; } /* Новый стол */
-        #map-terrace .entrance { top: 300px; left: 50%; transform: translateX(-50%); }
+        /* ПОЗИЦИОНИРОВАНИЕ СТОЛОВ согласно изображению */
+        #table-1 { top: 55px; left: 50px; width: 45px; height: 45px; } /* Круглый, маленький */
+        #table-2 { top: 55px; right: 50px; width: 45px; height: 45px; } /* Круглый, маленький */
+        #table-3 { top: 120px; left: 10px; width: 80px; height: 50px; } /* Прямоугольный */
+        #table-4 { top: 120px; right: 10px; width: 80px; height: 50px; } /* Прямоугольный */
+        #table-5 { top: 185px; left: 50%; transform: translateX(-50%); width: 70px; height: 70px; } /* Круглый, средний, по центру */
+        #table-6 { top: 260px; left: 10px; width: 80px; height: 80px; border-radius: 6px; } /* Прямоугольный, большой */
+        #table-7 { top: 260px; right: 10px; width: 80px; height: 80px; border-radius: 6px; } /* Прямоугольный, большой */
+        #table-8 { bottom: 65px; left: 50%; transform: translateX(-50%); width: 100px; height: 50px; } /* Прямоугольный, большой, по центру, над входом */
 
 
         /* ----- Кнопка подтверждения (ВОССТАНОВЛЕННАЯ, БОЛЬШАЯ) ----- */
@@ -428,21 +377,6 @@
             #table-details-card {
                 margin-top: 20px;
             }
-            .selection-panel {
-                flex-wrap: wrap;
-            }
-            .selection-item {
-                width: 30%; /* Увеличим для лучшей читаемости, если 4 элемента не помещаются */
-            }
-            .hall-select-item {
-                 width: 90%;
-            }
-        }
-        @media (max-width: 480px) {
-            .selection-item {
-                width: 40%; 
-                margin-bottom: 10px;
-            }
         }
     </style>
 </head>
@@ -469,21 +403,13 @@
         <span class="selection-label">Стол</span>
         <span class="selection-value" id="current-table-value">Не выбран</span>
     </div>
-    <div class="selection-item hall-select-item">
-        <label for="hall-select" class="selection-label">Зал</label>
-        <select id="hall-select">
-            <option value="Основной зал">Основной зал</option>
-            <option value="Терраса">Терраса</option>
-        </select>
-    </div>
 </div>
 
 <div class="table-map-container">
     <div class="map-wrapper">
-        
-        <div class="table-map" id="map-main-hall">
+        <div class="table-map" id="table-map">
             <div id="bar-counter" class="map-feature">Барная Стойка</div>
-            <div class="entrance map-feature">Вход</div>
+            <div id="entrance" class="map-feature">Вход</div>
 
             <div class="table-element table-round" id="table-1" data-table="1">1</div>
             <div class="table-element table-round" id="table-2" data-table="2">2</div>
@@ -491,18 +417,9 @@
             <div class="table-element table-rect" id="table-4" data-table="4">4</div>
             <div class="table-element table-round" id="table-5" data-table="5">5</div>
             <div class="table-element table-rect" id="table-6" data-table="6">6</div>
-            </div>
-
-        <div class="table-map" id="map-terrace">
-            <div id="terrace-wall" class="map-feature">Ограждение Террасы</div>
-            <div class="entrance map-feature">Вход/Выход</div>
-
             <div class="table-element table-rect" id="table-7" data-table="7">7</div>
             <div class="table-element table-rect" id="table-8" data-table="8">8</div>
-            <div class="table-element table-round" id="table-9" data-table="9">9</div>
-            <div class="table-element table-round" id="table-10" data-table="10">10</div>
         </div>
-
 
         <div id="table-details-card">
             <img id="table-photo" src="https://santarest.by/222.JPG" alt="Фото столика" onerror="this.onerror=null; this.src='https://placehold.co/400x200/3E4646/E2D2B0?text=Фото+стола'" />
@@ -539,5 +456,7 @@
 </div>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="main.js"></script> </body>
+<script type="module" src="/src/main.js"></script>
+
+</body>
 </html>
