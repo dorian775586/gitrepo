@@ -256,7 +256,16 @@ async function initializeMapAvailability(dateStr) {
     // После инициализации всей карты, если был выбран какой-то стол,
     // убеждаемся, что его детали и выделение актуальны
     if (selectedTableId) {
-        updateTableAvailability(selectedTableId);
+        // Здесь важно не просто вызвать updateTableAvailability, 
+        // а повторно отобразить детали и состояние для selectedTableId,
+        // учитывая, что initializeMapAvailability уже сбросила его состояние.
+        // Вызовем showTableDetails напрямую, чтобы оно переопределило цвет для выбранного стола.
+        const dateInput = document.getElementById("dateInput");
+        const dateStrForSelected = dateInput ? dateInput.value : null;
+        if (dateStrForSelected) {
+            const hasFreeSlotsForSelected = await fillTimeSelect(selectedTableId, dateStrForSelected);
+            showTableDetails(selectedTableId, !hasFreeSlotsForSelected);
+        }
     }
 }
 
@@ -291,15 +300,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ИНИЦИАЛИЗАЦИЯ: Убеждаемся, что Терраса активна при загрузке и обновляем карту
     switchArea('terrace'); 
-    initializeMapAvailability(formattedToday); // Инициализируем карту при загрузке
+    // initializeMapAvailability(formattedToday); // Эта строка вызывается внутри switchArea('terrace')
 
     // 3. Обработчик изменения даты
     dateInput.addEventListener('change', async (event) => {
         selectedDate = event.target.value;
+        // Обновляем всю карту, а затем, если был выбран стол, его детали
+        await initializeMapAvailability(selectedDate); 
         if (selectedTableId) {
-            await updateTableAvailability(selectedTableId); // Обновляем выбранный стол
+            await updateTableAvailability(selectedTableId); 
+        } else {
+            // Если столик не был выбран, но дата изменилась, скрываем карточку деталей.
+            document.getElementById('table-details-card').style.display = 'none';
         }
-        initializeMapAvailability(selectedDate); // Обновляем всю карту
     });
 
     // 4. Обработчик кликов по столам (общий для обеих карт)
@@ -307,8 +320,9 @@ document.addEventListener("DOMContentLoaded", () => {
     tableElements.forEach(table => {
         table.addEventListener('click', (event) => {
             const tableId = event.currentTarget.getAttribute('data-table');
-            // updateTableAvailability будет управлять классами .table-selected и .table-booked
             if (tableId) {
+                // Вызываем updateTableAvailability, которая обновит карточку деталей
+                // и установит правильные классы (selected/booked) на КЛИКНУТЫЙ стол.
                 updateTableAvailability(tableId); 
                 if (tableValueDisplay) {
                     tableValueDisplay.textContent = `Стол ${tableId}`;
@@ -321,9 +335,6 @@ document.addEventListener("DOMContentLoaded", () => {
     timeSelect.addEventListener('change', (event) => {
         selectedTime = event.target.value;
         currentTimeValue.textContent = selectedTime || '...';
-        // Здесь можно добавить дополнительную логику, если нужно обновить кнопку бронирования
-        // Например, если после выбора времени стол внезапно оказался занят
-        // (хотя fillTimeSelect уже должен был это обработать)
     });
 
     // 6. Обработчик кнопки подтверждения бронирования
@@ -353,7 +364,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (telegramWebApp) {
             userId = telegramWebApp.initDataUnsafe?.user?.id || 'unknown';
             userName = telegramWebApp.initDataUnsafe?.user?.full_name || 'unknown';
-            // Извлекаем bot_url из initDataUnsafe, если он был передан
             const initDataParams = new URLSearchParams(telegramWebApp.initData);
             botUrl = initDataParams.get('bot_url') || '';
         }
@@ -382,25 +392,26 @@ document.addEventListener("DOMContentLoaded", () => {
             if (response.ok) {
                 alert(result.message);
                 if (telegramWebApp) {
-                    // Отправляем данные в бота, чтобы он мог обработать их (например, отправить уведомление)
                     telegramWebApp.sendData(JSON.stringify({
                         type: 'booking_success',
                         table: selectedTableId,
                         date: selectedDate,
                         time: selectedTime
                     }));
-                    telegramWebApp.close(); // Закрываем Web App после успешного бронирования
+                    telegramWebApp.close(); 
                 }
                 // После успешной брони, обновить состояние карты
-                updateTableAvailability(selectedTableId);
-                initializeMapAvailability(selectedDate);
+                // Сначала обновим текущий выбранный стол
+                await updateTableAvailability(selectedTableId);
+                // Затем обновим всю карту для текущей даты
+                await initializeMapAvailability(selectedDate);
 
             } else {
                 alert(`Ошибка бронирования: ${result.message}`);
                 // После неудачной брони (например, дубликат), также обновить состояние,
                 // чтобы убедиться, что пользователь видит актуальную информацию
-                updateTableAvailability(selectedTableId);
-                initializeMapAvailability(selectedDate);
+                await updateTableAvailability(selectedTableId);
+                await initializeMapAvailability(selectedDate);
             }
         } catch (error) {
             console.error('Ошибка сети или сервера при бронировании:', error);
@@ -411,13 +422,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Если WebApp запущен из Telegram, можно добавить начальные параметры
     const telegramWebApp = window.Telegram?.WebApp;
     if (telegramWebApp) {
-        // Устанавливаем цвет верхней панели для Telegram Web App
-        telegramWebApp.setHeaderColor('#333'); // Или другой цвет, соответствующий вашему дизайну
+        telegramWebApp.setHeaderColor('#333'); 
         telegramWebApp.setBackgroundColor('#1c1c1c');
 
-        // Если вы передаете user_id и user_name через initData (как в main_reply_kb),
-        // то они будут доступны через telegramWebApp.initDataUnsafe
-        // Для демонстрации вытащим их здесь, хотя они используются при бронировании
         console.log('Telegram User ID:', telegramWebApp.initDataUnsafe?.user?.id);
         console.log('Telegram User Name:', telegramWebApp.initDataUnsafe?.user?.full_name);
     }
