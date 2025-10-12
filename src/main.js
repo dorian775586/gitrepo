@@ -53,7 +53,6 @@ function switchArea(areaId) {
     document.getElementById(`${areaId}-btn`).classList.add('active');
     
     // После переключения области, обновляем доступность всех столов для новой карты
-    // Если есть выбранная дата
     const dateInput = document.getElementById("dateInput");
     if (dateInput && dateInput.value) {
         initializeMapAvailability(dateInput.value);
@@ -151,11 +150,6 @@ function showTableDetails(tableId, isBooked = false) {
         photo: DEFAULT_TABLE_IMAGE
     };
 
-    // Сбрасываем все визуальные состояния со ВСЕХ столов перед применением нового
-    document.querySelectorAll('.table-element').forEach(el => {
-        el.classList.remove('table-selected', 'table-booked');
-    });
-    
     // Обновляем детали карточки
     tableTitle.textContent = info.title;
     tableDescription.textContent = info.desc;
@@ -166,16 +160,14 @@ function showTableDetails(tableId, isBooked = false) {
     }
     
     tableDetailsCard.style.display = 'block';
-    selectedTableId = tableId;
+    selectedTableId = tableId; // Запоминаем выбранный стол
 
     // Обновление состояния кнопки бронирования И ВИЗУАЛЬНОГО СОСТОЯНИЯ СТОЛА
     if (isBooked) {
-        tableElement.classList.add('table-booked'); // Стол становится красным
         confirmBtn.disabled = true;
         confirmBtn.textContent = `Стол ${tableId} занят на это время`;
         confirmBtn.style.backgroundColor = 'var(--table-booked)'; // Красный для кнопки
     } else {
-        tableElement.classList.add('table-selected'); // Стол становится золотым
         confirmBtn.disabled = false;
         confirmBtn.textContent = `Забронировать стол ${tableId}`;
         confirmBtn.style.backgroundColor = 'var(--primary-color)'; // Основной цвет для кнопки
@@ -187,12 +179,24 @@ function showTableDetails(tableId, isBooked = false) {
  * Используется при клике на стол или изменении даты.
  * @param {string} tableId - ID стола.
  */
-async function updateTableAvailability(tableId) {
+async function updateTableAvailabilityAndDetails(tableId) {
     const dateInput = document.getElementById("dateInput");
     const dateStr = dateInput ? dateInput.value : null;
 
     if (tableId && dateStr) {
         selectedDate = dateStr; // Обновляем глобальную выбранную дату
+
+        // Сначала удаляем класс 'table-selected' со всех столов
+        document.querySelectorAll('.table-element').forEach(el => {
+            el.classList.remove('table-selected');
+        });
+
+        // Затем добавляем 'table-selected' только к текущему выбранному столу
+        const currentTableElement = document.querySelector(`[data-table="${tableId}"]`);
+        if (currentTableElement) {
+            currentTableElement.classList.add('table-selected');
+        }
+
         const hasFreeSlots = await fillTimeSelect(tableId, dateStr);
         // showTableDetails вызывается с !hasFreeSlots:
         // - если hasFreeSlots = true (есть слоты), то !hasFreeSlots = false (стол не занят)
@@ -221,9 +225,10 @@ async function initializeMapAvailability(dateStr) {
 
     const allTables = document.querySelectorAll('.table-element');
     
-    // Сбрасываем все классы занятости перед новой инициализацией
+    // Сбрасываем только класс 'table-booked' со всех столов перед новой инициализацией
+    // Класс 'table-selected' будет управляться updateTableAvailabilityAndDetails при клике
     allTables.forEach(tableElement => {
-        tableElement.classList.remove('table-booked', 'table-selected');
+        tableElement.classList.remove('table-booked');
     });
 
     const availabilityChecks = Array.from(allTables).map(async (tableElement) => {
@@ -256,16 +261,10 @@ async function initializeMapAvailability(dateStr) {
     // После инициализации всей карты, если был выбран какой-то стол,
     // убеждаемся, что его детали и выделение актуальны
     if (selectedTableId) {
-        // Здесь важно не просто вызвать updateTableAvailability, 
-        // а повторно отобразить детали и состояние для selectedTableId,
-        // учитывая, что initializeMapAvailability уже сбросила его состояние.
-        // Вызовем showTableDetails напрямую, чтобы оно переопределило цвет для выбранного стола.
-        const dateInput = document.getElementById("dateInput");
-        const dateStrForSelected = dateInput ? dateInput.value : null;
-        if (dateStrForSelected) {
-            const hasFreeSlotsForSelected = await fillTimeSelect(selectedTableId, dateStrForSelected);
-            showTableDetails(selectedTableId, !hasFreeSlotsForSelected);
-        }
+        await updateTableAvailabilityAndDetails(selectedTableId);
+    } else {
+        // Если нет выбранного стола, скрываем карточку деталей
+        document.getElementById('table-details-card').style.display = 'none';
     }
 }
 
@@ -282,38 +281,72 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentTimeValue = document.getElementById("current-time-value");
     const tableValueDisplay = document.getElementById("table-value-display");
 
+    // Проверка наличия всех элементов
+    const requiredElements = {
+        dateInput: dateInput,
+        guestsInput: guestsInput,
+        phoneInput: phoneInput,
+        confirmBtn: confirmBtn,
+        timeSelect: timeSelect,
+        currentTimeValue: currentTimeValue,
+        tableValueDisplay: tableValueDisplay,
+        tableDetailsCard: document.getElementById('table-details-card'),
+        tableTitle: document.getElementById('table-title'),
+        tableDescription: document.getElementById('table-description'),
+        tablePhoto: document.getElementById('table-photo'),
+        terraceBtn: document.getElementById('terrace-btn'),
+        mainHallBtn: document.getElementById('main-hall-btn')
+    };
+
+    for (const key in requiredElements) {
+        if (!requiredElements[key]) {
+            console.error(`Элемент с ID '${key}' не найден в DOM. Скрипт может работать некорректно.`);
+            // В случае отсутствия критически важных элементов, можно прервать выполнение
+            // return; 
+        }
+    }
+
+
     // 1. Установка текущей даты и инициализация min/max для dateInput
     const today = new Date();
     const formattedToday = today.toISOString().split('T')[0]; // YYYY-MM-DD
-    dateInput.value = formattedToday;
-    dateInput.min = formattedToday;
+    if (dateInput) { // Проверяем, существует ли dateInput
+        dateInput.value = formattedToday;
+        dateInput.min = formattedToday;
 
-    const maxDate = new Date();
-    maxDate.setDate(today.getDate() + 30); // Бронирование на 30 дней вперед
-    dateInput.max = maxDate.toISOString().split('T')[0];
+        const maxDate = new Date();
+        maxDate.setDate(today.getDate() + 30); // Бронирование на 30 дней вперед
+        dateInput.max = maxDate.toISOString().split('T')[0];
+    }
 
     selectedDate = formattedToday; // Инициализируем глобальную переменную
 
     // 2. Обработчики для кнопок переключения областей
-    document.getElementById('terrace-btn').addEventListener('click', () => switchArea('terrace'));
-    document.getElementById('main-hall-btn').addEventListener('click', () => switchArea('main-hall'));
+    if (document.getElementById('terrace-btn')) {
+        document.getElementById('terrace-btn').addEventListener('click', () => switchArea('terrace'));
+    }
+    if (document.getElementById('main-hall-btn')) {
+        document.getElementById('main-hall-btn').addEventListener('click', () => switchArea('main-hall'));
+    }
 
-    // ИНИЦИАЛИЗАЦИЯ: Убеждаемся, что Терраса активна при загрузке и обновляем карту
+    // ИНИЦИАЛИЗАЦИЯ: Убеждаемся, что Терраса активна при загрузке
+    // initializeMapAvailability вызывается внутри switchArea
     switchArea('terrace'); 
-    // initializeMapAvailability(formattedToday); // Эта строка вызывается внутри switchArea('terrace')
 
     // 3. Обработчик изменения даты
-    dateInput.addEventListener('change', async (event) => {
-        selectedDate = event.target.value;
-        // Обновляем всю карту, а затем, если был выбран стол, его детали
-        await initializeMapAvailability(selectedDate); 
-        if (selectedTableId) {
-            await updateTableAvailability(selectedTableId); 
-        } else {
-            // Если столик не был выбран, но дата изменилась, скрываем карточку деталей.
-            document.getElementById('table-details-card').style.display = 'none';
-        }
-    });
+    if (dateInput) {
+        dateInput.addEventListener('change', async (event) => {
+            selectedDate = event.target.value;
+            await initializeMapAvailability(selectedDate); // Обновляем всю карту
+            if (selectedTableId) {
+                // Если был выбран стол, обновить его детали и выделение
+                await updateTableAvailabilityAndDetails(selectedTableId); 
+            } else {
+                // Если стол не был выбран, но дата изменилась, скрываем карточку деталей.
+                document.getElementById('table-details-card').style.display = 'none';
+            }
+        });
+    }
 
     // 4. Обработчик кликов по столам (общий для обеих карт)
     const tableElements = document.querySelectorAll('.table-element');
@@ -321,9 +354,9 @@ document.addEventListener("DOMContentLoaded", () => {
         table.addEventListener('click', (event) => {
             const tableId = event.currentTarget.getAttribute('data-table');
             if (tableId) {
-                // Вызываем updateTableAvailability, которая обновит карточку деталей
+                // Вызываем updateTableAvailabilityAndDetails, которая обновит карточку деталей
                 // и установит правильные классы (selected/booked) на КЛИКНУТЫЙ стол.
-                updateTableAvailability(tableId); 
+                updateTableAvailabilityAndDetails(tableId); 
                 if (tableValueDisplay) {
                     tableValueDisplay.textContent = `Стол ${tableId}`;
                 }
@@ -332,92 +365,95 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 5. Обработчик изменения выбора времени
-    timeSelect.addEventListener('change', (event) => {
-        selectedTime = event.target.value;
-        currentTimeValue.textContent = selectedTime || '...';
-    });
+    if (timeSelect) {
+        timeSelect.addEventListener('change', (event) => {
+            selectedTime = event.target.value;
+            if (currentTimeValue) {
+                currentTimeValue.textContent = selectedTime || '...';
+            }
+        });
+    }
 
     // 6. Обработчик кнопки подтверждения бронирования
-    confirmBtn.addEventListener('click', async () => {
-        if (!selectedTableId || !selectedDate || !selectedTime) {
-            alert("Пожалуйста, выберите стол, дату и время.");
-            return;
-        }
-
-        const guests = guestsInput.value;
-        const phone = phoneInput.value;
-
-        if (!guests || guests < 1) {
-            alert("Пожалуйста, укажите количество гостей.");
-            return;
-        }
-        if (!phone || phone.length < 5) { // Простейшая валидация номера
-            alert("Пожалуйста, введите корректный номер телефона.");
-            return;
-        }
-
-        const telegramWebApp = window.Telegram?.WebApp;
-        let userId = 'unknown';
-        let userName = 'unknown';
-        let botUrl = '';
-
-        if (telegramWebApp) {
-            userId = telegramWebApp.initDataUnsafe?.user?.id || 'unknown';
-            userName = telegramWebApp.initDataUnsafe?.user?.full_name || 'unknown';
-            const initDataParams = new URLSearchParams(telegramWebApp.initData);
-            botUrl = initDataParams.get('bot_url') || '';
-        }
-
-        const bookingData = {
-            user_id: userId,
-            user_name: userName,
-            phone: phone,
-            guests: parseInt(guests),
-            table: selectedTableId,
-            time: selectedTime,
-            date: selectedDate
-        };
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/book`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(bookingData)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert(result.message);
-                if (telegramWebApp) {
-                    telegramWebApp.sendData(JSON.stringify({
-                        type: 'booking_success',
-                        table: selectedTableId,
-                        date: selectedDate,
-                        time: selectedTime
-                    }));
-                    telegramWebApp.close(); 
-                }
-                // После успешной брони, обновить состояние карты
-                // Сначала обновим текущий выбранный стол
-                await updateTableAvailability(selectedTableId);
-                // Затем обновим всю карту для текущей даты
-                await initializeMapAvailability(selectedDate);
-
-            } else {
-                alert(`Ошибка бронирования: ${result.message}`);
-                // После неудачной брони (например, дубликат), также обновить состояние,
-                // чтобы убедиться, что пользователь видит актуальную информацию
-                await updateTableAvailability(selectedTableId);
-                await initializeMapAvailability(selectedDate);
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            if (!selectedTableId || !selectedDate || !selectedTime) {
+                alert("Пожалуйста, выберите стол, дату и время.");
+                return;
             }
-        } catch (error) {
-            console.error('Ошибка сети или сервера при бронировании:', error);
-            alert("Произошла ошибка при попытке бронирования. Попробуйте снова.");
-        }
-    });
+
+            const guests = guestsInput ? guestsInput.value : 1; // Дефолт, если нет
+            const phone = phoneInput ? phoneInput.value : ''; // Дефолт, если нет
+
+            if (!guests || guests < 1) {
+                alert("Пожалуйста, укажите количество гостей.");
+                return;
+            }
+            if (!phone || phone.length < 5) { 
+                alert("Пожалуйста, введите корректный номер телефона.");
+                return;
+            }
+
+            const telegramWebApp = window.Telegram?.WebApp;
+            let userId = 'unknown';
+            let userName = 'unknown';
+            let botUrl = '';
+
+            if (telegramWebApp) {
+                userId = telegramWebApp.initDataUnsafe?.user?.id || 'unknown';
+                userName = telegramWebApp.initDataUnsafe?.user?.full_name || 'unknown';
+                const initDataParams = new URLSearchParams(telegramWebApp.initData);
+                botUrl = initDataParams.get('bot_url') || '';
+            }
+
+            const bookingData = {
+                user_id: userId,
+                user_name: userName,
+                phone: phone,
+                guests: parseInt(guests),
+                table: selectedTableId,
+                time: selectedTime,
+                date: selectedDate
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/book`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    if (telegramWebApp) {
+                        telegramWebApp.sendData(JSON.stringify({
+                            type: 'booking_success',
+                            table: selectedTableId,
+                            date: selectedDate,
+                            time: selectedTime
+                        }));
+                        telegramWebApp.close(); 
+                    }
+                    // После успешной брони, обновить состояние карты
+                    await initializeMapAvailability(selectedDate);
+                    // Обновить детали выбранного стола
+                    await updateTableAvailabilityAndDetails(selectedTableId);
+
+                } else {
+                    alert(`Ошибка бронирования: ${result.message}`);
+                    await initializeMapAvailability(selectedDate);
+                    await updateTableAvailabilityAndDetails(selectedTableId);
+                }
+            } catch (error) {
+                console.error('Ошибка сети или сервера при бронировании:', error);
+                alert("Произошла ошибка при попытке бронирования. Попробуйте снова.");
+            }
+        });
+    }
 
     // Если WebApp запущен из Telegram, можно добавить начальные параметры
     const telegramWebApp = window.Telegram?.WebApp;
