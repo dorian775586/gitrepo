@@ -1,12 +1,12 @@
 // ===================================
 // КОНФИГУРАЦИЯ И ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ
 // ===================================
-const API_BASE_URL = "https://readytoearn-4.onrender.com"; 
-const DEFAULT_TABLE_IMAGE = "https://santarest.by/222.JPG"; 
+const API_BASE_URL = "https://readytoearn-4.onrender.com";
+const DEFAULT_TABLE_IMAGE = "https://santarest.by/222.JPG";
 
 let user_id = null;
 let user_name = "Неизвестный";
-let selectedTableId = null; 
+let selectedTableId = null;
 
 if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     const user = Telegram.WebApp.initDataUnsafe.user;
@@ -17,7 +17,8 @@ if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     }
 }
 
-const dateInputGlobal = document.getElementById("dateInput"); 
+// Минимальная дата сегодня
+const dateInputGlobal = document.getElementById("dateInput");
 if (dateInputGlobal) {
     const today = new Date().toISOString().split('T')[0];
     dateInputGlobal.min = today;
@@ -27,27 +28,25 @@ if (dateInputGlobal) {
 // УТИЛИТА ДЛЯ СООБЩЕНИЙ
 // ===================================
 function safeShowAlert(message) {
-    if (window.Telegram && Telegram.WebApp.isVersionAtLeast('6.1')) {
-        Telegram.WebApp.showAlert(message);
-    } else alert(message);
+    if (window.Telegram && Telegram.WebApp.isVersionAtLeast('6.1')) Telegram.WebApp.showAlert(message);
+    else alert(message);
 }
 
 // ===================================
 // ТЕМА И UI
 // ===================================
 function adaptToTheme() {
-    const themeParams = window.Telegram.WebApp.themeParams;
-    if (!themeParams) return;
+    const theme = window.Telegram.WebApp.themeParams;
+    if (!theme) return;
     const style = document.documentElement.style;
-    style.setProperty('--tg-theme-bg-color', themeParams.bg_color || '#1f1f1f');
-    style.setProperty('--tg-theme-text-color', themeParams.text_color || '#ffffff');
-    style.setProperty('--tg-theme-secondary-bg-color', themeParams.secondary_bg_color || '#252525');
-    style.setProperty('--tg-theme-hint-color', themeParams.hint_color || '#aaaaaa');
-    style.setProperty('--tg-theme-link-color', themeParams.link_color || '#007bff');
-    style.setProperty('--tg-theme-button-color', themeParams.button_color || '#007bff');
-    style.setProperty('--tg-theme-button-text-color', themeParams.button_text_color || '#ffffff');
+    style.setProperty('--tg-theme-bg-color', theme.bg_color || '#1f1f1f');
+    style.setProperty('--tg-theme-text-color', theme.text_color || '#ffffff');
+    style.setProperty('--tg-theme-secondary-bg-color', theme.secondary_bg_color || '#252525');
+    style.setProperty('--tg-theme-hint-color', theme.hint_color || '#aaaaaa');
+    style.setProperty('--tg-theme-link-color', theme.link_color || '#007bff');
+    style.setProperty('--tg-theme-button-color', theme.button_color || '#007bff');
+    style.setProperty('--tg-theme-button-text-color', theme.button_text_color || '#ffffff');
 }
-
 if (window.Telegram && Telegram.WebApp) {
     Telegram.WebApp.ready();
     adaptToTheme();
@@ -81,178 +80,181 @@ const TABLE_DETAILS = {
 };
 
 // ===================================
-// СТАТУС СТОЛОВ
+// ФУНКЦИИ ПО СТАТУСУ СТОЛОВ
 // ===================================
 function applyTableStatus(tableId, isBooked) {
-    const tableElement = document.querySelector(`[data-table="${tableId}"]`);
-    if (!tableElement) return;
-    if (isBooked) tableElement.classList.add('table-booked');
-    else tableElement.classList.remove('table-booked');
+    const el = document.querySelector(`[data-table="${tableId}"]`);
+    if (!el) return;
+    if (isBooked) el.classList.add('table-booked');
+    else el.classList.remove('table-booked');
 }
 
-function showTableDetails(tableId, isBooked = false) {
+function showTableDetails(tableId, isBooked=false){
     const card = document.getElementById('table-details-card');
     const confirmBtn = document.getElementById('confirm-btn');
     const title = document.getElementById('table-title');
     const desc = document.getElementById('table-description');
     const photo = document.getElementById('table-photo');
-    if (!card || !confirmBtn || !title || !desc) return;
+    if(!card || !confirmBtn || !title || !desc) return;
 
-    const info = TABLE_DETAILS[tableId] || { title: `Стол ${tableId}`, desc: 'Информация недоступна.' };
+    const info = TABLE_DETAILS[tableId] || {title:`Стол ${tableId}`, desc:'Информация недоступна.'};
     title.textContent = info.title;
     desc.textContent = info.desc;
-    if (photo) { photo.src = DEFAULT_TABLE_IMAGE; photo.alt = info.title; }
+    if(photo){ photo.src=DEFAULT_TABLE_IMAGE; photo.alt=info.title; }
 
-    card.style.display = 'block';
+    card.style.display='block';
     selectedTableId = tableId;
-
     applyTableStatus(tableId, isBooked);
 
-    if (isBooked) {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = `Стол ${tableId} занят на это время`;
-        confirmBtn.style.backgroundColor = 'var(--table-booked)';
-    } else {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = `Забронировать стол ${tableId}`;
-        confirmBtn.style.backgroundColor = 'var(--primary-color)';
+    if(isBooked){
+        confirmBtn.disabled=true;
+        confirmBtn.textContent=`Стол ${tableId} занят`;
+        confirmBtn.style.backgroundColor='var(--table-booked)';
+    }else{
+        confirmBtn.disabled=false;
+        confirmBtn.textContent=`Забронировать стол ${tableId}`;
+        confirmBtn.style.backgroundColor='var(--primary-color)';
     }
 }
 
 // ===================================
-// ЗАГРУЗКА СВОБОДНЫХ СЛОТОВ
+// ЗАПОЛНЕНИЕ ВРЕМЕНИ
 // ===================================
-async function fillTimeSelect(tableId, dateStr) {
+async function fillTimeSelect(tableId,dateStr){
     const timeSelect = document.getElementById("timeSelect");
     const currentTimeValue = document.getElementById("current-time-value");
-    if (!timeSelect) return false;
+    if(!timeSelect) return false;
+    timeSelect.innerHTML='<option value="">Загрузка...</option>';
+    if(currentTimeValue) currentTimeValue.textContent='...';
+    if(!tableId || !dateStr){ timeSelect.innerHTML='<option value="">Выберите стол и дату</option>'; if(currentTimeValue) currentTimeValue.textContent='...'; return false; }
 
-    timeSelect.innerHTML = '<option value="">Загрузка...</option>';
-    if (currentTimeValue) currentTimeValue.textContent = '...';
-    if (!tableId || !dateStr) {
-        timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
-        if (currentTimeValue) currentTimeValue.textContent = '...';
-        return false;
-    }
-
-    try {
+    try{
         const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${tableId}&date=${dateStr}`);
         const data = await res.json();
-        timeSelect.innerHTML = '';
-        if (data.status === "ok" && data.free_times && data.free_times.length > 0) {
+        timeSelect.innerHTML='';
+        if(data.status==="ok" && data.free_times && data.free_times.length>0){
             let availableTimes = data.free_times;
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            if (dateStr === todayStr) {
-                const minTime = now.getTime() + 10*60*1000;
-                availableTimes = availableTimes.filter(time => {
-                    const [h,m] = time.split(':').map(Number);
-                    const dt = new Date(now); dt.setHours(h,m,0,0);
-                    return dt.getTime() > minTime;
+            const now=new Date();
+            const todayStr=now.toISOString().split('T')[0];
+            if(dateStr===todayStr){
+                const minTime=now.getTime()+10*60*1000;
+                availableTimes=availableTimes.filter(t=>{
+                    const [h,m]=t.split(':').map(Number);
+                    const dt=new Date(now); dt.setHours(h,m,0,0);
+                    return dt.getTime()>minTime;
                 });
             }
-            if (availableTimes.length > 0) {
-                availableTimes.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t; opt.textContent = t;
-                    timeSelect.appendChild(opt);
-                });
-                const firstSlot = availableTimes[0];
-                timeSelect.value = firstSlot;
-                if (currentTimeValue) currentTimeValue.textContent = firstSlot;
+            if(availableTimes.length>0){
+                availableTimes.forEach(t=>{ const opt=document.createElement('option'); opt.value=t; opt.textContent=t; timeSelect.appendChild(opt); });
+                const firstSlot=availableTimes[0];
+                timeSelect.value=firstSlot;
+                if(currentTimeValue) currentTimeValue.textContent=firstSlot;
                 return true;
-            } else {
-                timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
-                if (currentTimeValue) currentTimeValue.textContent = 'Занято';
-                return false;
-            }
-        } else {
-            timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
-            if (currentTimeValue) currentTimeValue.textContent = 'Занято';
-            return false;
-        }
-    } catch(err) {
-        console.error("Ошибка при получении времени:", err);
-        timeSelect.innerHTML = '<option value="">Ошибка загрузки времени</option>';
-        if (currentTimeValue) currentTimeValue.textContent = 'Ошибка';
-        return false;
-    }
+            }else{ timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; if(currentTimeValue) currentTimeValue.textContent='Занято'; return false; }
+        }else{ timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; if(currentTimeValue) currentTimeValue.textContent='Занято'; return false; }
+    }catch(err){ console.error(err); timeSelect.innerHTML='<option value="">Ошибка</option>'; if(currentTimeValue) currentTimeValue.textContent='Ошибка'; return false; }
 }
 
-async function updateTableAvailability(tableId) {
+// ===================================
+// ОБНОВЛЕНИЕ ДАННЫХ ПО СТОЛУ
+// ===================================
+async function updateTableAvailability(tableId){
     const dateInput = document.getElementById("dateInput");
     const dateStr = dateInput ? dateInput.value : null;
     const confirmBtn = document.getElementById('confirm-btn');
-    if (confirmBtn) { confirmBtn.disabled=true; confirmBtn.textContent='Проверка доступности...'; confirmBtn.style.backgroundColor='#666'; }
-
-    if (tableId && dateStr) {
-        const hasFreeSlots = await fillTimeSelect(tableId, dateStr);
-        showTableDetails(tableId, !hasFreeSlots);
-    } else if (tableId) showTableDetails(tableId, false);
+    if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Проверка...'; confirmBtn.style.backgroundColor='#666'; }
+    if(tableId && dateStr){
+        const hasFree = await fillTimeSelect(tableId,dateStr);
+        showTableDetails(tableId,!hasFree);
+    }else if(tableId) showTableDetails(tableId,false);
 }
 
-async function initializeMapAvailability(dateStr) {
-    const activeMap = document.querySelector('.map-area.active');
-    if (!activeMap || !dateStr) return;
-    const tables = activeMap.querySelectorAll('.table-element');
-    tables.forEach(el => el.classList.remove('table-booked'));
+// ===================================
+// ОБНОВЛЕНИЕ КАРТЫ СТОЛОВ
+// ===================================
+async function initializeMapAvailability(dateStr){
+    const activeMap=document.querySelector('.map-area.active');
+    if(!activeMap || !dateStr) return;
+    const tables=activeMap.querySelectorAll('.table-element');
+    tables.forEach(t=>t.classList.remove('table-booked'));
 
-    await Promise.all(Array.from(tables).map(async el => {
-        const id = el.getAttribute('data-table'); if(!id) return;
-        try {
+    await Promise.all(Array.from(tables).map(async t=>{
+        const id=t.getAttribute('data-table');
+        if(!id) return;
+        try{
             const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${id}&date=${dateStr}`);
             const data = await res.json();
-            const isBooked = !(data.status==='ok' && data.free_times && data.free_times.length>0);
-            if(isBooked) el.classList.add('table-booked');
-        } catch(err){ el.classList.remove('table-booked'); }
+            const isBooked=!(data.status==='ok' && data.free_times && data.free_times.length>0);
+            if(isBooked) t.classList.add('table-booked');
+        }catch(e){ t.classList.remove('table-booked'); }
     }));
 
-    if(selectedTableId && activeMap.querySelector(`[data-table="${selectedTableId}"]`)) {
-        await updateTableAvailability(selectedTableId);
-    }
+    if(selectedTableId && activeMap.querySelector(`[data-table="${selectedTableId}"]`)) await updateTableAvailability(selectedTableId);
 }
 
 // ===================================
 // ПЕРЕКЛЮЧЕНИЕ ЗОН
 // ===================================
 function switchArea(area){
-    const terrace = document.getElementById('terrace-map');
-    const hall = document.getElementById('main-hall-map');
-    const tBtn = document.getElementById('toggle-terrace');
-    const hBtn = document.getElementById('toggle-hall');
+    const terraceMap=document.getElementById('terrace-map');
+    const hallMap=document.getElementById('main-hall-map');
+    const toggleTerrace=document.getElementById('toggle-terrace');
+    const toggleHall=document.getElementById('toggle-hall');
 
     document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
     selectedTableId=null;
     const card=document.getElementById('table-details-card'); if(card) card.style.display='none';
-    const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить бронь'; confirmBtn.style.backgroundColor='var(--primary-color)'; }
-    const tableVal = document.getElementById('current-table-value'); const timeVal=document.getElementById('current-time-value'); if(tableVal)tableVal.textContent='Не выбран'; if(timeVal)timeVal.textContent='...';
+    const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить'; confirmBtn.style.backgroundColor='var(--primary-color)'; }
 
-    if(area==='terrace'){ terrace?.classList.add('active'); hall?.classList.remove('active'); tBtn?.classList.add('active'); hBtn?.classList.remove('active'); }
-    else if(area==='hall'){ terrace?.classList.remove('active'); hall?.classList.add('active'); tBtn?.classList.remove('active'); hBtn?.classList.add('active'); }
+    if(area==='terrace'){ if(terraceMap) terraceMap.classList.add('active'); if(hallMap) hallMap.classList.remove('active'); if(toggleTerrace) toggleTerrace.classList.add('active'); if(toggleHall) toggleHall.classList.remove('active'); }
+    else if(area==='hall'){ if(terraceMap) terraceMap.classList.remove('active'); if(hallMap) hallMap.classList.add('active'); if(toggleTerrace) toggleTerrace.classList.remove('active'); if(toggleHall) toggleHall.classList.add('active'); }
 
-    const dateInput=document.getElementById('dateInput');
-    if(dateInput?.value) initializeMapAvailability(dateInput.value);
+    const dateInput=document.getElementById('dateInput'); if(dateInput && dateInput.value) initializeMapAvailability(dateInput.value);
 }
 
 // ===================================
-// ОТПРАВКА БРОНИ
+// ОТПРАВКА БРОНИ С УВЕДОМЛЕНИЕМ И МОЯ БРОНЬ
 // ===================================
 function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText){
-    const data={table:table_id,time:time_slot,guests,phone,user_id,user_name,date:date_str};
-    fetch(`${API_BASE_URL}/book`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
-    .then(res=>{if(!res.ok)return res.json().then(errData=>{throw new Error(res.status===409?`409: ${errData.message||'Ошибка бронирования'}`:errData.message||'Ошибка бронирования')}); return res.json();})
-    .then(_=>{
+    const data={ table:table_id,time:time_slot,guests,phone,user_id,user_name,date:date_str };
+    fetch(`${API_BASE_URL}/book`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
+    }).then(res=>{
+        if(!res.ok) return res.json().then(errData=>{ throw new Error(errData.message || 'Ошибка'); });
+        return res.json();
+    }).then(data=>{
         if(submitButton){ submitButton.disabled=false; submitButton.textContent=originalButtonText; }
-        safeShowAlert("✅ Бронь успешно создана! Вы получите подтверждение в чате.");
+        safeShowAlert('✅ Бронь успешно создана!');
+
+        // Обновляем карту
         initializeMapAvailability(date_str);
         document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
         selectedTableId=null;
         document.getElementById('table-details-card').style.display='none';
+        if(document.getElementById('booking-overlay')) document.getElementById('booking-overlay').style.display='none';
+
+        // === Уведомление админу (берем из старого кода) ===
+        fetch(`${API_BASE_URL}/notify_admin`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+        });
+
+        // === Добавляем в Моя бронь (гость) ===
+        fetch(`${API_BASE_URL}/my_bookings`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+        });
+
         Telegram.WebApp.close();
     }).catch(err=>{
         if(submitButton){ submitButton.disabled=false; submitButton.textContent=originalButtonText; }
-        safeShowAlert(`❌ ${err.message.includes('409:')?err.message.replace('409: ',''):'⚠️ Ошибка сети. Попробуйте позже.'}`);
-        document.getElementById('booking-overlay').style.display='none';
+        console.error(err);
+        safeShowAlert(`❌ ${err.message || 'Ошибка сети. Попробуйте позже.'}`);
+        if(document.getElementById('booking-overlay')) document.getElementById('booking-overlay').style.display='none';
         initializeMapAvailability(date_str);
     });
 }
@@ -260,73 +262,87 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
 // ===================================
 // ОБРАБОТЧИКИ СОБЫТИЙ
 // ===================================
-document.addEventListener("DOMContentLoaded",()=>{
-    const dateInput=document.getElementById("dateInput");
-    const confirmBtn=document.getElementById("confirm-btn");
+document.addEventListener('DOMContentLoaded',()=>{
+    const dateInput=document.getElementById('dateInput');
+    const confirmBtn=document.getElementById('confirm-btn');
     const tableElements=document.querySelectorAll('.table-element');
     const bookingOverlay=document.getElementById('booking-overlay');
-    const bookingForm=document.getElementById("booking-form");
-    const timeSelect=document.getElementById("timeSelect");
-    const tableVal=document.getElementById("current-table-value");
-    const timeVal=document.getElementById("current-time-value");
+    const bookingForm=document.getElementById('booking-form');
+    const timeSelect=document.getElementById('timeSelect');
+    const timeValueDisplay=document.getElementById('current-time-value');
+    const tableValueDisplay=document.getElementById('current-table-value');
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
 
-    if(timeVal){ const now=new Date(); timeVal.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
+    // Устанавливаем текущее время
+    if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 
+    // Дата
     if(dateInput){
-        const today=new Date().toISOString().split('T')[0]; dateInput.value=today;
+        const today=new Date().toISOString().split('T')[0];
+        dateInput.value=today;
         document.getElementById("current-date-value").textContent=new Date(today).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
-        dateInput.addEventListener("change",e=>{
+
+        dateInput.addEventListener('change',(e)=>{
             const newDate=e.target.value;
             document.getElementById("current-date-value").textContent=new Date(newDate).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
             initializeMapAvailability(newDate);
             if(selectedTableId) updateTableAvailability(selectedTableId);
-            else { document.getElementById('table-details-card').style.display='none'; if(confirmBtn) confirmBtn.disabled=true; }
+            else if(confirmBtn){ confirmBtn.disabled=true; }
         });
     }
 
-    toggleTerrace?.addEventListener('click',()=>switchArea('terrace'));
-    toggleHall?.addEventListener('click',()=>switchArea('hall'));
+    // Переключение зон
+    if(toggleTerrace) toggleTerrace.addEventListener('click',()=>switchArea('terrace'));
+    if(toggleHall) toggleHall.addEventListener('click',()=>switchArea('hall'));
 
-    tableElements.forEach(table=>{
-        table.addEventListener('click',e=>{
+    // Клик по столу
+    tableElements.forEach(t=>{
+        t.addEventListener('click',e=>{
             const id=e.currentTarget.getAttribute('data-table');
             document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
-            if(id){ e.currentTarget.classList.add('table-selected'); updateTableAvailability(id); if(tableVal)tableVal.textContent=`Стол ${id}`; }
+            if(!id) return;
+            e.currentTarget.classList.add('table-selected');
+            updateTableAvailability(id);
+            if(tableValueDisplay) tableValueDisplay.textContent=`Стол ${id}`;
         });
     });
 
+    // Подтверждение брони (модальное)
     if(confirmBtn){
-        confirmBtn.disabled=true;
-        confirmBtn.addEventListener("click",()=>{
-            if(!selectedTableId){ safeShowAlert("⚠️ Пожалуйста, выберите столик на карте!"); return; }
-            if(!timeSelect||timeSelect.value===''||timeSelect.value.includes('Нет свободных')){ safeShowAlert("⚠️ На выбранную дату нет свободных слотов для этого стола."); return; }
+        confirmBtn.addEventListener('click',()=>{
+            if(!selectedTableId){ safeShowAlert('⚠️ Выберите стол'); return; }
+            const ts = timeSelect ? timeSelect.value : null;
+            if(!ts || ts.includes('Нет')){ safeShowAlert('⚠️ Нет свободных слотов'); return; }
             document.getElementById('selected-table-modal').textContent=`(Стол ${selectedTableId})`;
             document.getElementById('dateInput').value=dateInput.value;
             if(bookingOverlay) bookingOverlay.style.display='flex';
         });
     }
 
+    // Отправка формы брони
     if(bookingForm){
-        bookingForm.addEventListener("submit",e=>{
+        bookingForm.addEventListener('submit',e=>{
             e.preventDefault();
-            const guests=document.getElementById("guestsInput")?.value;
-            const phone=document.getElementById("phoneInput")?.value;
+            const guestsInput=document.getElementById('guestsInput');
+            const phoneInput=document.getElementById('phoneInput');
             const table_id=selectedTableId;
-            const time_slot=timeSelect?.value;
-            const date_str=dateInput?.value;
+            const time_slot=timeSelect ? timeSelect.value : null;
+            const guests=guestsInput ? guestsInput.value : null;
+            const phone=phoneInput ? phoneInput.value : null;
+            const date_str=dateInput ? dateInput.value : null;
             const submitButton=bookingForm.querySelector('button[type="submit"]');
             const originalButtonText=submitButton.textContent;
-            if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert("⚠️ Пожалуйста, заполните все поля формы!"); return; }
-            submitButton.disabled=true; submitButton.textContent='Отправка...';
+            if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert('⚠️ Заполните все поля'); return; }
+            submitButton.disabled=true; submitButton.textContent='Обработка...';
             sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText);
         });
     }
 
-    document.getElementById('close-booking-overlay')?.addEventListener('click',()=>{
-        if(bookingOverlay) bookingOverlay.style.display='none';
-    });
+    // Закрытие модалки
+    const closeBtn=document.getElementById('closeBookingForm');
+    if(closeBtn) closeBtn.addEventListener('click',()=>{ if(bookingOverlay) bookingOverlay.style.display='none'; });
 
-    switchArea('terrace');
+    if(confirmBtn) confirmBtn.disabled=true;
+    if(dateInput) switchArea('terrace');
 });
