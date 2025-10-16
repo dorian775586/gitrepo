@@ -29,11 +29,14 @@ if (dateInputGlobal) {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    // Если текущее время >= 22:30 — минимальная дата завтра
     const minDate = now >= cutoff ? tomorrow : today;
+
     const minDateStr = minDate.toISOString().split('T')[0];
     dateInputGlobal.min = minDateStr;
+    dateInputGlobal.value = minDateStr; // Сразу устанавливаем значение
 
-    // Отображение текущей даты, если элемент есть
+    // Обновляем отображение текущей даты (если элемент есть)
     const currentDateDisplay = document.getElementById("current-date-value");
     if (currentDateDisplay) {
         currentDateDisplay.textContent = new Date(minDateStr).toLocaleDateString('ru-RU', {
@@ -180,14 +183,14 @@ async function fillTimeSelect(tableId,dateStr){
 async function updateTableAvailability(tableId){
     const dateInput = document.getElementById("dateInput");
     const dateStr = dateInput ? dateInput.value : null;
-    const confirmBtn = document.getElementById('confirm-btn');
 
-    // Если дата ещё не выбрана — показываем детали, но без статуса «занято»
+    // Если дата не выбрана — показываем только детали, без статуса "занято"
     if(!dateStr){
         showTableDetails(tableId, false);
         return;
     }
 
+    const confirmBtn = document.getElementById('confirm-btn');
     if(confirmBtn){ 
         confirmBtn.disabled=true; 
         confirmBtn.textContent='Проверка...'; 
@@ -242,7 +245,7 @@ function switchArea(area){
 }
 
 // ===================================
-// ОТПРАВКА БРОНИ
+// ОТПРАВКА БРОНИ С УВЕДОМЛЕНИЕМ И МОЯ БРОНЬ
 // ===================================
 function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText){
     const data={ table:table_id,time:time_slot,guests,phone,user_id,user_name,date:date_str };
@@ -256,13 +259,28 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
     }).then(data=>{
         if(submitButton){ submitButton.disabled=false; submitButton.textContent=originalButtonText; }
         safeShowAlert('✅ Бронь успешно создана!');
+
+        // Обновляем карту
         initializeMapAvailability(date_str);
         document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
         selectedTableId=null;
         document.getElementById('table-details-card').style.display='none';
         if(document.getElementById('booking-overlay')) document.getElementById('booking-overlay').style.display='none';
-        fetch(`${API_BASE_URL}/notify_admin`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-        fetch(`${API_BASE_URL}/my_bookings`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+
+        // === Уведомление админу ===
+        fetch(`${API_BASE_URL}/notify_admin`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+        });
+
+        // === Добавляем в Моя бронь (гость) ===
+        fetch(`${API_BASE_URL}/my_bookings`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+        });
+
         Telegram.WebApp.close();
     }).catch(err=>{
         if(submitButton){ submitButton.disabled=false; submitButton.textContent=originalButtonText; }
@@ -288,32 +306,48 @@ document.addEventListener('DOMContentLoaded',()=>{
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
 
+    // Устанавливаем текущее время
     if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 
+    // Дата
     if(dateInput){
+        const today=new Date().toISOString().split('T')[0];
+        dateInput.value=today;
+        document.getElementById("current-date-value").textContent=new Date(today).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+
         dateInput.addEventListener('change',(e)=>{
             const newDate=e.target.value;
             document.getElementById("current-date-value").textContent=new Date(newDate).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
             initializeMapAvailability(newDate);
             if(selectedTableId) updateTableAvailability(selectedTableId);
-            else if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Забронировать'; }
+            else if(confirmBtn){ confirmBtn.disabled=true; }
         });
     }
 
+    // Переключение зон
     if(toggleTerrace) toggleTerrace.addEventListener('click',()=>switchArea('terrace'));
     if(toggleHall) toggleHall.addEventListener('click',()=>switchArea('hall'));
 
+    // Клик по столу
     tableElements.forEach(t=>{
-        t.addEventListener('click',e=>{
-            const id=e.currentTarget.getAttribute('data-table');
-            document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
+        t.addEventListener('click', e=>{
+            const id = e.currentTarget.getAttribute('data-table');
             if(!id) return;
+            document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
             e.currentTarget.classList.add('table-selected');
-            updateTableAvailability(id);
-            if(tableValueDisplay) tableValueDisplay.textContent=`Стол ${id}`;
+            selectedTableId = id;
+
+            if(dateInput && dateInput.value){ 
+                updateTableAvailability(id);
+            } else {
+                showTableDetails(id, false);
+            }
+
+            if(tableValueDisplay) tableValueDisplay.textContent = `Стол ${id}`;
         });
     });
 
+    // Подтверждение брони (модальное)
     if(confirmBtn){
         confirmBtn.addEventListener('click',()=>{
             if(!selectedTableId){ safeShowAlert('⚠️ Выберите стол'); return; }
@@ -324,6 +358,67 @@ document.addEventListener('DOMContentLoaded',()=>{
             if(bookingOverlay) bookingOverlay.style.display='flex';
         });
     }
+
+    // === Валидация и автоподстановка телефона ===
+    const phoneInput = document.getElementById('phoneInput');
+    if (phoneInput) {
+        phoneInput.addEventListener('focus', () => {
+            if (!phoneInput.value.startsWith('+375')) {
+                phoneInput.value = '+375 ';
+            }
+        });
+
+        phoneInput.addEventListener('keydown', (e) => {
+            if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) {
+                e.preventDefault();
+            }
+        });
+
+        phoneInput.addEventListener('input', () => {
+            let val = phoneInput.value.replace(/[^\d+]/g, '');
+            if (!val.startsWith('+375')) val = '+375';
+            phoneInput.value = val.replace(/^(\+375)(\d{0,2})(\d{0,7}).*$/, (_, a, b, c) => {
+                let formatted = `${a}`;
+                if (b) formatted += ` (${b}`;
+                if (b && b.length === 2) formatted += ') ';
+                if (c) formatted += c;
+                return formatted;
+            });
+        });
+    }
+
+    // Отправка формы брони
+    if(bookingForm){
+        bookingForm.addEventListener('submit',e=>{
+            e.preventDefault();
+            const guestsInput=document.getElementById('guestsInput');
+            const phoneInput=document.getElementById('phoneInput');
+            const table_id=selectedTableId;
+            const time_slot=timeSelect ? timeSelect.value : null;
+            const guests=guestsInput ? guestsInput.value : null;
+            const phone=phoneInput ? phoneInput.value : null;
+            const date_str=dateInput ? dateInput.value : null;
+            const submitButton=bookingForm.querySelector('button[type="submit"]');
+            const originalButtonText=submitButton.textContent;
+
+            // Проверка телефона по шаблону РБ
+            const phonePattern = /^\+375\s?\(?((25)|(29)|(33)|(44))\)?\s?\d{3}\s?\d{2}\s?\d{2}$/;
+            if (!phonePattern.test(phone)) {
+                safeShowAlert('❌ Введите корректный номер в формате +375 (29|33|44|25) XXX XX XX');
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                return;
+            }
+
+            if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert('⚠️ Заполните все поля'); return; }
+            submitButton.disabled=true; submitButton.textContent='Обработка...';
+            sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText);
+        });
+    }
+
+    // Закрытие модалки
+    const closeBtn=document.getElementById('closeBookingForm');
+    if(closeBtn) closeBtn.addEventListener('click',()=>{ if(bookingOverlay) bookingOverlay.style.display='none'; });
 
     if(confirmBtn) confirmBtn.disabled=true;
     if(dateInput) switchArea('terrace');
