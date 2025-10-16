@@ -17,31 +17,35 @@ if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
     }
 }
 
-// Утилита для определения даты начала бронирования (Cutoff 22:30)
-function getInitialDate() {
-    const now = new Date();
-    const cutoffHour = 22;
-    const cutoffMinute = 30;
-    const cutoffTime = new Date(now);
-    cutoffTime.setHours(cutoffHour, cutoffMinute, 0, 0);
-
-    const initialDate = new Date(now);
-
-    // Если текущее время 22:30 или позже, устанавливаем дату на завтра
-    if (now >= cutoffTime) {
-        initialDate.setDate(initialDate.getDate() + 1);
-    }
-    
-    // Возвращаем дату в формате YYYY-MM-DD
-    return initialDate.toISOString().split('T')[0];
-}
-
-// === ИЗМЕНЕНИЕ 1: Установка минимальной даты (22:30 Cutoff) ===
+// ===================================
+// МИНИМАЛЬНАЯ ДАТА С УЧЁТОМ 22:30 CUT-OFF
+// ===================================
 const dateInputGlobal = document.getElementById("dateInput");
 if (dateInputGlobal) {
-    const startDate = getInitialDate();
-    dateInputGlobal.min = startDate;
+    const now = new Date();
+    const cutoff = new Date();
+    cutoff.setHours(22, 30, 0, 0); // 22:30
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Если текущее время >= 22:30 — минимальная дата завтра
+    const minDate = now >= cutoff ? tomorrow : today;
+
+    const minDateStr = minDate.toISOString().split('T')[0];
+    dateInputGlobal.min = minDateStr;
+    dateInputGlobal.value = minDateStr; // Сразу устанавливаем значение
+
+    // Обновляем отображение текущей даты (если элемент есть)
+    const currentDateDisplay = document.getElementById("current-date-value");
+    if (currentDateDisplay) {
+        currentDateDisplay.textContent = new Date(minDateStr).toLocaleDateString('ru-RU', {
+            day: 'numeric',
+            month: 'short'
+        });
+    }
 }
+
 
 // ===================================
 // УТИЛИТА ДЛЯ СООБЩЕНИЙ
@@ -132,7 +136,7 @@ function showTableDetails(tableId, isBooked=false){
     }else{
         confirmBtn.disabled=false;
         confirmBtn.textContent=`Забронировать стол ${tableId}`;
-        confirmBtn.style.backgroundColor='var(--tg-theme-button-color)';
+        confirmBtn.style.backgroundColor='var(--primary-color)';
     }
 }
 
@@ -223,7 +227,7 @@ function switchArea(area){
     document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
     selectedTableId=null;
     const card=document.getElementById('table-details-card'); if(card) card.style.display='none';
-    const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить'; confirmBtn.style.backgroundColor='var(--tg-theme-button-color)'; }
+    const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить'; confirmBtn.style.backgroundColor='var(--primary-color)'; }
 
     if(area==='terrace'){ if(terraceMap) terraceMap.classList.add('active'); if(hallMap) hallMap.classList.remove('active'); if(toggleTerrace) toggleTerrace.classList.add('active'); if(toggleHall) toggleHall.classList.remove('active'); }
     else if(area==='hall'){ if(terraceMap) terraceMap.classList.remove('active'); if(hallMap) hallMap.classList.add('active'); if(toggleTerrace) toggleTerrace.classList.remove('active'); if(toggleHall) toggleHall.classList.add('active'); }
@@ -234,14 +238,8 @@ function switchArea(area){
 // ===================================
 // ОТПРАВКА БРОНИ С УВЕДОМЛЕНИЕМ И МОЯ БРОНЬ
 // ===================================
-/**
- * Измененная функция для отправки бронирования.
- * @param {string} booking_name - Имя, которое пользователь ввел для бронирования.
- */
-function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText, booking_name){
-    // Используем имя из формы бронирования
-    const data={ table:table_id,time:time_slot,guests,phone,user_id,user_name: booking_name,date:date_str };
-
+function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText){
+    const data={ table:table_id,time:time_slot,guests,phone,user_id,user_name,date:date_str };
     fetch(`${API_BASE_URL}/book`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -274,11 +272,7 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
             body:JSON.stringify(data)
         });
 
-        // === ЗАКРЫТИЕ С ЗАДЕРЖКОЙ ДЛЯ ЛУЧШЕГО UX ===
-        setTimeout(() => {
-            Telegram.WebApp.close();
-        }, 2000);
-
+        Telegram.WebApp.close();
     }).catch(err=>{
         if(submitButton){ submitButton.disabled=false; submitButton.textContent=originalButtonText; }
         console.error(err);
@@ -303,28 +297,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
 
-    // === 1. ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ ВРЕМЕНИ ПРИ ВЫБОРЕ (СОХРАНЕНО) ===
-    if(timeSelect && timeValueDisplay){
-        timeSelect.addEventListener('change',(e)=>{
-            timeValueDisplay.textContent=e.target.value;
-        });
-    }
-
     // Устанавливаем текущее время
     if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 
-    // === ПРЕДЗАПОЛНЕНИЕ ИМЕНИ ДЛЯ БРОНИ (СОХРАНЕНО) ===
-    const nameInput=document.getElementById('nameInput');
-    if(nameInput && user_name && user_name!=='Неизвестный'){
-        nameInput.value=user_name;
-    }
-
     // Дата
     if(dateInput){
-        const startDate = getInitialDate(); // === ИЗМЕНЕНИЕ 2: Начальное значение даты (22:30 Cutoff) ===
-        
-        dateInput.value = startDate;
-        document.getElementById("current-date-value").textContent=new Date(startDate).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+        const today=new Date().toISOString().split('T')[0];
+        dateInput.value=today;
+        document.getElementById("current-date-value").textContent=new Date(today).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
 
         dateInput.addEventListener('change',(e)=>{
             const newDate=e.target.value;
@@ -358,80 +338,67 @@ document.addEventListener('DOMContentLoaded',()=>{
             const ts = timeSelect ? timeSelect.value : null;
             if(!ts || ts.includes('Нет')){ safeShowAlert('⚠️ Нет свободных слотов'); return; }
             document.getElementById('selected-table-modal').textContent=`(Стол ${selectedTableId})`;
-            // Устанавливаем текущее время и дату в модалку
-            document.getElementById('modal-booking-time').textContent = ts; // Предполагая, что есть такой элемент
-            document.getElementById('modal-booking-date').textContent = new Date(dateInput.value).toLocaleDateString('ru-RU',{day:'numeric',month:'short', year:'numeric'}); // Предполагая, что есть такой элемент
-
+            document.getElementById('dateInput').value=dateInput.value;
             if(bookingOverlay) bookingOverlay.style.display='flex';
         });
     }
 
     // === Валидация и автоподстановка телефона ===
-    const phoneInput = document.getElementById('phoneInput');
-    if (phoneInput) {
-        // Устанавливаем префикс +375 при фокусе
-        phoneInput.addEventListener('focus', () => {
-            if (!phoneInput.value.startsWith('+375')) {
-                phoneInput.value = '+375 ';
-            }
-        });
+const phoneInput = document.getElementById('phoneInput');
+if (phoneInput) {
+    // Устанавливаем префикс +375 при фокусе
+    phoneInput.addEventListener('focus', () => {
+        if (!phoneInput.value.startsWith('+375')) {
+            phoneInput.value = '+375 ';
+        }
+    });
 
-        // Запрещаем стирать префикс
-        phoneInput.addEventListener('keydown', (e) => {
-            if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) {
-                e.preventDefault();
-            }
-        });
+    // Запрещаем стирать префикс
+    phoneInput.addEventListener('keydown', (e) => {
+        if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) {
+            e.preventDefault();
+        }
+    });
 
-        // Валидация ввода
-        phoneInput.addEventListener('input', () => {
-            let val = phoneInput.value.replace(/[^\d+]/g, ''); // только цифры и +
-            if (!val.startsWith('+375')) val = '+375';
-            phoneInput.value = val.replace(/^(\+375)(\d{0,2})(\d{0,7}).*$/, (_, a, b, c) => {
-                let formatted = `${a}`;
-                if (b) formatted += ` (${b}`;
-                if (b && b.length === 2) formatted += ') ';
-                if (c) formatted += c;
-                return formatted;
-            });
+    // Валидация ввода
+    phoneInput.addEventListener('input', () => {
+        let val = phoneInput.value.replace(/[^\d+]/g, ''); // только цифры и +
+        if (!val.startsWith('+375')) val = '+375';
+        phoneInput.value = val.replace(/^(\+375)(\d{0,2})(\d{0,7}).*$/, (_, a, b, c) => {
+            let formatted = `${a}`;
+            if (b) formatted += ` (${b}`;
+            if (b && b.length === 2) formatted += ') ';
+            if (c) formatted += c;
+            return formatted;
         });
-    }
+    });
+}
 
     // Отправка формы брони
     if(bookingForm){
         bookingForm.addEventListener('submit',e=>{
-            e.preventDefault();
+            // Проверка телефона по шаблону РБ
+const phonePattern = /^\+375\s?\(?((25)|(29)|(33)|(44))\)?\s?\d{3}\s?\d{2}\s?\d{2}$/;
+if (!phonePattern.test(phone)) {
+    safeShowAlert('❌ Введите корректный номер в формате +375 (29|33|44|25) XXX XX XX');
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
+    return;
+}
 
+            e.preventDefault();
             const guestsInput=document.getElementById('guestsInput');
             const phoneInput=document.getElementById('phoneInput');
-            const nameInputLocal=document.getElementById('nameInput');
-
             const table_id=selectedTableId;
             const time_slot=timeSelect ? timeSelect.value : null;
             const guests=guestsInput ? guestsInput.value : null;
             const phone=phoneInput ? phoneInput.value : null;
             const date_str=dateInput ? dateInput.value : null;
-            const booking_name=nameInputLocal ? nameInputLocal.value.trim() : user_name;
-            
             const submitButton=bookingForm.querySelector('button[type="submit"]');
             const originalButtonText=submitButton.textContent;
-
-            // Проверка телефона по шаблону РБ
-            const phonePattern = /^\+375\s?\(?((25)|(29)|(33)|(44))\)?\s?\d{3}\s?\d{2}\s?\d{2}$/;
-            if (!phonePattern.test(phone)) {
-                safeShowAlert('❌ Введите корректный номер в формате +375 (29|33|44|25) XXX XX XX');
-                return;
-            }
-
-            // Валидация всех полей, включая имя
-            if(!table_id||!time_slot||!guests||!phone||!date_str || !booking_name){
-                safeShowAlert('⚠️ Заполните все поля (включая имя для брони)');
-                return;
-            }
-
+            if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert('⚠️ Заполните все поля'); return; }
             submitButton.disabled=true; submitButton.textContent='Обработка...';
-            // Передаем имя в функцию отправки
-            sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText, booking_name);
+            sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText);
         });
     }
 
@@ -440,6 +407,5 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(closeBtn) closeBtn.addEventListener('click',()=>{ if(bookingOverlay) bookingOverlay.style.display='none'; });
 
     if(confirmBtn) confirmBtn.disabled=true;
-    // === ИЗМЕНЕНИЕ 3: Вызываем переключение зон, чтобы обновить карту с новой начальной датой ===
     if(dateInput) switchArea('terrace');
 });
