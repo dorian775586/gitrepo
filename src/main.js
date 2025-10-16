@@ -320,9 +320,49 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     }
 
+    // === Валидация и автоподстановка телефона ===
+const phoneInput = document.getElementById('phoneInput');
+if (phoneInput) {
+    // Устанавливаем префикс +375 при фокусе
+    phoneInput.addEventListener('focus', () => {
+        if (!phoneInput.value.startsWith('+375')) {
+            phoneInput.value = '+375 ';
+        }
+    });
+
+    // Запрещаем стирать префикс
+    phoneInput.addEventListener('keydown', (e) => {
+        if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) {
+            e.preventDefault();
+        }
+    });
+
+    // Валидация ввода
+    phoneInput.addEventListener('input', () => {
+        let val = phoneInput.value.replace(/[^\d+]/g, ''); // только цифры и +
+        if (!val.startsWith('+375')) val = '+375';
+        phoneInput.value = val.replace(/^(\+375)(\d{0,2})(\d{0,7}).*$/, (_, a, b, c) => {
+            let formatted = `${a}`;
+            if (b) formatted += ` (${b}`;
+            if (b && b.length === 2) formatted += ') ';
+            if (c) formatted += c;
+            return formatted;
+        });
+    });
+}
+
     // Отправка формы брони
     if(bookingForm){
         bookingForm.addEventListener('submit',e=>{
+            // Проверка телефона по шаблону РБ
+const phonePattern = /^\+375\s?\(?((25)|(29)|(33)|(44))\)?\s?\d{3}\s?\d{2}\s?\d{2}$/;
+if (!phonePattern.test(phone)) {
+    safeShowAlert('❌ Введите корректный номер в формате +375 (29|33|44|25) XXX XX XX');
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
+    return;
+}
+
             e.preventDefault();
             const guestsInput=document.getElementById('guestsInput');
             const phoneInput=document.getElementById('phoneInput');
