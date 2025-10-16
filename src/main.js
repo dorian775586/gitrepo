@@ -29,14 +29,11 @@ if (dateInputGlobal) {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    // Если текущее время >= 22:30 — минимальная дата завтра
     const minDate = now >= cutoff ? tomorrow : today;
-
     const minDateStr = minDate.toISOString().split('T')[0];
     dateInputGlobal.min = minDateStr;
-    dateInputGlobal.value = minDateStr; // Сразу устанавливаем значение
+    dateInputGlobal.value = minDateStr;
 
-    // Обновляем отображение текущей даты (если элемент есть)
     const currentDateDisplay = document.getElementById("current-date-value");
     if (currentDateDisplay) {
         currentDateDisplay.textContent = new Date(minDateStr).toLocaleDateString('ru-RU', {
@@ -184,7 +181,6 @@ async function updateTableAvailability(tableId){
     const dateInput = document.getElementById("dateInput");
     const dateStr = dateInput ? dateInput.value : null;
 
-    // Если дата не выбрана — показываем только детали, без статуса "занято"
     if(!dateStr){
         showTableDetails(tableId, false);
         return;
@@ -260,21 +256,18 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
         if(submitButton){ submitButton.disabled=false; submitButton.textContent=originalButtonText; }
         safeShowAlert('✅ Бронь успешно создана!');
 
-        // Обновляем карту
         initializeMapAvailability(date_str);
         document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
         selectedTableId=null;
         document.getElementById('table-details-card').style.display='none';
         if(document.getElementById('booking-overlay')) document.getElementById('booking-overlay').style.display='none';
 
-        // === Уведомление админу ===
         fetch(`${API_BASE_URL}/notify_admin`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify(data)
         });
 
-        // === Добавляем в Моя бронь (гость) ===
         fetch(`${API_BASE_URL}/my_bookings`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -306,15 +299,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
 
-    // Устанавливаем текущее время
     if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 
-    // Дата
     if(dateInput){
-        const today=new Date().toISOString().split('T')[0];
-        dateInput.value=today;
-        document.getElementById("current-date-value").textContent=new Date(today).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
-
         dateInput.addEventListener('change',(e)=>{
             const newDate=e.target.value;
             document.getElementById("current-date-value").textContent=new Date(newDate).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
@@ -324,11 +311,9 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     }
 
-    // Переключение зон
     if(toggleTerrace) toggleTerrace.addEventListener('click',()=>switchArea('terrace'));
     if(toggleHall) toggleHall.addEventListener('click',()=>switchArea('hall'));
 
-    // Клик по столу
     tableElements.forEach(t=>{
         t.addEventListener('click', e=>{
             const id = e.currentTarget.getAttribute('data-table');
@@ -337,7 +322,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             e.currentTarget.classList.add('table-selected');
             selectedTableId = id;
 
-            if(dateInput && dateInput.value){ 
+            if(dateInput && dateInput.value){
                 updateTableAvailability(id);
             } else {
                 showTableDetails(id, false);
@@ -347,33 +332,20 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     });
 
-    // Подтверждение брони (модальное)
     if(confirmBtn){
         confirmBtn.addEventListener('click',()=>{
             if(!selectedTableId){ safeShowAlert('⚠️ Выберите стол'); return; }
             const ts = timeSelect ? timeSelect.value : null;
             if(!ts || ts.includes('Нет')){ safeShowAlert('⚠️ Нет свободных слотов'); return; }
             document.getElementById('selected-table-modal').textContent=`(Стол ${selectedTableId})`;
-            document.getElementById('dateInput').value=dateInput.value;
             if(bookingOverlay) bookingOverlay.style.display='flex';
         });
     }
 
-    // === Валидация и автоподстановка телефона ===
     const phoneInput = document.getElementById('phoneInput');
     if (phoneInput) {
-        phoneInput.addEventListener('focus', () => {
-            if (!phoneInput.value.startsWith('+375')) {
-                phoneInput.value = '+375 ';
-            }
-        });
-
-        phoneInput.addEventListener('keydown', (e) => {
-            if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) {
-                e.preventDefault();
-            }
-        });
-
+        phoneInput.addEventListener('focus', () => { if (!phoneInput.value.startsWith('+375')) phoneInput.value = '+375 '; });
+        phoneInput.addEventListener('keydown', (e) => { if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault(); });
         phoneInput.addEventListener('input', () => {
             let val = phoneInput.value.replace(/[^\d+]/g, '');
             if (!val.startsWith('+375')) val = '+375';
@@ -387,7 +359,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     }
 
-    // Отправка формы брони
     if(bookingForm){
         bookingForm.addEventListener('submit',e=>{
             e.preventDefault();
@@ -401,12 +372,9 @@ document.addEventListener('DOMContentLoaded',()=>{
             const submitButton=bookingForm.querySelector('button[type="submit"]');
             const originalButtonText=submitButton.textContent;
 
-            // Проверка телефона по шаблону РБ
             const phonePattern = /^\+375\s?\(?((25)|(29)|(33)|(44))\)?\s?\d{3}\s?\d{2}\s?\d{2}$/;
             if (!phonePattern.test(phone)) {
                 safeShowAlert('❌ Введите корректный номер в формате +375 (29|33|44|25) XXX XX XX');
-                submitButton.disabled = false;
-                submitButton.textContent = originalButtonText;
                 return;
             }
 
@@ -416,7 +384,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     }
 
-    // Закрытие модалки
     const closeBtn=document.getElementById('closeBookingForm');
     if(closeBtn) closeBtn.addEventListener('click',()=>{ if(bookingOverlay) bookingOverlay.style.display='none'; });
 
