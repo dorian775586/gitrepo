@@ -324,28 +324,6 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
 // ===================================
 document.addEventListener('DOMContentLoaded',()=>{
     const dateInput=document.getElementById('dateInput');
-    // ===================================
-// ЗАПОЛНЕНИЕ ВЫБОРА ГОСТЕЙ
-// ===================================
-const guestsSelect = document.getElementById('guestsInput');
-const currentGuestsValue = document.getElementById('current-guests-value');
-
-if (guestsSelect) {
-    for (let i = 1; i <= 20; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i;
-        if (i === 2) option.selected = true; // по умолчанию 2 гостя
-        guestsSelect.appendChild(option);
-    }
-
-    if(currentGuestsValue) currentGuestsValue.textContent = guestsSelect.value;
-
-    guestsSelect.addEventListener('change', () => {
-        if(currentGuestsValue) currentGuestsValue.textContent = guestsSelect.value;
-    });
-}
-
     const confirmBtn=document.getElementById('confirm-btn');
     const tableElements=document.querySelectorAll('.table-element');
     const bookingOverlay=document.getElementById('booking-overlay');
