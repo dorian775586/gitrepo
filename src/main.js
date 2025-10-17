@@ -18,22 +18,22 @@ if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
 }
 
 // ===================================
-// МИНИМАЛЬНАЯ ДАТА С УЧЁТОМ 22:30 CUT-OFF
+// МИНИМАЛЬНАЯ ДАТА (без cutoff — можно бронировать ночью)
 // ===================================
 const dateInputGlobal = document.getElementById("dateInput");
 if (dateInputGlobal) {
     const now = new Date();
-    const cutoff = new Date();
-    cutoff.setHours(22, 30, 0, 0); // 22:30
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
 
-    const minDate = now >= cutoff ? tomorrow : today;
+    // Текущая дата (всегда сегодня, даже ночью)
+    const minDate = today;
+
+    // Устанавливаем минимальную дату — сегодня
     const minDateStr = minDate.toISOString().split('T')[0];
     dateInputGlobal.min = minDateStr;
     dateInputGlobal.value = minDateStr;
 
+    // Отображаем дату на экране
     const currentDateDisplay = document.getElementById("current-date-value");
     if (currentDateDisplay) {
         currentDateDisplay.textContent = new Date(minDateStr).toLocaleDateString('ru-RU', {
