@@ -297,6 +297,9 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
         document.getElementById('table-details-card').style.display='none';
         if(document.getElementById('booking-overlay')) document.getElementById('booking-overlay').style.display='none';
 
+        // NOTE: Эти вызовы notify_admin и my_bookings не используются в коде бэкенда, который вы прислали,
+        // но я оставляю их, как было в вашем оригинальном коде. Вся логика уведомлений админа
+        // и пользователя теперь в /book API на стороне сервера.
         fetch(`${API_BASE_URL}/notify_admin`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -320,6 +323,33 @@ function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton,
 }
 
 // ===================================
+// НОВАЯ ФУНКЦИЯ: ЗАПОЛНЕНИЕ ВЫПАДАЮЩЕГО СПИСКА ГОСТЕЙ
+// ===================================
+function populateGuestsSelect() {
+    const guestsSelect = document.getElementById('guestsInput');
+    if (!guestsSelect) return;
+
+    // Очищаем существующие опции (если есть)
+    guestsSelect.innerHTML = ''; 
+
+    // Добавляем опции от 1 до 20
+    for (let i = 1; i <= 20; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        // Простая русская грамматика для отображения
+        let label = `${i} гост`;
+        if (i === 1) label += 'ь';
+        else if (i >= 2 && i <= 4) label += 'я';
+        else label += 'ей';
+        
+        option.textContent = label;
+        guestsSelect.appendChild(option);
+    }
+    // Устанавливаем значение по умолчанию, например, 2
+    guestsSelect.value = 2;
+}
+
+// ===================================
 // ОБРАБОТЧИКИ СОБЫТИЙ
 // ===================================
 document.addEventListener('DOMContentLoaded',()=>{
@@ -333,6 +363,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     const tableValueDisplay=document.getElementById('current-table-value');
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
+
+    // !!! Инициализация нового выпадающего списка гостей
+    populateGuestsSelect();
 
     if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 
@@ -397,11 +430,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(bookingForm){
         bookingForm.addEventListener('submit',e=>{
             e.preventDefault();
-            const guestsInput=document.getElementById('guestsInput');
+            // Получаем значение из <select>
+            const guestsInput=document.getElementById('guestsInput'); 
             const phoneInput=document.getElementById('phoneInput');
             const table_id=selectedTableId;
             const time_slot=timeSelect ? timeSelect.value : null;
-            const guests=guestsInput ? guestsInput.value : null;
+            // !!! Читаем значение из SELECT
+            const guests=guestsInput ? guestsInput.value : null; 
             const phone=phoneInput ? phoneInput.value : null;
             const date_str=dateInput ? dateInput.value : null;
             const submitButton=bookingForm.querySelector('button[type="submit"]');
@@ -415,7 +450,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
             if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert('⚠️ Заполните все поля'); return; }
             submitButton.disabled=true; submitButton.textContent='Обработка...';
-            sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText);
+            // Важно: guests - это строка, но бэкенд обработает ее как число.
+            sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText); 
         });
     }
 
