@@ -335,6 +335,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
 
+    // Заполнение селекта гостей
+    const guestsSelect = document.getElementById('guestsSelect');
+    if (guestsSelect) {
+        for (let i = 1; i <= 20; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i + (i === 1 ? " гость" : " гостей");
+            guestsSelect.appendChild(option);
+        }
+    }
+
     if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 
     if(dateInput){
