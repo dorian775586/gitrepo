@@ -18,22 +18,30 @@ if (window.Telegram && Telegram.WebApp.initDataUnsafe) {
 }
 
 // ===================================
-// МИНИМАЛЬНАЯ ДАТА (без cutoff — можно бронировать ночью)
+// МИНИМАЛЬНАЯ ДАТА (умная логика — после 22:30 брони переходят на завтра)
 // ===================================
 const dateInputGlobal = document.getElementById("dateInput");
 if (dateInputGlobal) {
     const now = new Date();
     const today = new Date();
 
-    // Текущая дата (всегда сегодня, даже ночью)
-    const minDate = today;
+    // Проверяем cutoff — 22:30
+    const cutoffHour = 22;
+    const cutoffMinute = 30;
+    let minDate = today;
 
-    // Устанавливаем минимальную дату — сегодня
+    if (now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() >= cutoffMinute)) {
+        // После 22:30 — автоматически завтра
+        minDate = new Date(today);
+        minDate.setDate(minDate.getDate() + 1);
+        console.log("[INFO] Cutoff: переключаемся на завтра");
+    }
+
     const minDateStr = minDate.toISOString().split('T')[0];
     dateInputGlobal.min = minDateStr;
     dateInputGlobal.value = minDateStr;
 
-    // Отображаем дату на экране
+    // Отображаем дату пользователю
     const currentDateDisplay = document.getElementById("current-date-value");
     if (currentDateDisplay) {
         currentDateDisplay.textContent = new Date(minDateStr).toLocaleDateString('ru-RU', {
@@ -41,6 +49,33 @@ if (dateInputGlobal) {
             month: 'short'
         });
     }
+
+    // Добавляем "умную" проверку при смене даты
+    dateInputGlobal.addEventListener("change", (e) => {
+        const selectedDate = new Date(e.target.value);
+        const nowCheck = new Date();
+
+        if (
+            selectedDate.toDateString() === nowCheck.toDateString() && // если выбрали "сегодня"
+            (nowCheck.getHours() > cutoffHour || (nowCheck.getHours() === cutoffHour && nowCheck.getMinutes() >= cutoffMinute))
+        ) {
+            // после 22:30 не даём бронировать на сегодня
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split("T")[0];
+            dateInputGlobal.value = tomorrowStr;
+            if (currentDateDisplay) {
+                currentDateDisplay.textContent = new Date(tomorrowStr).toLocaleDateString("ru-RU", {
+                    day: "numeric",
+                    month: "short"
+                });
+            }
+            safeShowAlert("⚠️ После 22:30 можно бронировать только на завтра.");
+            initializeMapAvailability(tomorrowStr);
+        } else {
+            initializeMapAvailability(e.target.value);
+        }
+    });
 }
 
 // ===================================
