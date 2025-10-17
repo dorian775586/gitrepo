@@ -25,28 +25,24 @@ if (dateInputGlobal) {
     const now = new Date();
     const today = new Date();
 
-  // Проверяем cutoff — 22:30 и ночь 0:00–5:00
-const cutoffHour = 22;
-const cutoffMinute = 30;
-let minDate = today;
+    const cutoffHour = 22;
+    const cutoffMinute = 30;
+    let minDate = today;
 
-// После 22:30 или если ночь (0:00–5:00) — автоматически завтра
-if (
-    (now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() >= cutoffMinute)) ||
-    (now.getHours() >= 0 && now.getHours() < 5)
-) {
-    minDate = new Date(today);
-    minDate.setDate(minDate.getDate() + 1);
-    console.log("[INFO] Cutoff или ночь: переключаемся на завтра");
-}
-
+    // После 22:30 или если ночь (0:00–5:00) — автоматически завтра
+    if (
+        (now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() >= cutoffMinute)) ||
+        (now.getHours() >= 0 && now.getHours() < 5)
+    ) {
+        minDate = new Date(today);
+        minDate.setDate(minDate.getDate() + 1);
+        console.log("[INFO] Cutoff или ночь: переключаемся на завтра");
     }
 
     const minDateStr = minDate.toISOString().split('T')[0];
     dateInputGlobal.min = minDateStr;
     dateInputGlobal.value = minDateStr;
 
-    // Отображаем дату пользователю
     const currentDateDisplay = document.getElementById("current-date-value");
     if (currentDateDisplay) {
         currentDateDisplay.textContent = new Date(minDateStr).toLocaleDateString('ru-RU', {
@@ -55,16 +51,14 @@ if (
         });
     }
 
-    // Добавляем "умную" проверку при смене даты
     dateInputGlobal.addEventListener("change", (e) => {
         const selectedDate = new Date(e.target.value);
         const nowCheck = new Date();
 
         if (
-            selectedDate.toDateString() === nowCheck.toDateString() && // если выбрали "сегодня"
+            selectedDate.toDateString() === nowCheck.toDateString() &&
             (nowCheck.getHours() > cutoffHour || (nowCheck.getHours() === cutoffHour && nowCheck.getMinutes() >= cutoffMinute))
         ) {
-            // после 22:30 не даём бронировать на сегодня
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split("T")[0];
@@ -81,6 +75,8 @@ if (
             initializeMapAvailability(e.target.value);
         }
     });
+}
+
 
 
 // ===================================
