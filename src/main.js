@@ -431,11 +431,11 @@ if (phoneInput) {
     bookingForm.addEventListener('submit', e => {
         e.preventDefault();
 
-        const guestsInput = document.getElementById('guestsInput');
+        const guestsSelect = document.getElementById('guestsSelect');
         const phoneInput = document.getElementById('phoneInput');
         const table_id = selectedTableId;
         const time_slot = timeSelect ? timeSelect.value : null;
-        const guests = guestsInput ? guestsInput.value : null;
+        const guests = guestsSelect ? guestsSelect.value : null;
         const phone = phoneInput ? phoneInput.value : null;
         const date_str = dateInput ? dateInput.value : null;
         const submitButton = bookingForm.querySelector('button[type="submit"]');
