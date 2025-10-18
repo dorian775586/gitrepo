@@ -399,7 +399,6 @@ if (phoneInput) {
     phoneInput.addEventListener('focus', () => {
         if (!phoneInput.value) {
             phoneInput.value = fixedPrefix;
-            // Устанавливаем курсор после '375 ('
             phoneInput.setSelectionRange(minLength, minLength);
         }
     });
@@ -411,57 +410,32 @@ if (phoneInput) {
 
         // **ШАГ 1: Обеспечиваем, что префикс не удаляется**
         if (!val.startsWith(fixedPrefix.trim())) {
-             // Если пользователь попытался удалить '+375', восстанавливаем его
-             val = fixedPrefix + val.replace(/\D/g, '').substring(3);
-             // Сбрасываем курсор к концу префикса, чтобы предотвратить дальнейшие попытки удалить его
-             phoneInput.value = val;
-             phoneInput.setSelectionRange(minLength, minLength);
-             return; // Прерываем дальнейшее форматирование на этом цикле
+            val = fixedPrefix + val.replace(/\D/g, '').substring(3);
+            phoneInput.value = val;
+            phoneInput.setSelectionRange(minLength, minLength);
+            return;
         }
-        
-        // **ШАГ 2: Извлекаем только цифры после '375'**
-        let digits = val.replace(/\D/g, ''); // Все цифры
-        digits = digits.substring(3); // Оставляем только те, что после '375'
 
-        let formatted = '+375';
-        
+        // **ШАГ 2: Извлекаем только цифры после '375'**
+        let digits = val.replace(/\D/g, '').substring(3);
+
+        // Ограничиваем до 9 цифр после кода
+        if (digits.length > 9) digits = digits.substring(0, 9);
+
         // **ШАГ 3: Форматируем номер**
-        if (digits.length > 0) {
-            // (XX)
-            formatted += ' (' + digits.substr(0, 2);
-        }
-        if (digits.length > 2) {
-            // XXX
-            formatted += ') ' + digits.substr(2, 3);
-        }
-        if (digits.length > 5) {
-            // XX
-            formatted += ' ' + digits.substr(5, 2);
-        }
-        if (digits.length > 7) {
-            // XX
-            formatted += ' ' + digits.substr(7, 2);
-        }
-        
-        // Ограничиваем ввод до 9 цифр после 375 (375 + 9 = 12 символов в переменной digits)
-        if (digits.length > 9) {
-            formatted = formatted.substring(0, formatted.length - (digits.length - 9) * 2 - 1); 
-        }
+        let formatted = '+375';
+        if (digits.length > 0) formatted += ' (' + digits.substr(0, 2);
+        if (digits.length > 2) formatted += ') ' + digits.substr(2, 3);
+        if (digits.length > 5) formatted += ' ' + digits.substr(5, 2);
+        if (digits.length > 7) formatted += ' ' + digits.substr(7, 2);
 
         phoneInput.value = formatted;
-        
-        // **ШАГ 4: Корректируем позицию курсора**
-        // Если курсор пытается зайти на область "+375", перемещаем его за скобку.
-        if (start < minLength) {
-             phoneInput.setSelectionRange(minLength, minLength);
-        }
-        
+
+        // **ШАГ 4: Корректируем курсор**
+        if (start < minLength) phoneInput.setSelectionRange(minLength, minLength);
     });
 
-    // 3. УДАЛЯЕМ старый обработчик keydown
-    // (Который блокировал Backspace/Delete. Теперь он не нужен, т.к. "input" справляется с фиксацией префикса)
-
-    // 4. Дополнительно: при потере фокуса, если поле пустое или содержит только префикс, очищаем его
+    // 4. Очистка при потере фокуса, если поле пустое или только префикс
     phoneInput.addEventListener('blur', () => {
         if (phoneInput.value === '+375' || phoneInput.value === '+375 (' || phoneInput.value === '') {
             phoneInput.value = '';
@@ -469,8 +443,7 @@ if (phoneInput) {
     });
 }
 
-
-    if(bookingForm){
+if (bookingForm) {
     bookingForm.addEventListener('submit', e => {
         e.preventDefault();
 
@@ -485,7 +458,7 @@ if (phoneInput) {
         const originalButtonText = submitButton.textContent;
 
         // Проверка телефона
-        const phoneDigits = phone.replace(/\D/g, ''); // оставляем только цифры
+        const phoneDigits = phone.replace(/\D/g, '');
         if (!/^(375)(25|29|33|44)\d{7}$/.test(phoneDigits)) {
             safeShowAlert('❌ Введите корректный номер в формате +375 (25|29|33|44) XXX XX XX');
             return;
@@ -503,10 +476,11 @@ if (phoneInput) {
     });
 }
 
+const closeBtn = document.getElementById('closeBookingForm');
+if (closeBtn) closeBtn.addEventListener('click', () => {
+    if (bookingOverlay) bookingOverlay.style.display = 'none';
+});
 
-    const closeBtn=document.getElementById('closeBookingForm');
-    if(closeBtn) closeBtn.addEventListener('click',()=>{ if(bookingOverlay) bookingOverlay.style.display='none'; });
-
-    if(confirmBtn) confirmBtn.disabled=true;
-    if(dateInput) switchArea('terrace');
+if (confirmBtn) confirmBtn.disabled = true;
+if (dateInput) switchArea('terrace');
 });
