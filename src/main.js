@@ -390,21 +390,42 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
 
     const phoneInput = document.getElementById('phoneInput');
-    if (phoneInput) {
-        phoneInput.addEventListener('focus', () => { if (!phoneInput.value.startsWith('+375')) phoneInput.value = '+375 '; });
-        phoneInput.addEventListener('keydown', (e) => { if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault(); });
-        phoneInput.addEventListener('input', () => {
-            let val = phoneInput.value.replace(/[^\d+]/g, '');
-            if (!val.startsWith('+375')) val = '+375';
-            phoneInput.value = val.replace(/^(\+375)(\d{0,2})(\d{0,7}).*$/, (_, a, b, c) => {
-                let formatted = `${a}`;
-                if (b) formatted += ` (${b}`;
-                if (b && b.length === 2) formatted += ') ';
-                if (c) formatted += c;
-                return formatted;
-            });
-        });
-    }
+
+if (phoneInput) {
+    // При фокусе вставляем +375 если поле пустое
+    phoneInput.addEventListener('focus', () => {
+        if (!phoneInput.value.startsWith('+375')) phoneInput.value = '+375 ';
+    });
+
+    // Запрет удаления кода страны
+    phoneInput.addEventListener('keydown', (e) => {
+        if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault();
+    });
+
+    // Форматирование номера в реальном времени
+    phoneInput.addEventListener('input', () => {
+        let val = phoneInput.value.replace(/\D/g, ''); // оставляем только цифры
+        if (!val.startsWith('375')) val = '375' + val; // гарантируем код страны
+
+        // Форматируем в +375 (XX) XXX XX XX
+        let formatted = '+375';
+        if (val.length > 3) {
+            formatted += ' (' + val.substr(3,2) + ')';
+        }
+        if (val.length > 5) {
+            formatted += ' ' + val.substr(5,3);
+        }
+        if (val.length > 8) {
+            formatted += ' ' + val.substr(8,2);
+        }
+        if (val.length > 10) {
+            formatted += ' ' + val.substr(10,2);
+        }
+
+        phoneInput.value = formatted;
+    });
+}
+
 
     if(bookingForm){
         bookingForm.addEventListener('submit',e=>{
@@ -419,11 +440,12 @@ document.addEventListener('DOMContentLoaded',()=>{
             const submitButton=bookingForm.querySelector('button[type="submit"]');
             const originalButtonText=submitButton.textContent;
 
-            const phonePattern = /^\+375\s?\(?((25)|(29)|(33)|(44))\)?\s?\d{3}\s?\d{2}\s?\d{2}$/;
-            if (!phonePattern.test(phone)) {
-                safeShowAlert('❌ Введите корректный номер в формате +375 (29|33|44|25) XXX XX XX');
+            const phoneDigits = phone.replace(/\D/g,''); // оставляем только цифры
+            if(!/^\+?375(25|29|33|44)\d{7}$/.test('+' + phoneDigits)){
+                safeShowAlert('❌ Введите корректный номер в формате +375 (25|29|33|44) XXX XX XX');
                 return;
             }
+
 
             if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert('⚠️ Заполните все поля'); return; }
             submitButton.disabled=true; submitButton.textContent='Обработка...';
