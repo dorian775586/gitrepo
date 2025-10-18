@@ -399,7 +399,7 @@ if (phoneInput) {
 
     // Запрет удаления кода страны
     phoneInput.addEventListener('keydown', (e) => {
-        if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault();
+        if (phoneInput.selectionStart <= 3 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault();
     });
 
     // Форматирование номера в реальном времени
