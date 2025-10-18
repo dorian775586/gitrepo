@@ -390,21 +390,34 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
 
     const phoneInput = document.getElementById('phoneInput');
-    if (phoneInput) {
-        phoneInput.addEventListener('focus', () => { if (!phoneInput.value.startsWith('+375')) phoneInput.value = '+375 '; });
-        phoneInput.addEventListener('keydown', (e) => { if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault(); });
-        phoneInput.addEventListener('input', () => {
-            let val = phoneInput.value.replace(/[^\d+]/g, '');
-            if (!val.startsWith('+375')) val = '+375';
-            phoneInput.value = val.replace(/^(\+375)(\d{0,2})(\d{0,7}).*$/, (_, a, b, c) => {
-                let formatted = `${a}`;
-                if (b) formatted += ` (${b}`;
-                if (b && b.length === 2) formatted += ') ';
-                if (c) formatted += c;
-                return formatted;
-            });
-        });
-    }
+if (phoneInput) {
+    phoneInput.addEventListener('focus', () => {
+        if (!phoneInput.value.startsWith('+375')) phoneInput.value = '+375 ';
+        setTimeout(() => phoneInput.setSelectionRange(phoneInput.value.length, phoneInput.value.length), 0);
+    });
+
+    phoneInput.addEventListener('keydown', (e) => {
+        // Защита префикса +375
+        if (phoneInput.selectionStart <= 5 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault();
+    });
+
+    phoneInput.addEventListener('input', () => {
+        let val = phoneInput.value.replace(/[^\d+]/g, '');
+        if (!val.startsWith('+375')) val = '+375';
+
+        const match = val.match(/^(\+375)(\d{0,2})(\d{0,3})(\d{0,2})(\d{0,2})/);
+        if (match) {
+            let formatted = match[1];
+            if (match[2]) formatted += ` (${match[2]}`;
+            if (match[2] && match[2].length === 2) formatted += ') ';
+            if (match[3]) formatted += match[3];
+            if (match[4]) formatted += ' ' + match[4];
+            if (match[5]) formatted += ' ' + match[5];
+            phoneInput.value = formatted;
+        }
+    });
+}
+
 
     if(bookingForm){
         bookingForm.addEventListener('submit',e=>{
