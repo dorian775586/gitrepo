@@ -428,30 +428,38 @@ if (phoneInput) {
 
 
     if(bookingForm){
-        bookingForm.addEventListener('submit',e=>{
-            e.preventDefault();
-            const guestsInput=document.getElementById('guestsInput');
-            const phoneInput=document.getElementById('phoneInput');
-            const table_id=selectedTableId;
-            const time_slot=timeSelect ? timeSelect.value : null;
-            const guests=guestsInput ? guestsInput.value : null;
-            const phone=phoneInput ? phoneInput.value : null;
-            const date_str=dateInput ? dateInput.value : null;
-            const submitButton=bookingForm.querySelector('button[type="submit"]');
-            const originalButtonText=submitButton.textContent;
+    bookingForm.addEventListener('submit', e => {
+        e.preventDefault();
 
-            const phoneDigits = phone.replace(/\D/g,''); // оставляем только цифры
-            if(!/^\+?375(25|29|33|44)\d{7}$/.test('+' + phoneDigits)){
-                safeShowAlert('❌ Введите корректный номер в формате +375 (25|29|33|44) XXX XX XX');
-                return;
-            }
+        const guestsInput = document.getElementById('guestsInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const table_id = selectedTableId;
+        const time_slot = timeSelect ? timeSelect.value : null;
+        const guests = guestsInput ? guestsInput.value : null;
+        const phone = phoneInput ? phoneInput.value : null;
+        const date_str = dateInput ? dateInput.value : null;
+        const submitButton = bookingForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
 
+        // Проверка телефона
+        const phoneDigits = phone.replace(/\D/g, ''); // оставляем только цифры
+        if (!/^(375)(25|29|33|44)\d{7}$/.test(phoneDigits)) {
+            safeShowAlert('❌ Введите корректный номер в формате +375 (25|29|33|44) XXX XX XX');
+            return;
+        }
 
-            if(!table_id||!time_slot||!guests||!phone||!date_str){ safeShowAlert('⚠️ Заполните все поля'); return; }
-            submitButton.disabled=true; submitButton.textContent='Обработка...';
-            sendBooking(table_id,time_slot,guests,phone,date_str,submitButton,originalButtonText);
-        });
-    }
+        // Проверяем остальные поля
+        if (!table_id || !time_slot || !guests || !date_str) {
+            safeShowAlert('⚠️ Заполните все поля');
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Обработка...';
+        sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText);
+    });
+}
+
 
     const closeBtn=document.getElementById('closeBookingForm');
     if(closeBtn) closeBtn.addEventListener('click',()=>{ if(bookingOverlay) bookingOverlay.style.display='none'; });
