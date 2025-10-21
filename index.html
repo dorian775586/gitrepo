@@ -403,18 +403,19 @@ body {
     background-color: var(--table-selected) !important;
     border-color: var(--secondary-color) !important;
     box-shadow: 0 0 10px var(--secondary-color);
+    color: var(--bg-dark); /* текст внутри выбранного стола станет чёрным */
 }
-
 .table-element .table-number {
     color: var(--text-main); /* белый по умолчанию */
 }
 
 .table-selected .table-number {
-    color: var(--secondary-color) !important; /* серый номер при выборе */
+    color: var(--secondary-color) !important; /* серый номер при выборе, чтобы был виден на белом фоне */
 }
 
-.table-selected .table-capacity {
-    color: var(--bg-dark) !important; /* количество персон остаётся чёрным, чтобы видно на белом фоне */
+/* количество персон оставляем серым, чтобы на белом фоне был виден */
+.table-element .table-capacity {
+    color: var(--secondary-color);
 }
 
 
