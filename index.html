@@ -189,8 +189,8 @@ body {
 #booking-form button[type="submit"] {
     margin-top: 20px;
     padding: 12px;
-    background-color: var(--primary-color);
-    color: var(--bg-dark);
+    background-color: var(--primary-color) !important; /* ✅ принудительно основной цвет */
+    color: var(--text-main) !important; /* ✅ текст белый */
     font-weight: bold;
     border: none;
     border-radius: 8px;
@@ -198,7 +198,14 @@ body {
     font-size: 14px;
     width: 100%;
     text-transform: uppercase;
+    transition: all 0.2s;
 }
+
+#booking-form button[type="submit"]:hover {
+    background-color: var(--secondary-color);
+    color: var(--bg-dark);
+}
+
 
 /* ----- Карта столов ----- */
 .table-map-container {
@@ -403,6 +410,7 @@ body {
     background-color: var(--table-selected) !important;
     border-color: var(--secondary-color) !important;
     box-shadow: 0 0 10px var(--secondary-color);
+    color: var(--text-main);
 }
 
 
