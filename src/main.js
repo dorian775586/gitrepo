@@ -179,7 +179,6 @@ async function fillTimeSelect(tableId,dateStr){
     const timeSelect = document.getElementById("timeSelect");
     const currentTimeValue = document.getElementById("current-time-value");
     if(!timeSelect) return false;
-
     timeSelect.innerHTML='<option value="">Загрузка...</option>';
     if(currentTimeValue) currentTimeValue.textContent='...';
     if(!tableId || !dateStr){ 
@@ -206,39 +205,26 @@ async function fillTimeSelect(tableId,dateStr){
             }
 
             if(availableTimes.length>0){
-                // Отрисовка всех слотов
-                availableTimes.forEach(t=>{
-                    const opt=document.createElement('option'); 
-                    opt.value=t; 
-                    opt.textContent=t; 
-                    timeSelect.appendChild(opt); 
+                let allOptions = availableTimes.map(t=>{
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    opt.textContent = t;
+                    return opt;
                 });
 
-                const firstSlot=availableTimes[0];
-                timeSelect.value=firstSlot;
-                if(currentTimeValue) currentTimeValue.textContent=firstSlot;
-
-                // Функция скрытия следующих 5 слотов
-                function hideNextSlots(selected){
-                    const baseIndex = availableTimes.indexOf(selected);
-                    const blocked = baseIndex!==-1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
-                    for(const opt of timeSelect.options){
-                        if(blocked.includes(opt.value)) opt.style.display='none';
-                        else opt.style.display='block';
-                    }
+                function renderOptions(selected=null){
+                    timeSelect.innerHTML='';
+                    let baseIndex = selected ? availableTimes.indexOf(selected) : 0;
+                    let blocked = baseIndex!==-1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
+                    allOptions.forEach(opt=>{
+                        if(!blocked.includes(opt.value)) timeSelect.appendChild(opt);
+                    });
+                    timeSelect.value = selected || availableTimes[0];
+                    if(currentTimeValue) currentTimeValue.textContent = timeSelect.value;
                 }
 
-                // Сразу скрываем после первого слота
-                hideNextSlots(firstSlot);
-
-                // Блокировка при изменении выбора пользователем
-                timeSelect.addEventListener('change',()=>{
-                    const selected = timeSelect.value;
-                    if(!selected) return;
-                    if(currentTimeValue) currentTimeValue.textContent=selected;
-                    hideNextSlots(selected);
-                });
-
+                renderOptions(); // первичная отрисовка
+                timeSelect.addEventListener('change',()=>renderOptions(timeSelect.value));
                 return true;
             }else{ 
                 timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; 
@@ -257,7 +243,6 @@ async function fillTimeSelect(tableId,dateStr){
         return false; 
     }
 }
-
 
 // ===================================
 // ОБНОВЛЕНИЕ ДАННЫХ ПО СТОЛУ
