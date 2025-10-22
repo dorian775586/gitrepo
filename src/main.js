@@ -221,16 +221,38 @@ async function fillTimeSelect(tableId, dateStr){
                 return opt;
             });
 
-            // Функция рендеринга с блокировкой следующих 5 слотов
+            // Сохраняем выбранный слот
+            let selectedSlot = null;
+
             function renderOptions(selected=null){
+                selectedSlot = selected;
                 timeSelect.innerHTML = '';
-                let baseIndex = selected ? availableTimes.indexOf(selected) : 0;
-                let blocked = baseIndex !== -1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
+
+                let blocked = [];
+                if(selected){ 
+                    // блокируем только после выбранного вручную
+                    const baseIndex = availableTimes.indexOf(selected);
+                    blocked = availableTimes.slice(baseIndex+1, baseIndex+6);
+                }
+
                 allOptions.forEach(opt=>{
                     if(!blocked.includes(opt.value)) timeSelect.appendChild(opt);
                 });
-                timeSelect.value = selected || availableTimes[0];
-                if(currentTimeValue) currentTimeValue.textContent = timeSelect.value;
+
+                // Если первый рендер — подтягиваем ближайшее
+                if(!selected){
+                    const firstVisible = availableTimes.find(t=>{
+                        const optTime = new Date();
+                        const [h,m] = t.split(':').map(Number);
+                        optTime.setHours(h,m,0,0);
+                        return optTime.getTime() > now.getTime();
+                    }) || availableTimes[0];
+                    timeSelect.value = firstVisible;
+                    if(currentTimeValue) currentTimeValue.textContent = firstVisible;
+                } else {
+                    timeSelect.value = selected;
+                    if(currentTimeValue) currentTimeValue.textContent = selected;
+                }
             }
 
             // Первичная отрисовка
@@ -241,19 +263,20 @@ async function fillTimeSelect(tableId, dateStr){
 
             return true;
 
-        }else{
+        } else {
             timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
             if(currentTimeValue) currentTimeValue.textContent = 'Занято';
             return false;
         }
 
-    }catch(err){
+    } catch(err){
         console.error(err);
         timeSelect.innerHTML = '<option value="">Ошибка</option>';
         if(currentTimeValue) currentTimeValue.textContent = 'Ошибка';
         return false;
     }
 }
+
 
 
 // ===================================
