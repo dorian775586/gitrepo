@@ -175,98 +175,89 @@ function showTableDetails(tableId, isBooked=false){
 // ===================================
 // ЗАПОЛНЕНИЕ ВРЕМЕНИ С БЛОКИРОВКОЙ 5 СЛОТОВ
 // ===================================
-async function fillTimeSelect(tableId, dateStr){
+async function fillTimeSelect(tableId, dateStr) {
     const timeSelect = document.getElementById("timeSelect");
     const currentTimeValue = document.getElementById("current-time-value");
-    if(!timeSelect) return false;
+    if (!timeSelect) return false;
 
     timeSelect.innerHTML = '<option value="">Загрузка...</option>';
-    if(currentTimeValue) currentTimeValue.textContent = '...';
-    if(!tableId || !dateStr){
+    if (currentTimeValue) currentTimeValue.textContent = '...';
+    if (!tableId || !dateStr) {
         timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
-        if(currentTimeValue) currentTimeValue.textContent = '...';
+        if (currentTimeValue) currentTimeValue.textContent = '...';
         return false;
     }
 
-    try{
+    try {
         const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${tableId}&date=${dateStr}`);
         const data = await res.json();
         timeSelect.innerHTML = '';
 
-        if(data.status === "ok" && data.free_times && data.free_times.length > 0){
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            let availableTimes = data.free_times;
-
-            // Оставляем только будущие слоты на сегодня
-            if(dateStr === todayStr){
-                const minTime = now.getTime() + 10*60*1000; // +10 минут
-                availableTimes = availableTimes.filter(t=>{
-                    const [h,m] = t.split(':').map(Number);
-                    const dt = new Date(now); dt.setHours(h,m,0,0);
-                    return dt.getTime() > minTime;
-                });
-            }
-
-            if(availableTimes.length === 0){
-                timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
-                if(currentTimeValue) currentTimeValue.textContent = 'Занято';
-                return false;
-            }
-
-            // Создаём все опции заранее
-            const allOptions = availableTimes.map(t=>{
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                return opt;
-            });
-
-            // Функция рендеринга с блокировкой следующих 5 слотов
-            function renderOptions(selected=null){
-                let baseIndex;
-                if(selected) {
-                    baseIndex = availableTimes.indexOf(selected); // после выбора
-                } else {
-                    // выбираем ближайший будущий слот
-                    baseIndex = availableTimes.findIndex(t=>{
-                        const [h,m] = t.split(':').map(Number);
-                        const dt = new Date();
-                        dt.setHours(h,m,0,0);
-                        return dt.getTime() > now.getTime();
-                    });
-                    if(baseIndex === -1) baseIndex = 0;
-                    selected = availableTimes[baseIndex]; // подтяжка к ближайшему
-                }
-
-                const blocked = availableTimes.slice(baseIndex+1, baseIndex+6);
-
-                timeSelect.innerHTML = '';
-                allOptions.forEach(opt=>{
-                    if(!blocked.includes(opt.value)) timeSelect.appendChild(opt);
-                });
-                timeSelect.value = selected;
-                if(currentTimeValue) currentTimeValue.textContent = selected;
-            }
-
-            // Первичная отрисовка
-            renderOptions();
-
-            // Обновляем при смене выбора пользователем
-            timeSelect.onchange = ()=>renderOptions(timeSelect.value);
-
-            return true;
-
-        } else {
+        if (data.status !== "ok" || !data.free_times || data.free_times.length === 0) {
             timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
-            if(currentTimeValue) currentTimeValue.textContent = 'Занято';
+            if (currentTimeValue) currentTimeValue.textContent = 'Занято';
             return false;
         }
 
-    } catch(err){
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        // получаем список свободных слотов, исключаем уже забронированные
+        let availableTimes = data.free_times;
+
+        if (dateStr === todayStr) {
+            const minTime = now.getTime() + 10 * 60 * 1000;
+            availableTimes = availableTimes.filter(t => {
+                const [h, m] = t.split(':').map(Number);
+                const dt = new Date(now); dt.setHours(h, m, 0, 0);
+                return dt.getTime() > minTime;
+            });
+        }
+
+        if (availableTimes.length === 0) {
+            timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
+            if (currentTimeValue) currentTimeValue.textContent = 'Занято';
+            return false;
+        }
+
+        // создаём все опции
+        const allOptions = availableTimes.map(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = t;
+            return opt;
+        });
+
+        // функция рендеринга с блокировкой следующих 5 слотов
+        function renderOptions(selected = null) {
+            timeSelect.innerHTML = '';
+            let baseIndex = selected ? availableTimes.indexOf(selected) : 0;
+            let blocked = [];
+            if (baseIndex !== -1) blocked = availableTimes.slice(baseIndex + 1, baseIndex + 6);
+
+            allOptions.forEach(opt => {
+                if (!blocked.includes(opt.value)) timeSelect.appendChild(opt);
+            });
+
+            // если выбранный слот уже забронирован или null, ставим ближайший
+            if (!selected || !availableTimes.includes(selected)) {
+                selected = availableTimes[0];
+            }
+
+            timeSelect.value = selected;
+            if (currentTimeValue) currentTimeValue.textContent = selected;
+        }
+
+        renderOptions();
+
+        timeSelect.onchange = () => renderOptions(timeSelect.value);
+
+        return true;
+
+    } catch (err) {
         console.error(err);
         timeSelect.innerHTML = '<option value="">Ошибка</option>';
-        if(currentTimeValue) currentTimeValue.textContent = 'Ошибка';
+        if (currentTimeValue) currentTimeValue.textContent = 'Ошибка';
         return false;
     }
 }
