@@ -175,119 +175,87 @@ function showTableDetails(tableId, isBooked=false){
 // ===================================
 // ЗАПОЛНЕНИЕ ВРЕМЕНИ
 // ===================================
-async function fillTimeSelect(tableId, dateStr) {
+async function fillTimeSelect(tableId, dateStr){
     const timeSelect = document.getElementById("timeSelect");
     const currentTimeValue = document.getElementById("current-time-value");
-    if (!timeSelect) return false;
+    if(!timeSelect) return false;
 
-    timeSelect.innerHTML = '<option value="">Загрузка...</option>';
-    if (currentTimeValue) currentTimeValue.textContent = '...';
-    if (!tableId || !dateStr) {
-        timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
-        if (currentTimeValue) currentTimeValue.textContent = '...';
-        return false;
+    timeSelect.innerHTML='<option value="">Загрузка...</option>';
+    if(currentTimeValue) currentTimeValue.textContent='...';
+    if(!tableId || !dateStr){ 
+        timeSelect.innerHTML='<option value="">Выберите стол и дату</option>'; 
+        if(currentTimeValue) currentTimeValue.textContent='...'; 
+        return false; 
     }
 
-    try {
+    try{
         const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${tableId}&date=${dateStr}`);
         const data = await res.json();
-        timeSelect.innerHTML = '';
+        timeSelect.innerHTML='';
 
-        if (data.status === "ok" && data.free_times && data.free_times.length > 0) {
+        if(data.status==="ok" && data.free_times && data.free_times.length>0){
             let availableTimes = data.free_times;
+            const now=new Date();
+            const todayStr=now.toISOString().split('T')[0];
 
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            if (dateStr === todayStr) {
-                const minTime = now.getTime() + 10 * 60 * 1000;
-                availableTimes = availableTimes.filter(t => {
-                    const [h, m] = t.split(':').map(Number);
-                    const dt = new Date(now);
-                    dt.setHours(h, m, 0, 0);
-                    return dt.getTime() > minTime;
+            if(dateStr===todayStr){
+                const minTime=now.getTime()+10*60*1000;
+                availableTimes=availableTimes.filter(t=>{
+                    const [h,m]=t.split(':').map(Number);
+                    const dt=new Date(now); dt.setHours(h,m,0,0);
+                    return dt.getTime()>minTime;
                 });
             }
 
-            // Вспомогательный массив для хранения заблокированных слотов
-            let blockedSlots = [];
+            // Изначально отобразим все доступные слоты
+            availableTimes.forEach(t=>{
+                const opt=document.createElement('option');
+                opt.value=t;
+                opt.textContent=t;
+                timeSelect.appendChild(opt);
+            });
 
-            function renderOptions(selectedTime = null) {
-                timeSelect.innerHTML = '';
-                availableTimes.forEach((t, index) => {
-                    // блокируем следующие 5 слотов после выбранного
-                    if (selectedTime) {
-                        const baseIndex = availableTimes.indexOf(selectedTime);
-                        blockedSlots = availableTimes.slice(baseIndex + 1, baseIndex + 6);
-                    } else {
-                        blockedSlots = [];
+            // Сохраним выбранный слот для последующей блокировки следующих 5
+            function blockNextSlots(selected){
+                const baseIndex = availableTimes.indexOf(selected);
+                if(baseIndex !== -1){
+                    const blocked = availableTimes.slice(baseIndex+1, baseIndex+6);
+                    for(const opt of timeSelect.options){
+                        if(blocked.includes(opt.value)) opt.style.display='none';
+                        else opt.style.display='block';
                     }
-
-                    if (!blockedSlots.includes(t)) {
-                        const opt = document.createElement('option');
-                        opt.value = t;
-                        opt.textContent = t;
-                        timeSelect.appendChild(opt);
-                    }
-                });
-
-                // сохраняем выбранное время
-                if (selectedTime && availableTimes.includes(selectedTime)) {
-                    timeSelect.value = selectedTime;
-                } else {
-                    timeSelect.value = timeSelect.options[0]?.value || '';
                 }
-
-                if (currentTimeValue) currentTimeValue.textContent = timeSelect.value;
             }
 
-            // Первичная отрисовка всех доступных слотов
-            renderOptions();
+            // Сразу блокируем следующие 5 после первого слота
+            const firstSlot = availableTimes[0];
+            timeSelect.value = firstSlot;
+            if(currentTimeValue) currentTimeValue.textContent = firstSlot;
+            blockNextSlots(firstSlot);
 
-            // Обновляем список при выборе времени
-            timeSelect.addEventListener('change', () => {
+            // Блокировка при изменении выбора пользователем
+            timeSelect.addEventListener('change',()=>{
                 const selected = timeSelect.value;
-                if (!selected) return;
-                renderOptions(selected);
+                if(!selected) return;
+                if(currentTimeValue) currentTimeValue.textContent = selected;
+                blockNextSlots(selected);
             });
 
             return true;
-
-        } else {
-            timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
-            if (currentTimeValue) currentTimeValue.textContent = 'Занято';
+        }else{
+            timeSelect.innerHTML='<option value="">Нет свободных слотов</option>';
+            if(currentTimeValue) currentTimeValue.textContent='Занято';
             return false;
         }
 
-    } catch (err) {
+    }catch(err){
         console.error(err);
-        timeSelect.innerHTML = '<option value="">Ошибка</option>';
-        if (currentTimeValue) currentTimeValue.textContent = 'Ошибка';
+        timeSelect.innerHTML='<option value="">Ошибка</option>';
+        if(currentTimeValue) currentTimeValue.textContent='Ошибка';
         return false;
     }
 }
 
-
-// ===================================
-// ПЕРЕКЛЮЧЕНИЕ ЗОН
-// ===================================
-function switchArea(area){
-    const terraceMap=document.getElementById('terrace-map');
-    const hallMap=document.getElementById('main-hall-map');
-    const toggleTerrace=document.getElementById('toggle-terrace');
-    const toggleHall=document.getElementById('toggle-hall');
-
-    document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
-    selectedTableId=null;
-    const card=document.getElementById('table-details-card'); if(card) card.style.display='none';
-    const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить'; confirmBtn.style.backgroundColor='var(--primary-color)'; }
-
-    if(area==='terrace'){ if(terraceMap) terraceMap.classList.add('active'); if(hallMap) hallMap.classList.remove('active'); if(toggleTerrace) toggleTerrace.classList.add('active'); if(toggleHall) toggleHall.classList.remove('active'); }
-    else if(area==='hall'){ if(terraceMap) terraceMap.classList.remove('active'); if(hallMap) hallMap.classList.add('active'); if(toggleTerrace) toggleTerrace.classList.remove('active'); if(toggleHall) toggleHall.classList.add('active'); }
-
-    const dateInput=document.getElementById('dateInput'); if(dateInput && dateInput.value) initializeMapAvailability(dateInput.value);
-}
-
-// ===================================
 // ОТПРАВКА БРОНИ С УВЕДОМЛЕНИЕМ И МОЯ БРОНЬ
 // ===================================
 function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText){
