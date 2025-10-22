@@ -175,74 +175,86 @@ function showTableDetails(tableId, isBooked=false){
 // ===================================
 // ЗАПОЛНЕНИЕ ВРЕМЕНИ С БЛОКИРОВКОЙ 5 СЛОТОВ
 // ===================================
-async function fillTimeSelect(tableId,dateStr){
+async function fillTimeSelect(tableId, dateStr){
     const timeSelect = document.getElementById("timeSelect");
     const currentTimeValue = document.getElementById("current-time-value");
     if(!timeSelect) return false;
-    timeSelect.innerHTML='<option value="">Загрузка...</option>';
-    if(currentTimeValue) currentTimeValue.textContent='...';
-    if(!tableId || !dateStr){ 
-        timeSelect.innerHTML='<option value="">Выберите стол и дату</option>'; 
-        if(currentTimeValue) currentTimeValue.textContent='...'; 
-        return false; 
+
+    timeSelect.innerHTML = '<option value="">Загрузка...</option>';
+    if(currentTimeValue) currentTimeValue.textContent = '...';
+    if(!tableId || !dateStr){
+        timeSelect.innerHTML = '<option value="">Выберите стол и дату</option>';
+        if(currentTimeValue) currentTimeValue.textContent = '...';
+        return false;
     }
 
     try{
         const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${tableId}&date=${dateStr}`);
         const data = await res.json();
-        timeSelect.innerHTML='';
-        if(data.status==="ok" && data.free_times && data.free_times.length>0){
+        timeSelect.innerHTML = '';
+
+        if(data.status === "ok" && data.free_times && data.free_times.length > 0){
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
             let availableTimes = data.free_times;
-            const now=new Date();
-            const todayStr=now.toISOString().split('T')[0];
-            if(dateStr===todayStr){
-                const minTime=now.getTime()+10*60*1000;
-                availableTimes=availableTimes.filter(t=>{
-                    const [h,m]=t.split(':').map(Number);
-                    const dt=new Date(now); dt.setHours(h,m,0,0);
-                    return dt.getTime()>minTime;
+
+            if(dateStr === todayStr){
+                const minTime = now.getTime() + 10*60*1000;
+                availableTimes = availableTimes.filter(t=>{
+                    const [h,m] = t.split(':').map(Number);
+                    const dt = new Date(now); dt.setHours(h,m,0,0);
+                    return dt.getTime() > minTime;
                 });
             }
 
-            if(availableTimes.length>0){
-                let allOptions = availableTimes.map(t=>{
-                    const opt = document.createElement('option');
-                    opt.value = t;
-                    opt.textContent = t;
-                    return opt;
-                });
-
-                function renderOptions(selected=null){
-                    timeSelect.innerHTML='';
-                    let baseIndex = selected ? availableTimes.indexOf(selected) : 0;
-                    let blocked = baseIndex!==-1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
-                    allOptions.forEach(opt=>{
-                        if(!blocked.includes(opt.value)) timeSelect.appendChild(opt);
-                    });
-                    timeSelect.value = selected || availableTimes[0];
-                    if(currentTimeValue) currentTimeValue.textContent = timeSelect.value;
-                }
-
-                renderOptions(); // первичная отрисовка
-                timeSelect.addEventListener('change',()=>renderOptions(timeSelect.value));
-                return true;
-            }else{ 
-                timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; 
-                if(currentTimeValue) currentTimeValue.textContent='Занято'; 
-                return false; 
+            if(availableTimes.length === 0){
+                timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
+                if(currentTimeValue) currentTimeValue.textContent = 'Занято';
+                return false;
             }
-        }else{ 
-            timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; 
-            if(currentTimeValue) currentTimeValue.textContent='Занято'; 
-            return false; 
+
+            // Генерируем все опции заранее
+            const allOptions = availableTimes.map(t=>{
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                return opt;
+            });
+
+            // Функция рендеринга с блокировкой следующих 5 слотов
+            function renderOptions(selected=null){
+                timeSelect.innerHTML = '';
+                let baseIndex = selected ? availableTimes.indexOf(selected) : 0;
+                let blocked = baseIndex !== -1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
+                allOptions.forEach(opt=>{
+                    if(!blocked.includes(opt.value)) timeSelect.appendChild(opt);
+                });
+                timeSelect.value = selected || availableTimes[0];
+                if(currentTimeValue) currentTimeValue.textContent = timeSelect.value;
+            }
+
+            // Первичная отрисовка
+            renderOptions();
+
+            // Обновляем при смене выбора
+            timeSelect.onchange = ()=>renderOptions(timeSelect.value);
+
+            return true;
+
+        }else{
+            timeSelect.innerHTML = '<option value="">Нет свободных слотов</option>';
+            if(currentTimeValue) currentTimeValue.textContent = 'Занято';
+            return false;
         }
-    }catch(err){ 
-        console.error(err); 
-        timeSelect.innerHTML='<option value="">Ошибка</option>'; 
-        if(currentTimeValue) currentTimeValue.textContent='Ошибка'; 
-        return false; 
+
+    }catch(err){
+        console.error(err);
+        timeSelect.innerHTML = '<option value="">Ошибка</option>';
+        if(currentTimeValue) currentTimeValue.textContent = 'Ошибка';
+        return false;
     }
 }
+
 
 // ===================================
 // ОБНОВЛЕНИЕ ДАННЫХ ПО СТОЛУ
