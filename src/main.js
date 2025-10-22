@@ -198,9 +198,10 @@ async function fillTimeSelect(tableId, dateStr){
             const now=new Date();
             const todayStr=now.toISOString().split('T')[0];
 
+            // Фильтруем слоты на сегодня, чтобы выбрать только будущие
             if(dateStr===todayStr){
                 const minTime=now.getTime()+10*60*1000;
-                availableTimes=availableTimes.filter(t=>{
+                availableTimes = availableTimes.filter(t=>{
                     const [h,m]=t.split(':').map(Number);
                     const dt=new Date(now); dt.setHours(h,m,0,0);
                     return dt.getTime()>minTime;
@@ -215,33 +216,32 @@ async function fillTimeSelect(tableId, dateStr){
                 timeSelect.appendChild(opt);
             });
 
-            // Сохраним выбранный слот для последующей блокировки следующих 5
-            function blockNextSlots(selected){
-                const baseIndex = availableTimes.indexOf(selected);
-                if(baseIndex !== -1){
-                    const blocked = availableTimes.slice(baseIndex+1, baseIndex+6);
-                    for(const opt of timeSelect.options){
-                        if(blocked.includes(opt.value)) opt.style.display='none';
-                        else opt.style.display='block';
-                    }
+            // Функция для скрытия следующих 5 слотов после выбранного
+            function hideNextSlots(selectedTime){
+                const baseIndex = availableTimes.indexOf(selectedTime);
+                const blocked = baseIndex !== -1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
+                for(const opt of timeSelect.options){
+                    if(blocked.includes(opt.value)) opt.style.display='none';
+                    else opt.style.display='block';
                 }
             }
 
-            // Сразу блокируем следующие 5 после первого слота
+            // Сразу выбираем первый слот и скрываем следующие
             const firstSlot = availableTimes[0];
             timeSelect.value = firstSlot;
             if(currentTimeValue) currentTimeValue.textContent = firstSlot;
-            blockNextSlots(firstSlot);
+            hideNextSlots(firstSlot);
 
-            // Блокировка при изменении выбора пользователем
+            // Добавляем обработчик для изменения выбора пользователем
             timeSelect.addEventListener('change',()=>{
                 const selected = timeSelect.value;
                 if(!selected) return;
                 if(currentTimeValue) currentTimeValue.textContent = selected;
-                blockNextSlots(selected);
+                hideNextSlots(selected);
             });
 
             return true;
+
         }else{
             timeSelect.innerHTML='<option value="">Нет свободных слотов</option>';
             if(currentTimeValue) currentTimeValue.textContent='Занято';
