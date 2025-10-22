@@ -198,8 +198,9 @@ async function fillTimeSelect(tableId, dateStr){
             const todayStr = now.toISOString().split('T')[0];
             let availableTimes = data.free_times;
 
+            // Оставляем только будущие слоты на сегодня
             if(dateStr === todayStr){
-                const minTime = now.getTime() + 10*60*1000;
+                const minTime = now.getTime() + 10*60*1000; // +10 минут
                 availableTimes = availableTimes.filter(t=>{
                     const [h,m] = t.split(':').map(Number);
                     const dt = new Date(now); dt.setHours(h,m,0,0);
@@ -213,7 +214,7 @@ async function fillTimeSelect(tableId, dateStr){
                 return false;
             }
 
-            // Генерируем все опции заранее
+            // Создаём все опции заранее
             const allOptions = availableTimes.map(t=>{
                 const opt = document.createElement('option');
                 opt.value = t;
@@ -221,44 +222,37 @@ async function fillTimeSelect(tableId, dateStr){
                 return opt;
             });
 
-            // Сохраняем выбранный слот
-            let selectedSlot = null;
-
+            // Функция рендеринга с блокировкой следующих 5 слотов
             function renderOptions(selected=null){
-                selectedSlot = selected;
-                timeSelect.innerHTML = '';
-
-                let blocked = [];
-                if(selected){ 
-                    // блокируем только после выбранного вручную
-                    const baseIndex = availableTimes.indexOf(selected);
-                    blocked = availableTimes.slice(baseIndex+1, baseIndex+6);
+                let baseIndex;
+                if(selected) {
+                    baseIndex = availableTimes.indexOf(selected); // после выбора
+                } else {
+                    // выбираем ближайший будущий слот
+                    baseIndex = availableTimes.findIndex(t=>{
+                        const [h,m] = t.split(':').map(Number);
+                        const dt = new Date();
+                        dt.setHours(h,m,0,0);
+                        return dt.getTime() > now.getTime();
+                    });
+                    if(baseIndex === -1) baseIndex = 0;
+                    selected = availableTimes[baseIndex]; // подтяжка к ближайшему
                 }
 
+                const blocked = availableTimes.slice(baseIndex+1, baseIndex+6);
+
+                timeSelect.innerHTML = '';
                 allOptions.forEach(opt=>{
                     if(!blocked.includes(opt.value)) timeSelect.appendChild(opt);
                 });
-
-                // Если первый рендер — подтягиваем ближайшее
-                if(!selected){
-                    const firstVisible = availableTimes.find(t=>{
-                        const optTime = new Date();
-                        const [h,m] = t.split(':').map(Number);
-                        optTime.setHours(h,m,0,0);
-                        return optTime.getTime() > now.getTime();
-                    }) || availableTimes[0];
-                    timeSelect.value = firstVisible;
-                    if(currentTimeValue) currentTimeValue.textContent = firstVisible;
-                } else {
-                    timeSelect.value = selected;
-                    if(currentTimeValue) currentTimeValue.textContent = selected;
-                }
+                timeSelect.value = selected;
+                if(currentTimeValue) currentTimeValue.textContent = selected;
             }
 
             // Первичная отрисовка
             renderOptions();
 
-            // Обновляем при смене выбора
+            // Обновляем при смене выбора пользователем
             timeSelect.onchange = ()=>renderOptions(timeSelect.value);
 
             return true;
