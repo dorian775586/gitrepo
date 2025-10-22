@@ -199,16 +199,50 @@ async function fillTimeSelect(tableId,dateStr){
                     return dt.getTime()>minTime;
                 });
             }
-            if(availableTimes.length>0){
-                availableTimes.forEach(t=>{ const opt=document.createElement('option'); opt.value=t; opt.textContent=t; timeSelect.appendChild(opt); });
-                const firstSlot=availableTimes[0];
-                timeSelect.value=firstSlot;
-                if(currentTimeValue) currentTimeValue.textContent=firstSlot;
-                return true;
-            }else{ timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; if(currentTimeValue) currentTimeValue.textContent='Занято'; return false; }
-        }else{ timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; if(currentTimeValue) currentTimeValue.textContent='Занято'; return false; }
-    }catch(err){ console.error(err); timeSelect.innerHTML='<option value="">Ошибка</option>'; if(currentTimeValue) currentTimeValue.textContent='Ошибка'; return false; }
+
+            // 🟢 ДОБАВЛЯЕМ 3-ЧАСОВУЮ БЛОКИРОВКУ НА КЛИЕНТЕ
+            availableTimes.forEach(t=>{
+                const opt=document.createElement('option');
+                opt.value=t;
+                opt.textContent=t;
+                timeSelect.appendChild(opt);
+            });
+
+            timeSelect.addEventListener('change',()=>{
+                const selected = timeSelect.value;
+                if(!selected) return;
+                const [h,m] = selected.split(':').map(Number);
+                const baseIndex = availableTimes.indexOf(selected);
+                if(baseIndex !== -1){
+                    const blocked = availableTimes.slice(baseIndex+1, baseIndex+7);
+                    for(const opt of timeSelect.options){
+                        if(blocked.includes(opt.value)){
+                            opt.style.display='none';
+                        }else{
+                            opt.style.display='block';
+                        }
+                    }
+                }
+            });
+
+            const firstSlot = availableTimes[0];
+            timeSelect.value = firstSlot;
+            if(currentTimeValue) currentTimeValue.textContent = firstSlot;
+            return true;
+
+        }else{
+            timeSelect.innerHTML='<option value="">Нет свободных слотов</option>';
+            if(currentTimeValue) currentTimeValue.textContent='Занято';
+            return false;
+        }
+    }catch(err){
+        console.error(err);
+        timeSelect.innerHTML='<option value="">Ошибка</option>';
+        if(currentTimeValue) currentTimeValue.textContent='Ошибка';
+        return false;
+    }
 }
+
 
 // ===================================
 // ОБНОВЛЕНИЕ ДАННЫХ ПО СТОЛУ
