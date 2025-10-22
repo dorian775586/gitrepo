@@ -173,9 +173,9 @@ function showTableDetails(tableId, isBooked=false){
 }
 
 // ===================================
-// ЗАПОЛНЕНИЕ ВРЕМЕНИ
+// ЗАПОЛНЕНИЕ ВРЕМЕНИ С БЛОКИРОВКОЙ 5 СЛОТОВ
 // ===================================
-async function fillTimeSelect(tableId, dateStr){
+async function fillTimeSelect(tableId,dateStr){
     const timeSelect = document.getElementById("timeSelect");
     const currentTimeValue = document.getElementById("current-time-value");
     if(!timeSelect) return false;
@@ -192,70 +192,140 @@ async function fillTimeSelect(tableId, dateStr){
         const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${tableId}&date=${dateStr}`);
         const data = await res.json();
         timeSelect.innerHTML='';
-
         if(data.status==="ok" && data.free_times && data.free_times.length>0){
             let availableTimes = data.free_times;
             const now=new Date();
             const todayStr=now.toISOString().split('T')[0];
-
-            // Фильтруем слоты на сегодня, чтобы выбрать только будущие
             if(dateStr===todayStr){
                 const minTime=now.getTime()+10*60*1000;
-                availableTimes = availableTimes.filter(t=>{
+                availableTimes=availableTimes.filter(t=>{
                     const [h,m]=t.split(':').map(Number);
                     const dt=new Date(now); dt.setHours(h,m,0,0);
                     return dt.getTime()>minTime;
                 });
             }
 
-            // Изначально отобразим все доступные слоты
-            availableTimes.forEach(t=>{
-                const opt=document.createElement('option');
-                opt.value=t;
-                opt.textContent=t;
-                timeSelect.appendChild(opt);
-            });
+            if(availableTimes.length>0){
+                // Отрисовка всех слотов
+                availableTimes.forEach(t=>{
+                    const opt=document.createElement('option'); 
+                    opt.value=t; 
+                    opt.textContent=t; 
+                    timeSelect.appendChild(opt); 
+                });
 
-            // Функция для скрытия следующих 5 слотов после выбранного
-            function hideNextSlots(selectedTime){
-                const baseIndex = availableTimes.indexOf(selectedTime);
-                const blocked = baseIndex !== -1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
-                for(const opt of timeSelect.options){
-                    if(blocked.includes(opt.value)) opt.style.display='none';
-                    else opt.style.display='block';
+                const firstSlot=availableTimes[0];
+                timeSelect.value=firstSlot;
+                if(currentTimeValue) currentTimeValue.textContent=firstSlot;
+
+                // Функция скрытия следующих 5 слотов
+                function hideNextSlots(selected){
+                    const baseIndex = availableTimes.indexOf(selected);
+                    const blocked = baseIndex!==-1 ? availableTimes.slice(baseIndex+1, baseIndex+6) : [];
+                    for(const opt of timeSelect.options){
+                        if(blocked.includes(opt.value)) opt.style.display='none';
+                        else opt.style.display='block';
+                    }
                 }
+
+                // Сразу скрываем после первого слота
+                hideNextSlots(firstSlot);
+
+                // Блокировка при изменении выбора пользователем
+                timeSelect.addEventListener('change',()=>{
+                    const selected = timeSelect.value;
+                    if(!selected) return;
+                    if(currentTimeValue) currentTimeValue.textContent=selected;
+                    hideNextSlots(selected);
+                });
+
+                return true;
+            }else{ 
+                timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; 
+                if(currentTimeValue) currentTimeValue.textContent='Занято'; 
+                return false; 
             }
-
-            // Сразу выбираем первый слот и скрываем следующие
-            const firstSlot = availableTimes[0];
-            timeSelect.value = firstSlot;
-            if(currentTimeValue) currentTimeValue.textContent = firstSlot;
-            hideNextSlots(firstSlot);
-
-            // Добавляем обработчик для изменения выбора пользователем
-            timeSelect.addEventListener('change',()=>{
-                const selected = timeSelect.value;
-                if(!selected) return;
-                if(currentTimeValue) currentTimeValue.textContent = selected;
-                hideNextSlots(selected);
-            });
-
-            return true;
-
-        }else{
-            timeSelect.innerHTML='<option value="">Нет свободных слотов</option>';
-            if(currentTimeValue) currentTimeValue.textContent='Занято';
-            return false;
+        }else{ 
+            timeSelect.innerHTML='<option value="">Нет свободных слотов</option>'; 
+            if(currentTimeValue) currentTimeValue.textContent='Занято'; 
+            return false; 
         }
-
-    }catch(err){
-        console.error(err);
-        timeSelect.innerHTML='<option value="">Ошибка</option>';
-        if(currentTimeValue) currentTimeValue.textContent='Ошибка';
-        return false;
+    }catch(err){ 
+        console.error(err); 
+        timeSelect.innerHTML='<option value="">Ошибка</option>'; 
+        if(currentTimeValue) currentTimeValue.textContent='Ошибка'; 
+        return false; 
     }
 }
 
+
+// ===================================
+// ОБНОВЛЕНИЕ ДАННЫХ ПО СТОЛУ
+// ===================================
+async function updateTableAvailability(tableId){
+    const dateInput = document.getElementById("dateInput");
+    const dateStr = dateInput ? dateInput.value : null;
+
+    if(!dateStr){
+        showTableDetails(tableId, false);
+        return;
+    }
+
+    const confirmBtn = document.getElementById('confirm-btn');
+    if(confirmBtn){ 
+        confirmBtn.disabled=true; 
+        confirmBtn.textContent='Проверка...'; 
+        confirmBtn.style.backgroundColor='#666'; 
+    }
+
+    const hasFree = await fillTimeSelect(tableId,dateStr);
+    showTableDetails(tableId,!hasFree);
+}
+
+// ===================================
+// ОБНОВЛЕНИЕ КАРТЫ СТОЛОВ
+// ===================================
+async function initializeMapAvailability(dateStr){
+    const activeMap=document.querySelector('.map-area.active');
+    if(!activeMap || !dateStr) return;
+    const tables=activeMap.querySelectorAll('.table-element');
+    tables.forEach(t=>t.classList.remove('table-booked'));
+
+    await Promise.all(Array.from(tables).map(async t=>{
+        const id=t.getAttribute('data-table');
+        if(!id) return;
+        try{
+            const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${id}&date=${dateStr}`);
+            const data = await res.json();
+            const isBooked=!(data.status==='ok' && data.free_times && data.free_times.length>0);
+            if(isBooked) t.classList.add('table-booked');
+        }catch(e){ t.classList.remove('table-booked'); }
+    }));
+
+    if(selectedTableId && activeMap.querySelector(`[data-table="${selectedTableId}"]`)) await updateTableAvailability(selectedTableId);
+}
+
+// ===================================
+// ПЕРЕКЛЮЧЕНИЕ ЗОН
+// ===================================
+function switchArea(area){
+    const terraceMap=document.getElementById('terrace-map');
+    const hallMap=document.getElementById('main-hall-map');
+    const toggleTerrace=document.getElementById('toggle-terrace');
+    const toggleHall=document.getElementById('toggle-hall');
+
+    document.querySelectorAll('.table-element').forEach(el=>el.classList.remove('table-selected'));
+    selectedTableId=null;
+    const card=document.getElementById('table-details-card'); if(card) card.style.display='none';
+    const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить'; confirmBtn.style.backgroundColor='var(--primary-color)'; }
+
+    if(area==='terrace'){ if(terraceMap) terraceMap.classList.add('active'); if(hallMap) hallMap.classList.remove('active'); if(toggleTerrace) toggleTerrace.classList.add('active'); if(toggleHall) toggleHall.classList.remove('active'); }
+    else if(area==='hall'){ if(terraceMap) terraceMap.classList.remove('active'); if(hallMap) hallMap.classList.add('active'); if(toggleTerrace) toggleTerrace.classList.remove('active'); if(toggleHall) toggleHall.classList.add('active'); }
+
+    const dateInput=document.getElementById('dateInput'); if(dateInput && dateInput.value) initializeMapAvailability(dateInput.value);
+}
+
+// ===================================
 // ОТПРАВКА БРОНИ С УВЕДОМЛЕНИЕМ И МОЯ БРОНЬ
 // ===================================
 function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText){
