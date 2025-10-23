@@ -237,7 +237,7 @@ async function updateTableAvailability(tableId){
 // ОБНОВЛЕНИЕ КАРТЫ СТОЛОВ
 // ===================================
 async function initializeMapAvailability(dateStr){
-    const activeMap=document.querySelector('.map-area.active');
+    const activeMap=document.querySelector('.table-map.active'); // Исправил селектор
     if(!activeMap || !dateStr) return;
     const tables=activeMap.querySelectorAll('.table-element');
     tables.forEach(t=>t.classList.remove('table-booked'));
@@ -248,6 +248,8 @@ async function initializeMapAvailability(dateStr){
         try{
             const res = await fetch(`${API_BASE_URL}/get_booked_times?table=${id}&date=${dateStr}`);
             const data = await res.json();
+            // На данный момент логика бэкенда предполагает, что если free_times пуст, то стол занят.
+            // При реализации логики с продолжительностью, бэкенд должен учитывать и продолжительность!
             const isBooked=!(data.status==='ok' && data.free_times && data.free_times.length>0);
             if(isBooked) t.classList.add('table-booked');
         }catch(e){ t.classList.remove('table-booked'); }
@@ -270,17 +272,39 @@ function switchArea(area){
     const card=document.getElementById('table-details-card'); if(card) card.style.display='none';
     const confirmBtn=document.getElementById('confirm-btn'); if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Подтвердить'; confirmBtn.style.backgroundColor='var(--primary-color)'; }
 
-    if(area==='terrace'){ if(terraceMap) terraceMap.classList.add('active'); if(hallMap) hallMap.classList.remove('active'); if(toggleTerrace) toggleTerrace.classList.add('active'); if(toggleHall) toggleHall.classList.remove('active'); }
-    else if(area==='hall'){ if(terraceMap) terraceMap.classList.remove('active'); if(hallMap) hallMap.classList.add('active'); if(toggleTerrace) toggleTerrace.classList.remove('active'); if(toggleHall) toggleHall.classList.add('active'); }
+    if(area==='terrace'){ 
+        if(terraceMap) terraceMap.classList.add('active'); 
+        if(hallMap) hallMap.classList.remove('active'); 
+        if(toggleTerrace) toggleTerrace.classList.add('active'); 
+        if(toggleHall) toggleHall.classList.remove('active'); 
+    }
+    else if(area==='hall'){ 
+        if(terraceMap) terraceMap.classList.remove('active'); 
+        if(hallMap) hallMap.classList.add('active'); 
+        if(toggleTerrace) toggleTerrace.classList.remove('active'); 
+        if(toggleHall) toggleHall.classList.add('active'); 
+    }
 
-    const dateInput=document.getElementById('dateInput'); if(dateInput && dateInput.value) initializeMapAvailability(dateInput.value);
+    const dateInput=document.getElementById('dateInput'); 
+    if(dateInput && dateInput.value) initializeMapAvailability(dateInput.value);
 }
 
 // ===================================
 // ОТПРАВКА БРОНИ С УВЕДОМЛЕНИЕМ И МОЯ БРОНЬ
 // ===================================
-function sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText){
-    const data={ table:table_id,time:time_slot,guests,phone,user_id,user_name,date:date_str };
+/**
+ * @param {string} table_id
+ * @param {string} time_slot
+ * @param {string} duration_hours // ДОБАВЛЕН НОВЫЙ ПАРАМЕТР
+ * @param {string} guests
+ * @param {string} phone
+ * @param {string} date_str
+ * @param {HTMLElement} submitButton
+ * @param {string} originalButtonText
+ */
+function sendBooking(table_id, time_slot, duration_hours, guests, phone, date_str, submitButton, originalButtonText){
+    // ВКЛЮЧАЕМ DURATION_HOURS В ТЕЛО ЗАПРОСА
+    const data={ table:table_id,time:time_slot,duration:duration_hours,guests,phone,user_id,user_name,date:date_str }; 
     fetch(`${API_BASE_URL}/book`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -334,6 +358,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     const tableValueDisplay=document.getElementById('current-table-value');
     const toggleTerrace=document.getElementById('toggle-terrace');
     const toggleHall=document.getElementById('toggle-hall');
+    
+    // Новая константа для выбора продолжительности
+    const durationSelect = document.getElementById('durationSelect');
 
     // Заполнение селекта гостей
     const guestsSelect = document.getElementById('guestsSelect');
@@ -344,6 +371,12 @@ document.addEventListener('DOMContentLoaded',()=>{
             option.textContent = i + (i === 1 ? " гость" : " гостей");
             guestsSelect.appendChild(option);
         }
+    }
+    
+    // Инициализация выбора продолжительности
+    if (durationSelect) {
+        // Устанавливаем по умолчанию 2 часа (значение "2")
+        durationSelect.value = "2"; 
     }
 
     if(timeValueDisplay){ const now=new Date(); timeValueDisplay.textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
@@ -454,6 +487,7 @@ if (bookingForm) {
         const guests = guestsSelect ? guestsSelect.value : null;
         const phone = phoneInput ? phoneInput.value : null;
         const date_str = dateInput ? dateInput.value : null;
+        const duration_hours = durationSelect ? durationSelect.value : null; // ИЗВЛЕКАЕМ DURATION
         const submitButton = bookingForm.querySelector('button[type="submit"]');
         const originalButtonText = submitButton.textContent;
 
@@ -464,15 +498,16 @@ if (bookingForm) {
             return;
         }
 
-        // Проверяем остальные поля
-        if (!table_id || !time_slot || !guests || !date_str) {
-            safeShowAlert('⚠️ Заполните все поля');
+        // Проверяем остальные поля (добавлена проверка duration_hours)
+        if (!table_id || !time_slot || !guests || !date_str || !duration_hours) {
+            safeShowAlert('⚠️ Заполните все поля, включая продолжительность бронирования');
             return;
         }
 
         submitButton.disabled = true;
         submitButton.textContent = 'Обработка...';
-        sendBooking(table_id, time_slot, guests, phone, date_str, submitButton, originalButtonText);
+        // ПЕРЕДАЕМ DURATION_HOURS В ФУНКЦИЮ
+        sendBooking(table_id, time_slot, duration_hours, guests, phone, date_str, submitButton, originalButtonText);
     });
 }
 
