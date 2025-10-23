@@ -7,7 +7,7 @@
     <title>Бронирование столика</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
-       /* ========================================================== */
+        /* ========================================================== */
 /* Финальная стилизация "The Golden Spoon" (Black & White) */
 /* ========================================================== */
 :root {
@@ -603,6 +603,14 @@ body {
         
         <label for="timeSelect">Выберите время</label>
         <select id="timeSelect" required></select>
+        
+        <label for="durationSelect">Продолжительность (часы)</label>
+        <select id="durationSelect" required>
+            <option value="" disabled selected>Выберите</option>
+            <option value="1">1 час</option>
+            <option value="2">2 часа</option>
+            <option value="3">3 часа</option>
+        </select>
         
         <label for="guestsInput">Количество гостей</label>
         <select id="guestsSelect" required></select>
